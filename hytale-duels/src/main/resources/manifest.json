@@ -1,0 +1,7 @@
+{
+  "Name": "HytaleDuels",
+  "Description": "Plugin de duels 1v1/2v2 avec systeme de kits",
+  "Author": "kingc",
+  "Version": "0.1.0",
+  "IncludesAssetPack": true
+}

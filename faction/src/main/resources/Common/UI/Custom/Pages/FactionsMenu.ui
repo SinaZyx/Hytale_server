@@ -1,0 +1,455 @@
+$C = "../Common.ui";
+
+@NavButtonStyle = TextButtonStyle(
+  Default: (Background: #0f1721, LabelStyle: (FontSize: 13, TextColor: #96a9be, RenderBold: true, HorizontalAlignment: Start, VerticalAlignment: Center)),
+  Hovered: (Background: #1a2533, LabelStyle: (FontSize: 13, TextColor: #d6e3f1, RenderBold: true, HorizontalAlignment: Start, VerticalAlignment: Center)),
+  Pressed: (Background: #0a121c, LabelStyle: (FontSize: 13, TextColor: #96a9be, RenderBold: true, HorizontalAlignment: Start, VerticalAlignment: Center))
+);
+
+@ActionButtonStyle = TextButtonStyle(
+  Default: (Background: #223042, LabelStyle: (FontSize: 13, TextColor: #e0e8f1, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Center)),
+  Hovered: (Background: #2b3b52, LabelStyle: (FontSize: 13, TextColor: #ffffff, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Center)),
+  Pressed: (Background: #1b2636, LabelStyle: (FontSize: 13, TextColor: #d0d8e1, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Center))
+);
+
+@CloseButtonStyle = TextButtonStyle(
+  Default: (Background: #2b3542, LabelStyle: (FontSize: 12, TextColor: #96a9be, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Center)),
+  Hovered: (Background: #3b4552, LabelStyle: (FontSize: 12, TextColor: #b6c9de, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Center)),
+  Pressed: (Background: #1b2532, LabelStyle: (FontSize: 12, TextColor: #96a9be, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Center))
+);
+
+$C.@PageOverlay {
+  LayoutMode: Middle;
+
+  Group #Root {
+    Anchor: (Width: 1120, Height: 680);
+    LayoutMode: Left;
+    Background: #0f1621(0.98);
+
+    Group #NavPanel {
+      Anchor: (Width: 200);
+      Background: #0a1119(0.95);
+      LayoutMode: Top;
+      Padding: (Full: 16);
+
+      Label {
+        Text: "MENU";
+        Anchor: (Height: 22);
+        Style: (FontSize: 11, TextColor: #4a5568, RenderUppercase: true, LetterSpacing: 2);
+      }
+
+      Group { Anchor: (Height: 10); }
+
+      Group #NavManageRow {
+        LayoutMode: Left;
+        Anchor: (Height: 28, Bottom: 6);
+
+        Group #NavManageIndicator {
+          Anchor: (Width: 4, Height: 24, Right: 8);
+          Background: #4a9eff;
+          Visible: false;
+        }
+
+        TextButton #NavManageButton {
+          Text: "Gestion";
+          Anchor: (Width: 140, Height: 24);
+          Style: @NavButtonStyle;
+        }
+      }
+
+      Group #NavMembersRow {
+        LayoutMode: Left;
+        Anchor: (Height: 28, Bottom: 6);
+
+        Group #NavMembersIndicator {
+          Anchor: (Width: 4, Height: 24, Right: 8);
+          Background: #4aff7f;
+          Visible: false;
+        }
+
+        TextButton #NavMembersButton {
+          Text: "Membres";
+          Anchor: (Width: 140, Height: 24);
+          Style: @NavButtonStyle;
+        }
+      }
+
+      Group #NavRelationsRow {
+        LayoutMode: Left;
+        Anchor: (Height: 28, Bottom: 6);
+
+        Group #NavRelationsIndicator {
+          Anchor: (Width: 4, Height: 24, Right: 8);
+          Background: #6cb8a7;
+          Visible: false;
+        }
+
+        TextButton #NavRelationsButton {
+          Text: "Alliances";
+          Anchor: (Width: 140, Height: 24);
+          Style: @NavButtonStyle;
+        }
+      }
+
+      Group #NavClaimsRow {
+        LayoutMode: Left;
+        Anchor: (Height: 28, Bottom: 6);
+
+        Group #NavClaimsIndicator {
+          Anchor: (Width: 4, Height: 24, Right: 8);
+          Background: #b48dd8;
+          Visible: false;
+        }
+
+        TextButton #NavClaimsButton {
+          Text: "Claims";
+          Anchor: (Width: 140, Height: 24);
+          Style: @NavButtonStyle;
+        }
+      }
+
+      Group #NavToolsRow {
+        LayoutMode: Left;
+        Anchor: (Height: 28, Bottom: 12);
+
+        Group #NavToolsIndicator {
+          Anchor: (Width: 4, Height: 24, Right: 8);
+          Background: #ffaa4a;
+          Visible: false;
+        }
+
+        TextButton #NavToolsButton {
+          Text: "Outils";
+          Anchor: (Width: 140, Height: 24);
+          Style: @NavButtonStyle;
+        }
+      }
+
+      Group { FlexWeight: 1; }
+
+      Label {
+        Text: "Astuce: /f";
+        Anchor: (Height: 20);
+        Style: (FontSize: 11, TextColor: #6e7da1);
+      }
+    }
+
+    Group #MainPanel {
+      FlexWeight: 1;
+      Background: #141c26(0.98);
+      LayoutMode: Top;
+      Padding: (Full: 16);
+
+      Group #Header {
+        LayoutMode: Left;
+        Anchor: (Height: 36);
+
+        Label {
+          Text: "Factions";
+          Style: (FontSize: 22, TextColor: #ffffff, RenderBold: true);
+          FlexWeight: 1;
+        }
+
+        TextButton #CloseButton {
+          Text: "FERMER";
+          Anchor: (Width: 90, Height: 28);
+          Style: @CloseButtonStyle;
+        }
+      }
+
+      Group {
+        Anchor: (Height: 1);
+        Background: #2b3542;
+      }
+
+      Group { Anchor: (Height: 12); }
+
+      Group #StatusPanel {
+        Background: #1a2330(0.95);
+        LayoutMode: Top;
+        Padding: (Full: 12);
+        Anchor: (Bottom: 10);
+
+        Label {
+          Text: "Statut";
+          Style: (FontSize: 12, TextColor: #6e7da1, RenderUppercase: true, LetterSpacing: 1);
+          Anchor: (Bottom: 6);
+        }
+
+        Label #FactionStatus {
+          Style: (FontSize: 15, TextColor: #ffffff, RenderBold: true);
+          Anchor: (Bottom: 4);
+        }
+
+        Label #FactionDetails {
+          Style: (FontSize: 12, TextColor: #a9b7c4);
+          Anchor: (Bottom: 4);
+        }
+
+        Label #FactionDescription {
+          Style: (FontSize: 12, TextColor: #8fa0b2);
+        }
+      }
+
+      Group #FactionInputPanel {
+        Background: #1a2330(0.95);
+        LayoutMode: Top;
+        Padding: (Full: 12);
+        Anchor: (Bottom: 10);
+
+        Label {
+          Text: "Nom de faction";
+          Style: (FontSize: 12, TextColor: #6e7da1, RenderUppercase: true);
+          Anchor: (Bottom: 6);
+        }
+
+        $C.@TextField #FactionNameInput {
+          Anchor: (Width: 420);
+          PlaceholderText: "Nom de faction";
+        }
+
+        Group { Anchor: (Height: 8); }
+
+        Label {
+          Text: "Description";
+          Style: (FontSize: 12, TextColor: #6e7da1, RenderUppercase: true);
+          Anchor: (Bottom: 6);
+        }
+
+        $C.@TextField #DescriptionInput {
+          Anchor: (Width: 420);
+          PlaceholderText: "Description de la faction";
+        }
+      }
+
+      Group #PlayerInputPanel {
+        Background: #1a2330(0.95);
+        LayoutMode: Top;
+        Padding: (Full: 12);
+        Anchor: (Bottom: 10);
+        Visible: false;
+
+        Label {
+          Text: "Joueur";
+          Style: (FontSize: 12, TextColor: #6e7da1, RenderUppercase: true);
+          Anchor: (Bottom: 6);
+        }
+
+        $C.@TextField #PlayerNameInput {
+          Anchor: (Width: 420);
+          PlaceholderText: "Pseudo joueur";
+        }
+      }
+
+      Group #ManageView {
+        Background: #1a2330(0.95);
+        LayoutMode: Top;
+        Padding: (Full: 12);
+        Anchor: (Bottom: 10);
+
+        Label {
+          Text: "Gestion";
+          Style: (FontSize: 12, TextColor: #6e7da1, RenderUppercase: true, LetterSpacing: 1);
+          Anchor: (Bottom: 8);
+        }
+
+        Group {
+          LayoutMode: Left;
+
+          Group {
+            LayoutMode: Top;
+            Anchor: (Width: 220);
+
+            TextButton #CreateButton { Text: "Creer"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+            TextButton #RenameButton { Text: "Renommer"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+            TextButton #DescButton { Text: "Description"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+            TextButton #ListButton { Text: "Liste"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+          }
+
+          Group {
+            LayoutMode: Top;
+            Anchor: (Width: 220);
+            Padding: (Left: 8);
+
+            TextButton #AcceptButton { Text: "Accepter"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+            TextButton #DenyButton { Text: "Refuser"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+            TextButton #DisbandButton { Text: "Dissoudre"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+            TextButton #LeaveButton { Text: "Quitter"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+          }
+        }
+      }
+
+      Group #MembersView {
+        Background: #1a2330(0.95);
+        LayoutMode: Top;
+        Padding: (Full: 12);
+        Anchor: (Bottom: 10);
+        Visible: false;
+
+        Label {
+          Text: "Membres";
+          Style: (FontSize: 12, TextColor: #6e7da1, RenderUppercase: true, LetterSpacing: 1);
+          Anchor: (Bottom: 8);
+        }
+
+        Group {
+          LayoutMode: Left;
+
+          Group {
+            LayoutMode: Top;
+            Anchor: (Width: 220);
+
+            TextButton #InviteButton { Text: "Inviter"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+            TextButton #KickButton { Text: "Expulser"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+            TextButton #PromoteButton { Text: "Promouvoir"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+            TextButton #DemoteButton { Text: "Retrograder"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+            TextButton #LeaderButton { Text: "Transferer chef"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+          }
+
+          Group {
+            FlexWeight: 1;
+            LayoutMode: Top;
+            Padding: (Left: 10);
+
+            Label {
+              Text: "Liste des membres";
+              Style: (FontSize: 11, TextColor: #6e7da1, RenderUppercase: true);
+              Anchor: (Bottom: 6);
+            }
+
+            Group #MembersList {
+              LayoutMode: TopScrolling;
+              ScrollbarStyle: $C.@DefaultScrollbarStyle;
+              Anchor: (Height: 150);
+            }
+          }
+        }
+      }
+
+      Group #RelationsView {
+        Background: #1a2330(0.95);
+        LayoutMode: Top;
+        Padding: (Full: 12);
+        Anchor: (Bottom: 10);
+        Visible: false;
+
+        Label {
+          Text: "Alliances";
+          Style: (FontSize: 12, TextColor: #6e7da1, RenderUppercase: true, LetterSpacing: 1);
+          Anchor: (Bottom: 8);
+        }
+
+        Group {
+          LayoutMode: Left;
+
+          Group {
+            LayoutMode: Top;
+            Anchor: (Width: 220);
+
+            TextButton #AllyButton { Text: "Allier"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+            TextButton #UnallyButton { Text: "Rompre alliance"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+          }
+
+          Group {
+            FlexWeight: 1;
+            LayoutMode: Top;
+            Padding: (Left: 10);
+
+            Label {
+              Text: "Allies";
+              Style: (FontSize: 11, TextColor: #6e7da1, RenderUppercase: true);
+              Anchor: (Bottom: 6);
+            }
+
+            Group #AlliesList {
+              LayoutMode: TopScrolling;
+              ScrollbarStyle: $C.@DefaultScrollbarStyle;
+              Anchor: (Height: 120);
+            }
+          }
+        }
+      }
+
+      Group #ClaimsView {
+        Background: #1a2330(0.95);
+        LayoutMode: Top;
+        Padding: (Full: 12);
+        Anchor: (Bottom: 10);
+        Visible: false;
+
+        Label {
+          Text: "Claims";
+          Style: (FontSize: 12, TextColor: #6e7da1, RenderUppercase: true, LetterSpacing: 1);
+          Anchor: (Bottom: 8);
+        }
+
+        Label #ClaimStats {
+          Style: (FontSize: 12, TextColor: #a9b7c4);
+          Anchor: (Bottom: 10);
+        }
+
+        Group {
+          LayoutMode: Left;
+
+          Group {
+            LayoutMode: Top;
+            Anchor: (Width: 220);
+
+            TextButton #ClaimButton { Text: "Claim"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+            TextButton #UnclaimButton { Text: "Unclaim"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+          }
+
+          Group {
+            LayoutMode: Top;
+            Anchor: (Width: 220);
+            Padding: (Left: 8);
+
+            TextButton #SetHomeButton { Text: "Set home"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+            TextButton #HomeButton { Text: "Home"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+          }
+        }
+      }
+
+      Group #ToolsView {
+        Background: #1a2330(0.95);
+        LayoutMode: Top;
+        Padding: (Full: 12);
+        Anchor: (Bottom: 10);
+        Visible: false;
+
+        Label {
+          Text: "Outils";
+          Style: (FontSize: 12, TextColor: #6e7da1, RenderUppercase: true, LetterSpacing: 1);
+          Anchor: (Bottom: 8);
+        }
+
+        Group {
+          LayoutMode: Left;
+
+          TextButton #InfoButton { Text: "Info"; Anchor: (Width: 150, Height: 28, Right: 8); Style: @ActionButtonStyle; }
+          TextButton #MapButton { Text: "Map"; Anchor: (Width: 150, Height: 28, Right: 8); Style: @ActionButtonStyle; }
+          TextButton #WhoButton { Text: "Who"; Anchor: (Width: 150, Height: 28); Style: @ActionButtonStyle; }
+        }
+      }
+    }
+
+    Group #SidePanel {
+      Anchor: (Width: 280);
+      Background: #0a1119(0.95);
+      LayoutMode: Top;
+      Padding: (Full: 16);
+
+      Label {
+        Text: "Factions";
+        Style: (FontSize: 12, TextColor: #6e7da1, RenderUppercase: true, LetterSpacing: 1);
+        Anchor: (Bottom: 8);
+      }
+
+      Group #FactionsList {
+        LayoutMode: TopScrolling;
+        ScrollbarStyle: $C.@DefaultScrollbarStyle;
+        Anchor: (Height: 560);
+      }
+    }
+  }
+}

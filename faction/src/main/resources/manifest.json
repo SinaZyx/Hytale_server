@@ -1,0 +1,22 @@
+{
+    "Group": "KingC",
+    "Name": "HytaleFactions",
+    "Version": "0.1.0",
+    "Description": "PvP factions plugin with claims, invites, and allies.",
+    "Authors": [
+        {
+            "Name": "KingC"
+        }
+    ],
+    "Website": "",
+    "ServerVersion": "*",
+    "Dependencies": {
+        
+    },
+    "OptionalDependencies": {
+        
+    },
+    "DisabledByDefault": false,
+    "Main": "com.kingc.hytale.factions.hytale.HytaleFactionsPlugin",
+    "IncludesAssetPack": true
+}

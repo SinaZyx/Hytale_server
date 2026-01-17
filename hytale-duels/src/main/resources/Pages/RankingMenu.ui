@@ -1,0 +1,269 @@
+// Ranking Menu UI
+// Classement, stats personnelles, et infos sur les rangs
+
+VerticalLayout {
+    Name: "RankingMenuRoot";
+    Style: (
+        BackgroundColor: #1a1a1a,
+        Padding: 20,
+        Width: 550,
+        Height: 480
+    );
+    Anchor: (CenterX: 0, CenterY: 0);
+
+    Children: [
+        // Header avec stats du joueur
+        HorizontalLayout {
+            Style: (Padding: 15, BackgroundColor: #252525);
+            Anchor: (Bottom: 15);
+            Children: [
+                VerticalLayout {
+                    Style: (Width: 200);
+                    Children: [
+                        Label {
+                            Text: "Ton classement";
+                            Style: (FontSize: 11, TextColor: #6c7a89);
+                        },
+                        Label {
+                            Name: "PlayerRank";
+                            Text: "Silver III";
+                            Style: (FontSize: 18, TextColor: #c0c0c0, FontWeight: Bold);
+                        },
+                        Label {
+                            Name: "PlayerElo";
+                            Text: "1000 ELO";
+                            Style: (FontSize: 14, TextColor: #d7e0e8);
+                        }
+                    ];
+                },
+                VerticalLayout {
+                    Style: (Width: 150);
+                    Children: [
+                        Label {
+                            Text: "Position";
+                            Style: (FontSize: 11, TextColor: #6c7a89);
+                        },
+                        Label {
+                            Name: "PlayerPosition";
+                            Text: "#1 / 100";
+                            Style: (FontSize: 16, TextColor: #4fc3f7, FontWeight: Bold);
+                        },
+                        Label {
+                            Name: "PlayerWinLoss";
+                            Text: "0W / 0L";
+                            Style: (FontSize: 12, TextColor: #9aa7b0);
+                        }
+                    ];
+                }
+            ];
+        },
+
+        // Navigation Tabs
+        HorizontalLayout {
+            Style: (Padding: 5, BackgroundColor: #2a2a2a);
+            Anchor: (Bottom: 10);
+            Children: [
+                Button {
+                    Name: "NavLeaderboardButton";
+                    Style: (Padding: 10, BackgroundColor: #333333);
+                    Anchor: (Right: 5);
+                    Children: [
+                        Label { Text: "Classement"; Style: (FontSize: 13, TextColor: #d7e0e8); }
+                    ];
+                },
+                VerticalLayout {
+                    Name: "NavLeaderboardIndicator";
+                    Visible: true;
+                    Style: (Height: 3, Width: 70, BackgroundColor: #4fc3f7);
+                },
+                Button {
+                    Name: "NavMyStatsButton";
+                    Style: (Padding: 10, BackgroundColor: #333333);
+                    Anchor: (Right: 5);
+                    Children: [
+                        Label { Text: "Mes Stats"; Style: (FontSize: 13, TextColor: #d7e0e8); }
+                    ];
+                },
+                VerticalLayout {
+                    Name: "NavMyStatsIndicator";
+                    Visible: false;
+                    Style: (Height: 3, Width: 70, BackgroundColor: #4fc3f7);
+                },
+                Button {
+                    Name: "NavRanksButton";
+                    Style: (Padding: 10, BackgroundColor: #333333);
+                    Children: [
+                        Label { Text: "Rangs"; Style: (FontSize: 13, TextColor: #d7e0e8); }
+                    ];
+                },
+                VerticalLayout {
+                    Name: "NavRanksIndicator";
+                    Visible: false;
+                    Style: (Height: 3, Width: 70, BackgroundColor: #4fc3f7);
+                }
+            ];
+        },
+
+        // === LEADERBOARD VIEW ===
+        VerticalLayout {
+            Name: "LeaderboardView";
+            Visible: true;
+            Style: (Padding: 10);
+            Children: [
+                // Sort buttons
+                HorizontalLayout {
+                    Anchor: (Bottom: 10);
+                    Children: [
+                        Label { Text: "Trier par:"; Style: (FontSize: 11, TextColor: #6c7a89); Anchor: (Right: 10); },
+                        Button {
+                            Name: "SortEloButton";
+                            Style: (Padding: 5, BackgroundColor: #333333);
+                            Anchor: (Right: 5);
+                            Children: [
+                                Label { Text: "ELO"; Style: (FontSize: 11, TextColor: #d7e0e8); }
+                            ];
+                        },
+                        VerticalLayout {
+                            Name: "SortEloActive";
+                            Visible: true;
+                            Style: (Height: 2, Width: 30, BackgroundColor: #4fc3f7);
+                        },
+                        Button {
+                            Name: "SortWinsButton";
+                            Style: (Padding: 5, BackgroundColor: #333333);
+                            Anchor: (Right: 5);
+                            Children: [
+                                Label { Text: "Victoires"; Style: (FontSize: 11, TextColor: #d7e0e8); }
+                            ];
+                        },
+                        VerticalLayout {
+                            Name: "SortWinsActive";
+                            Visible: false;
+                            Style: (Height: 2, Width: 50, BackgroundColor: #4fc3f7);
+                        },
+                        Button {
+                            Name: "SortWinrateButton";
+                            Style: (Padding: 5, BackgroundColor: #333333);
+                            Children: [
+                                Label { Text: "Winrate"; Style: (FontSize: 11, TextColor: #d7e0e8); }
+                            ];
+                        },
+                        VerticalLayout {
+                            Name: "SortWinrateActive";
+                            Visible: false;
+                            Style: (Height: 2, Width: 50, BackgroundColor: #4fc3f7);
+                        }
+                    ];
+                },
+
+                // Leaderboard list
+                ScrollView {
+                    Style: (Height: 250, BackgroundColor: #1e1e1e, Padding: 5);
+                    Children: [
+                        VerticalLayout {
+                            Name: "LeaderboardList";
+                        }
+                    ];
+                }
+            ];
+        },
+
+        // === MY STATS VIEW ===
+        VerticalLayout {
+            Name: "MyStatsView";
+            Visible: false;
+            Style: (Padding: 10);
+            Children: [
+                // Stats grid
+                HorizontalLayout {
+                    Anchor: (Bottom: 15);
+                    Children: [
+                        // Colonne gauche
+                        VerticalLayout {
+                            Style: (Width: 200, Padding: 10, BackgroundColor: #2a2a2a);
+                            Anchor: (Right: 10);
+                            Children: [
+                                Label { Text: "ELO"; Style: (FontSize: 11, TextColor: #6c7a89); },
+                                Label { Name: "StatElo"; Text: "1000"; Style: (FontSize: 24, TextColor: #4fc3f7, FontWeight: Bold); },
+                                Label { Text: "Victoires"; Style: (FontSize: 11, TextColor: #6c7a89); Anchor: (Top: 10); },
+                                Label { Name: "StatWins"; Text: "0"; Style: (FontSize: 18, TextColor: #4caf50); },
+                                Label { Text: "Defaites"; Style: (FontSize: 11, TextColor: #6c7a89); Anchor: (Top: 10); },
+                                Label { Name: "StatLosses"; Text: "0"; Style: (FontSize: 18, TextColor: #f44336); }
+                            ];
+                        },
+                        // Colonne droite
+                        VerticalLayout {
+                            Style: (Width: 200, Padding: 10, BackgroundColor: #2a2a2a);
+                            Children: [
+                                Label { Text: "Winrate"; Style: (FontSize: 11, TextColor: #6c7a89); },
+                                Label { Name: "StatWinRate"; Text: "0%"; Style: (FontSize: 24, TextColor: #ff9800, FontWeight: Bold); },
+                                Label { Text: "Serie actuelle"; Style: (FontSize: 11, TextColor: #6c7a89); Anchor: (Top: 10); },
+                                Label { Name: "StatWinStreak"; Text: "0"; Style: (FontSize: 18, TextColor: #d7e0e8); },
+                                Label { Text: "Meilleure serie"; Style: (FontSize: 11, TextColor: #6c7a89); Anchor: (Top: 10); },
+                                Label { Name: "StatBestStreak"; Text: "0"; Style: (FontSize: 18, TextColor: #ffd700); }
+                            ];
+                        }
+                    ];
+                },
+
+                // Total matches
+                HorizontalLayout {
+                    Style: (Padding: 10, BackgroundColor: #2a2a2a);
+                    Anchor: (Bottom: 15);
+                    Children: [
+                        Label { Text: "Total matchs joues:"; Style: (FontSize: 12, TextColor: #9aa7b0); Anchor: (Right: 10); },
+                        Label { Name: "StatTotalMatches"; Text: "0"; Style: (FontSize: 14, TextColor: #d7e0e8, FontWeight: Bold); }
+                    ];
+                },
+
+                // Progression vers prochain rang
+                VerticalLayout {
+                    Style: (Padding: 10, BackgroundColor: #2a2a2a);
+                    Children: [
+                        Label { Text: "Prochain rang"; Style: (FontSize: 11, TextColor: #6c7a89); Anchor: (Bottom: 5); },
+                        HorizontalLayout {
+                            Anchor: (Bottom: 8);
+                            Children: [
+                                Label { Name: "NextRankName"; Text: "Gold III"; Style: (FontSize: 14, TextColor: #ffd700); Anchor: (Right: 10); },
+                                Label { Name: "NextRankElo"; Text: "+300 ELO"; Style: (FontSize: 12, TextColor: #9aa7b0); }
+                            ];
+                        },
+                        // Progress bar background
+                        HorizontalLayout {
+                            Style: (Height: 8, BackgroundColor: #1a1a1a, Width: 100%);
+                            Children: [
+                                // Progress bar fill
+                                HorizontalLayout {
+                                    Name: "ProgressBar";
+                                    Style: (Height: 8, BackgroundColor: #4fc3f7, Width: 30%);
+                                }
+                            ];
+                        }
+                    ];
+                }
+            ];
+        },
+
+        // === RANKS INFO VIEW ===
+        VerticalLayout {
+            Name: "RanksView";
+            Visible: false;
+            Style: (Padding: 10);
+            Children: [
+                Label {
+                    Text: "Tous les rangs";
+                    Style: (FontSize: 14, TextColor: #ffffff, FontWeight: Bold);
+                    Anchor: (Bottom: 10);
+                },
+                ScrollView {
+                    Style: (Height: 280, BackgroundColor: #1e1e1e, Padding: 5);
+                    Children: [
+                        VerticalLayout {
+                            Name: "RanksList";
+                        }
+                    ];
+                }
+            ];
+        }
+    ];
+}
