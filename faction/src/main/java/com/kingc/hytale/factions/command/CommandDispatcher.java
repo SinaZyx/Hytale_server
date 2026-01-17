@@ -23,12 +23,22 @@ public final class CommandDispatcher {
     private final ServerAdapter server;
     private final FactionSettings settings;
     private final Supplier<Result<Void>> reloadHandler;
+    private java.util.function.Function<java.util.UUID, String> chatToggleHandler;
 
     public CommandDispatcher(FactionService service, ServerAdapter server, FactionSettings settings, Supplier<Result<Void>> reloadHandler) {
+        this(service, server, settings, reloadHandler, null);
+    }
+
+    public CommandDispatcher(FactionService service, ServerAdapter server, FactionSettings settings, Supplier<Result<Void>> reloadHandler, java.util.function.Function<java.util.UUID, String> chatToggleHandler) {
         this.service = service;
         this.server = server;
         this.settings = settings;
         this.reloadHandler = reloadHandler;
+        this.chatToggleHandler = chatToggleHandler;
+    }
+
+    public void setChatToggleHandler(java.util.function.Function<java.util.UUID, String> handler) {
+        this.chatToggleHandler = handler;
     }
 
     public boolean handle(CommandSource source, String commandLine) {
@@ -75,10 +85,13 @@ public final class CommandDispatcher {
             case "leader" -> handleLeader(source, parts);
             case "ally" -> handleAlly(source, parts);
             case "unally" -> handleUnally(source, parts);
+            case "enemy" -> handleEnemy(source, parts);
+            case "unenemy" -> handleUnenemy(source, parts);
             case "sethome" -> handleSetHome(source);
             case "home" -> handleHome(source);
             case "claim" -> handleClaim(source);
             case "unclaim" -> handleUnclaim(source);
+            case "chat" -> handleChatToggle(source);
             default -> {
                 send(source, "Unknown subcommand. Use /f help.");
                 return false;
@@ -525,6 +538,32 @@ public final class CommandDispatcher {
         send(source, result.message());
     }
 
+    private void handleEnemy(CommandSource source, String[] parts) {
+        UUID playerId = requirePlayer(source);
+        if (playerId == null) {
+            return;
+        }
+        if (parts.length < 2) {
+            send(source, "Usage: /f enemy <faction>");
+            return;
+        }
+        Result<Void> result = service.enemy(playerId, parts[1]);
+        send(source, result.message());
+    }
+
+    private void handleUnenemy(CommandSource source, String[] parts) {
+        UUID playerId = requirePlayer(source);
+        if (playerId == null) {
+            return;
+        }
+        if (parts.length < 2) {
+            send(source, "Usage: /f unenemy <faction>");
+            return;
+        }
+        Result<Void> result = service.unenemy(playerId, parts[1]);
+        send(source, result.message());
+    }
+
     private void handleSetHome(CommandSource source) {
         UUID playerId = requirePlayer(source);
         if (playerId == null) {
@@ -581,6 +620,19 @@ public final class CommandDispatcher {
         ClaimKey claim = ClaimKey.fromLocation(location.get(), settings.chunkSize);
         Result<Void> result = service.unclaim(playerId, claim);
         send(source, result.message());
+    }
+
+    private void handleChatToggle(CommandSource source) {
+        UUID playerId = requirePlayer(source);
+        if (playerId == null) {
+            return;
+        }
+        if (chatToggleHandler == null) {
+            send(source, "Chat toggle not available.");
+            return;
+        }
+        String newMode = chatToggleHandler.apply(playerId);
+        send(source, "Chat mode set to: " + newMode);
     }
 
     private UUID requirePlayer(CommandSource source) {

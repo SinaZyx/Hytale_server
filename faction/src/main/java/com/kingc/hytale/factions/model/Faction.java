@@ -14,6 +14,7 @@ public final class Faction {
     private final long createdAtEpochMs;
     private final Map<UUID, MemberRole> members;
     private final Set<UUID> allies;
+    private final Set<UUID> enemies;
 
     private String name;
     private String description;
@@ -21,15 +22,20 @@ public final class Faction {
     private Integer powerOverride;
 
     public Faction(UUID id, String name, long createdAtEpochMs, Map<UUID, MemberRole> members) {
-        this(id, name, createdAtEpochMs, members, Set.of());
+        this(id, name, createdAtEpochMs, members, Set.of(), Set.of());
     }
 
     public Faction(UUID id, String name, long createdAtEpochMs, Map<UUID, MemberRole> members, Set<UUID> allies) {
+        this(id, name, createdAtEpochMs, members, allies, Set.of());
+    }
+
+    public Faction(UUID id, String name, long createdAtEpochMs, Map<UUID, MemberRole> members, Set<UUID> allies, Set<UUID> enemies) {
         this.id = id;
         this.name = name;
         this.createdAtEpochMs = createdAtEpochMs;
         this.members = new HashMap<>(members);
         this.allies = new HashSet<>(allies);
+        this.enemies = new HashSet<>(enemies);
     }
 
     public UUID id() {
@@ -102,5 +108,17 @@ public final class Faction {
 
     public void removeAlly(UUID factionId) {
         allies.remove(factionId);
+    }
+
+    public Set<UUID> enemies() {
+        return Collections.unmodifiableSet(enemies);
+    }
+
+    public void addEnemy(UUID factionId) {
+        enemies.add(factionId);
+    }
+
+    public void removeEnemy(UUID factionId) {
+        enemies.remove(factionId);
     }
 }

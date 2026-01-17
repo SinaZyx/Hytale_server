@@ -1,0 +1,61 @@
+// HelpMenu.ui - Hytale UI Definition
+// This file defines the visual layout for the Help Menu
+
+VerticalLayout {
+    Style: (BackgroundColor: #1a1a2e, Padding: 20, Width: 500, Height: 400);
+    
+    // Header
+    Label {
+        Text: "⚔ Guide des Duels ⚔";
+        Style: (FontSize: 20, TextColor: #4fc3f7, Alignment: Center, MarginBottom: 15);
+    }
+    
+    // Navigation Bar
+    HorizontalLayout {
+        Id: NavBar;
+        Style: (Alignment: Center, MarginBottom: 10);
+        Children: [
+            Button { Id: NavCommandsButton; Text: "Commandes"; Style: (Width: 120, Padding: 8); }
+            Button { Id: NavKitsButton; Text: "Kits"; Style: (Width: 120, Padding: 8); }
+            Button { Id: NavRulesButton; Text: "Regles"; Style: (Width: 120, Padding: 8); }
+        ];
+    }
+    
+    // Tab Indicators
+    HorizontalLayout {
+        Style: (Alignment: Center, MarginBottom: 10);
+        Children: [
+            Label { Id: NavCommandsIndicator; Text: "▼"; Style: (Width: 120, TextColor: #4fc3f7, Alignment: Center); Visible: true; }
+            Label { Id: NavKitsIndicator; Text: "▼"; Style: (Width: 120, TextColor: #4fc3f7, Alignment: Center); Visible: false; }
+            Label { Id: NavRulesIndicator; Text: "▼"; Style: (Width: 120, TextColor: #4fc3f7, Alignment: Center); Visible: false; }
+        ];
+    }
+    
+    // Content Views
+    ScrollView {
+        Id: CommandsView;
+        Style: (Height: 280, BackgroundColor: #0f0f1a);
+        Visible: true;
+        Children: [
+            VerticalLayout { Id: CommandsList; Style: (Padding: 5); }
+        ];
+    }
+    
+    ScrollView {
+        Id: KitsView;
+        Style: (Height: 280, BackgroundColor: #0f0f1a);
+        Visible: false;
+        Children: [
+            VerticalLayout { Id: KitsList; Style: (Padding: 5); }
+        ];
+    }
+    
+    ScrollView {
+        Id: RulesView;
+        Style: (Height: 280, BackgroundColor: #0f0f1a);
+        Visible: false;
+        Children: [
+            VerticalLayout { Id: RulesList; Style: (Padding: 5); }
+        ];
+    }
+}

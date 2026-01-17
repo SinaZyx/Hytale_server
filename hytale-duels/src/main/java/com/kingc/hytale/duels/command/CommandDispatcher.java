@@ -79,6 +79,11 @@ public final class CommandDispatcher {
                 source.sendMessage(PREFIX + result.message());
                 yield true;
             }
+            case "help" -> {
+                // Signal to open help menu - handled by HytaleDuelsPlugin wrapper
+                source.sendMessage(PREFIX + "OPEN_HELP_MENU");
+                yield true;
+            }
             default -> {
                 String targetName = subCommand;
                 String kitId = parts.length > 1 ? parts[1] : "tank";

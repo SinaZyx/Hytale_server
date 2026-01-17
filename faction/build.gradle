@@ -144,13 +144,11 @@ task compareEvents {
         def outFile = file('build/api_dump.txt')
         outFile.text = ""
         try {
-            def chat = loader.loadClass('com.hypixel.hytale.server.core.event.events.player.PlayerChatEvent')
+            def playerRef = loader.loadClass('com.hypixel.hytale.server.core.universe.PlayerRef')
             
-            outFile.text = "PlayerChatEvent Fields:\n"
-            chat.fields.each { f ->
-                if (java.lang.reflect.Modifier.isStatic(f.modifiers)) {
-                    outFile.append(f.toString() + " = " + f.get(null) + "\n")
-                }
+            outFile.text = "PlayerRef Methods:\n"
+            playerRef.methods.each { m ->
+                outFile.append(m.toString() + "\n")
             }
             println "Dumped to " + outFile.absolutePath
         } catch (Exception e) {

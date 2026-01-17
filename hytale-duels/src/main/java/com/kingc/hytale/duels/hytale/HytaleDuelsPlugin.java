@@ -102,6 +102,26 @@ public final class HytaleDuelsPlugin extends JavaPlugin {
         }
     }
 
+    public void openHelpMenu(com.hypixel.hytale.server.core.universe.PlayerRef playerRef) {
+        if (playerRef == null) return;
+        com.hypixel.hytale.server.core.universe.world.World world = com.hypixel.hytale.server.core.universe.Universe.get().getWorld(playerRef.getWorldUuid());
+        if (world != null) {
+            world.execute(() -> {
+                 var entityStore = world.getEntityStore();
+                 if (entityStore != null) {
+                     var store = entityStore.getStore();
+                     var ref = entityStore.getRefFromUUID(playerRef.getUuid());
+                     if (store != null && ref != null) {
+                         var player = store.getComponent(ref, com.hypixel.hytale.server.core.entity.entities.Player.getComponentType());
+                         if (player != null) {
+                             player.getPageManager().openCustomPage(ref, store, new HelpMenuPage(this, playerRef));
+                         }
+                     }
+                 }
+            });
+        }
+    }
+
     public void flush() {
         if (core != null) {
             try {

@@ -385,6 +385,53 @@ public final class FactionService {
         return Result.ok("Alliance removed.", null);
     }
 
+    public Result<Void> enemy(UUID actorId, String targetFactionName) {
+        Optional<Faction> factionOpt = findFactionByMember(actorId);
+        if (factionOpt.isEmpty()) {
+            return Result.error("You are not in a faction.");
+        }
+        Faction faction = factionOpt.get();
+        if (!hasAtLeastRole(faction, actorId, settings.roleForAlly())) {
+            return Result.error("You do not have permission to manage enemies.");
+        }
+        Optional<Faction> targetOpt = findFactionByName(targetFactionName);
+        if (targetOpt.isEmpty()) {
+            return Result.error("Faction not found.");
+        }
+        Faction target = targetOpt.get();
+        if (target.id().equals(faction.id())) {
+            return Result.error("You cannot declare yourself as an enemy.");
+        }
+        // Remove from allies if present
+        faction.removeAlly(target.id());
+        target.removeAlly(faction.id());
+        // Add as enemies
+        faction.addEnemy(target.id());
+        target.addEnemy(faction.id());
+        logAction(actorId, "enemy with=" + target.name() + " faction=" + faction.name());
+        return Result.ok("You are now enemies with " + target.name() + ".", null);
+    }
+
+    public Result<Void> unenemy(UUID actorId, String targetFactionName) {
+        Optional<Faction> factionOpt = findFactionByMember(actorId);
+        if (factionOpt.isEmpty()) {
+            return Result.error("You are not in a faction.");
+        }
+        Faction faction = factionOpt.get();
+        if (!hasAtLeastRole(faction, actorId, settings.roleForAlly())) {
+            return Result.error("You do not have permission to manage enemies.");
+        }
+        Optional<Faction> targetOpt = findFactionByName(targetFactionName);
+        if (targetOpt.isEmpty()) {
+            return Result.error("Faction not found.");
+        }
+        Faction target = targetOpt.get();
+        faction.removeEnemy(target.id());
+        target.removeEnemy(faction.id());
+        logAction(actorId, "unenemy with=" + target.name() + " faction=" + faction.name());
+        return Result.ok("You are no longer enemies with " + target.name() + ".", null);
+    }
+
     public boolean canBuild(UUID actorId, Location location) {
         ClaimKey claim = ClaimKey.fromLocation(location, settings.chunkSize);
         UUID ownerId = store.claims().get(claim);

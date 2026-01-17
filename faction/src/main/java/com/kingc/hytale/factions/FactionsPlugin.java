@@ -90,6 +90,10 @@ public final class FactionsPlugin {
         return settings;
     }
 
+    public void setChatToggleHandler(java.util.function.Function<java.util.UUID, String> handler) {
+        dispatcher.setChatToggleHandler(handler);
+    }
+
     private void createBackup() throws IOException {
         if (settings.backupRetention <= 0) {
             return;

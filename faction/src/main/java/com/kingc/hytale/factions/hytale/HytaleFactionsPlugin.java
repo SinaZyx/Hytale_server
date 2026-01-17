@@ -25,6 +25,7 @@ import com.kingc.hytale.factions.api.Location;
 import com.kingc.hytale.factions.model.Faction;
 import com.kingc.hytale.factions.service.FactionSettings;
 import com.hypixel.hytale.server.core.event.events.player.PlayerChatEvent;
+import com.kingc.hytale.factions.model.ChatMode;
 
 
 import javax.annotation.Nonnull;
@@ -54,6 +55,7 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
     });
     private final Map<UUID, String> lastClaimByPlayer = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastClaimNotifyAt = new ConcurrentHashMap<>();
+    private final Map<UUID, ChatMode> playerChatModes = new ConcurrentHashMap<>();
     private FactionsPlugin plugin;
     private ScheduledFuture<?> claimTask;
 
@@ -65,6 +67,10 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
     protected void setup() {
         try {
             plugin = new FactionsPlugin(getDataDirectory(), serverAdapter);
+            plugin.setChatToggleHandler(playerId -> {
+                toggleChatMode(playerId);
+                return getChatMode(playerId).name();
+            });
         } catch (IOException e) {
             throw new IllegalStateException("Failed to initialize factions plugin", e);
         }
@@ -89,12 +95,67 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         if (player == null) {
             return;
         }
-        Optional<Faction> faction = plugin.service().findFactionByMember(player.getUuid());
-        if (faction.isPresent()) {
-            String prefix = "[" + faction.get().name() + "] ";
-            String original = event.getContent();
-            event.setContent(prefix + original);
+        UUID playerId = player.getUuid();
+        Optional<Faction> factionOpt = plugin.service().findFactionByMember(playerId);
+        
+        // Check chat mode
+        ChatMode mode = playerChatModes.getOrDefault(playerId, ChatMode.PUBLIC);
+        
+        if (mode == ChatMode.FACTION || mode == ChatMode.ALLY) {
+            if (factionOpt.isEmpty()) {
+                player.sendMessage(Message.raw("[Factions] You are not in a faction."));
+                return;
+            }
+            Faction faction = factionOpt.get();
+            String content = event.getContent();
+            String prefix = mode == ChatMode.FACTION ? "[Faction] " : "[Ally] ";
+            
+            // Cancel public broadcast
+            event.setCancelled(true);
+            
+            // Send to faction members
+            for (UUID memberId : faction.members().keySet()) {
+                PlayerRef member = Universe.get().getPlayer(memberId);
+                if (member != null) {
+                    member.sendMessage(Message.raw(prefix + player.getUsername() + ": " + content));
+                }
+            }
+            
+            // If ally mode, also send to allies
+            if (mode == ChatMode.ALLY) {
+                for (UUID allyId : faction.allies()) {
+                    Optional<Faction> allyFaction = plugin.service().getFactionById(allyId);
+                    if (allyFaction.isPresent()) {
+                        for (UUID memberId : allyFaction.get().members().keySet()) {
+                            PlayerRef member = Universe.get().getPlayer(memberId);
+                            if (member != null) {
+                                member.sendMessage(Message.raw(prefix + "[" + faction.name() + "] " + player.getUsername() + ": " + content));
+                            }
+                        }
+                    }
+                }
+            }
+        } else {
+            // Public chat - just add faction prefix if in faction
+            if (factionOpt.isPresent()) {
+                String prefix = "[" + factionOpt.get().name() + "] ";
+                event.setContent(prefix + event.getContent());
+            }
         }
+    }
+
+    public void toggleChatMode(UUID playerId) {
+        ChatMode current = playerChatModes.getOrDefault(playerId, ChatMode.PUBLIC);
+        ChatMode next = switch (current) {
+            case PUBLIC -> ChatMode.FACTION;
+            case FACTION -> ChatMode.ALLY;
+            case ALLY -> ChatMode.PUBLIC;
+        };
+        playerChatModes.put(playerId, next);
+    }
+
+    public ChatMode getChatMode(UUID playerId) {
+        return playerChatModes.getOrDefault(playerId, ChatMode.PUBLIC);
     }
 
 

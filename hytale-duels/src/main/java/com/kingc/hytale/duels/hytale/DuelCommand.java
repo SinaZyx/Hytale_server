@@ -23,6 +23,19 @@ public final class DuelCommand extends CommandBase {
         if (input != null && input.length() > 5) { // "duel " is 5 chars
             commandLine = input.trim();
         }
+        
+        // Intercept help command to open UI directly
+        String[] parts = commandLine.split("\\s+", 2);
+        if (parts.length >= 2 && "help".equalsIgnoreCase(parts[1])) {
+            if (ctx.isPlayer() && ctx.sender() != null) {
+                var playerRef = com.hypixel.hytale.server.core.universe.Universe.get().getPlayer(ctx.sender().getUuid());
+                if (playerRef != null) {
+                    plugin.openHelpMenu(playerRef);
+                    return;
+                }
+            }
+        }
+        
         plugin.core().onCommand(new HytaleCommandSource(ctx), commandLine);
         plugin.flush();
     }
