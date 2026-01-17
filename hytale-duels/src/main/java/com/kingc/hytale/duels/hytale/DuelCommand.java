@@ -24,7 +24,7 @@ public final class DuelCommand extends CommandBase {
             commandLine = input.trim();
         }
         
-        // Intercept help command to open UI directly
+        // Intercept help command to open UI
         String[] parts = commandLine.split("\\s+", 2);
         if (parts.length >= 2 && "help".equalsIgnoreCase(parts[1])) {
             if (ctx.isPlayer() && ctx.sender() != null) {
