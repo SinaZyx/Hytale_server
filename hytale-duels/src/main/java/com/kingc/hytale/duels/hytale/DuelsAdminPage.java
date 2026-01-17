@@ -241,26 +241,8 @@ public final class DuelsAdminPage extends InteractiveCustomUIPage<DuelsAdminPage
         events.addEventBinding(CustomUIEventBindingType.Activating, "#ArenaSetSpawn2Button",
             EventData.of(AdminEventData.KEY_ACTION, "arena_setspawn2"));
 
-        // Bind kit selection
-        for (KitDefinition kit : plugin.core().kitService().getAllKits()) {
-            events.addEventBinding(CustomUIEventBindingType.Activating, "#Kit_" + kit.id(),
-                EventData.of(AdminEventData.KEY_ACTION, "kit_select")
-                    .append(AdminEventData.KEY_KIT_ID, kit.id()));
-        }
-
-        // Bind arena selection
-        for (Arena arena : plugin.core().arenaService().getAllArenas()) {
-            events.addEventBinding(CustomUIEventBindingType.Activating, "#Arena_" + arena.id(),
-                EventData.of(AdminEventData.KEY_ACTION, "arena_select")
-                    .append(AdminEventData.KEY_ARENA_ID, arena.id()));
-        }
-
-        // Bind match end buttons
-        for (Match match : getActiveMatches()) {
-            events.addEventBinding(CustomUIEventBindingType.Activating, "#EndMatch_" + match.id(),
-                EventData.of(AdminEventData.KEY_ACTION, "match_end")
-                    .append(AdminEventData.KEY_MATCH_ID, match.id()));
-        }
+        // Note: Dynamic list selection removed - use commands instead
+        // /kit save <name>, /kit delete <name>, etc.
     }
 
     private void bindNavigation(UIEventBuilder events) {
