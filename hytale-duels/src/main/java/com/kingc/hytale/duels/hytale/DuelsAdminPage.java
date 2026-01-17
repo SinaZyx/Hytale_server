@@ -213,36 +213,8 @@ public final class DuelsAdminPage extends InteractiveCustomUIPage<DuelsAdminPage
 
     private void bindActions(UIEventBuilder events) {
         bindNavigation(events);
-
-        // Kit actions
-        events.addEventBinding(CustomUIEventBindingType.Activating, "#KitCreateButton",
-            EventData.of(AdminEventData.KEY_ACTION, "kit_create")
-                .append(AdminEventData.KEY_KIT_NAME, "#NewKitIdInput.Value"));
-
-        events.addEventBinding(CustomUIEventBindingType.Activating, "#KitDeleteButton",
-            EventData.of(AdminEventData.KEY_ACTION, "kit_delete"));
-
-        events.addEventBinding(CustomUIEventBindingType.Activating, "#KitSaveButton",
-            EventData.of(AdminEventData.KEY_ACTION, "kit_save")
-                .append(AdminEventData.KEY_KIT_NAME, "#KitNameInput.Value")
-                .append(AdminEventData.KEY_KIT_ICON, "#KitIconInput.Value"));
-
-        // Arena actions
-        events.addEventBinding(CustomUIEventBindingType.Activating, "#ArenaCreateButton",
-            EventData.of(AdminEventData.KEY_ACTION, "arena_create")
-                .append(AdminEventData.KEY_ARENA_NAME, "#NewArenaIdInput.Value"));
-
-        events.addEventBinding(CustomUIEventBindingType.Activating, "#ArenaDeleteButton",
-            EventData.of(AdminEventData.KEY_ACTION, "arena_delete"));
-
-        events.addEventBinding(CustomUIEventBindingType.Activating, "#ArenaSetSpawn1Button",
-            EventData.of(AdminEventData.KEY_ACTION, "arena_setspawn1"));
-
-        events.addEventBinding(CustomUIEventBindingType.Activating, "#ArenaSetSpawn2Button",
-            EventData.of(AdminEventData.KEY_ACTION, "arena_setspawn2"));
-
-        // Note: Dynamic list selection removed - use commands instead
-        // /kit save <name>, /kit delete <name>, etc.
+        // Note: Input fields removed from simplified UI
+        // Use commands instead: /kit save <name>, /kit delete <name>, etc.
     }
 
     private void bindNavigation(UIEventBuilder events) {
