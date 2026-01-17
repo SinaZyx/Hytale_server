@@ -31,6 +31,14 @@ public final class Match {
         return id;
     }
 
+    public String matchId() {
+        return id;
+    }
+
+    public long startedAt() {
+        return startedAt;
+    }
+
     public String arenaId() {
         return arenaId;
     }

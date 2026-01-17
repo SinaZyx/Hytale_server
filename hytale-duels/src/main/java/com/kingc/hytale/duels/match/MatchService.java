@@ -19,6 +19,8 @@ import java.util.function.LongSupplier;
 
 public final class MatchService {
     private static final long REQUEST_COOLDOWN_MS = 5_000;
+    private static final long MATCH_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
+    private static final long WARNING_TIME_MS = 4 * 60 * 1000;  // 4 minutes (1 min before end)
 
     private final ServerAdapter server;
     private final ArenaService arenaService;
@@ -31,6 +33,14 @@ public final class MatchService {
     private final Map<String, Match> activeMatches = new ConcurrentHashMap<>();
     private final Map<UUID, String> playerToMatch = new ConcurrentHashMap<>();
     private final AtomicInteger matchIdCounter = new AtomicInteger(1);
+    private final java.util.Set<String> warnedMatches = ConcurrentHashMap.newKeySet();
+
+    private final java.util.concurrent.ScheduledExecutorService timeoutScheduler = 
+        java.util.concurrent.Executors.newSingleThreadScheduledExecutor(r -> {
+            Thread t = new Thread(r, "Duels-MatchTimer");
+            t.setDaemon(true);
+            return t;
+        });
 
     public MatchService(ServerAdapter server, ArenaService arenaService, KitService kitService,
                         RankingService rankingService, LongSupplier clock) {
@@ -39,6 +49,9 @@ public final class MatchService {
         this.kitService = kitService;
         this.rankingService = rankingService;
         this.clock = clock;
+        
+        // Start the timeout checker (every 5 seconds)
+        timeoutScheduler.scheduleAtFixedRate(this::checkMatchTimeouts, 5, 5, java.util.concurrent.TimeUnit.SECONDS);
     }
 
     public Result sendDuelRequest(UUID senderId, UUID targetId, String kitId) {
@@ -252,6 +265,52 @@ public final class MatchService {
     private void cleanupExpiredRequests() {
         long now = clock.getAsLong();
         pendingRequests.entrySet().removeIf(entry -> entry.getValue().isExpired(now));
+    }
+
+    private void checkMatchTimeouts() {
+        long now = clock.getAsLong();
+        
+        for (Match match : activeMatches.values()) {
+            if (match.state() != MatchState.RUNNING) continue;
+            
+            long elapsed = now - match.startedAt();
+            
+            // 1-minute warning
+            if (elapsed >= WARNING_TIME_MS && !warnedMatches.contains(match.matchId())) {
+                warnedMatches.add(match.matchId());
+                for (UUID playerId : match.allPlayers()) {
+                    server.getPlayer(playerId).ifPresent(p -> 
+                        p.sendMessage("[Duels] ⚠ 1 minute restante!")
+                    );
+                }
+            }
+            
+            // Timeout - end as draw
+            if (elapsed >= MATCH_TIMEOUT_MS) {
+                endMatchAsDraw(match.matchId());
+            }
+        }
+    }
+
+    private void endMatchAsDraw(String matchId) {
+        Match match = activeMatches.remove(matchId);
+        if (match == null) return;
+        
+        warnedMatches.remove(matchId);
+        
+        for (UUID playerId : match.allPlayers()) {
+            playerToMatch.remove(playerId);
+            server.getPlayer(playerId).ifPresent(p -> 
+                p.sendMessage("[Duels] ⏱ Temps ecoule! Match nul.")
+            );
+        }
+        
+        arenaService.releaseArena(match.arenaId());
+        // No ELO change for draw
+    }
+
+    public void shutdown() {
+        timeoutScheduler.shutdownNow();
     }
 
     public record Result(boolean success, String message) {
