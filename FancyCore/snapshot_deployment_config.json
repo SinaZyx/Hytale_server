@@ -1,0 +1,31 @@
+{
+  "project_name": "FancyCore",
+  "plugin_jar_path": "/plugins/fancycore/build/libs/FancyCore-%VERSION%.jar",
+  "changelog_path": "/plugins/fancycore/CHANGELOG-SNAPSHOT.md",
+  "version_path": "/plugins/fancycore/VERSION",
+  "fancyspaces": {
+    "space_id": "fc",
+    "platform": "hytale_plugin",
+    "channel": "alpha",
+    "supported_versions": [ "2026.01.13-50e69c385" ]
+  },
+  "orbis": {
+    "resource_id": "cmj49s5lm000a01s6az79izy3",
+    "channel": "ALPHA",
+    "compatible_hytale_version_ids": [ "cmj1x42ef001k4qz9r03ojrpe" ]
+  },
+  "modtale": {
+    "project_id": "4ab11727-c0b4-4c76-bb03-a86d781ec24b",
+    "channel": "ALPHA",
+    "game_versions": [ "2026.01.13-50e69c385" ]
+  },
+  "unifiedhytale": {
+    "project_id": "bdf8f934-3fa6-4101-a666-86b77adcbb25",
+    "game_versions": [ "2026.01.13-50e69c385" ],
+    "release_channel": "alpha"
+  },
+  "hytahub": {
+    "slug": "fancycore",
+    "channel": "alpha"
+  }
+}

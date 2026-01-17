@@ -1,0 +1,20 @@
+{
+  "Group": "FancyInnovations",
+  "Name": "FancyCore",
+  "Version": "$version",
+  "Description": "Essential features every Hytale server needs. From permission management over world management to economy and more.",
+  "Website": "https://fancyinnovations.com/docs/hytale-plugins/fancycore",
+  "Main": "com.fancyinnovations.fancycore.main.FancyCorePlugin",
+  "IncludesAssetPack": true,
+  "ServerVersion": "*",
+  "Dependencies": {
+    "Hytale:I18nModule": "*"
+  },
+  "Authors": [
+    {
+      "Name": "Oliver Schlueter",
+      "Email": "oliver@fancyinnovations.com",
+      "Url": "https://fancyinnovations.com"
+    }
+  ]
+}

@@ -1,0 +1,97 @@
+package com.fancyinnovations.fancycore.api;
+
+import com.fancyinnovations.fancycore.api.chat.ChatService;
+import com.fancyinnovations.fancycore.api.chat.ChatStorage;
+import com.fancyinnovations.fancycore.api.economy.CurrencyService;
+import com.fancyinnovations.fancycore.api.economy.CurrencyStorage;
+import com.fancyinnovations.fancycore.api.events.service.EventService;
+import com.fancyinnovations.fancycore.api.inventory.BackpacksService;
+import com.fancyinnovations.fancycore.api.inventory.BackpacksStorage;
+import com.fancyinnovations.fancycore.api.inventory.KitsService;
+import com.fancyinnovations.fancycore.api.inventory.KitsStorage;
+import com.fancyinnovations.fancycore.api.moderation.PunishmentService;
+import com.fancyinnovations.fancycore.api.moderation.PunishmentStorage;
+import com.fancyinnovations.fancycore.api.permissions.PermissionService;
+import com.fancyinnovations.fancycore.api.permissions.PermissionStorage;
+import com.fancyinnovations.fancycore.api.placeholders.PlaceholderService;
+import com.fancyinnovations.fancycore.api.player.FancyPlayerService;
+import com.fancyinnovations.fancycore.api.player.FancyPlayerStorage;
+import com.fancyinnovations.fancycore.api.teleport.*;
+import de.oliver.fancyanalytics.logger.ExtendedFancyLogger;
+import org.jetbrains.annotations.ApiStatus;
+
+import java.util.concurrent.ScheduledExecutorService;
+
+public interface FancyCore {
+
+    static FancyCore get() {
+        return InstanceHolder.getInstance();
+    }
+
+    ExtendedFancyLogger getFancyLogger();
+
+    FancyCoreConfig getConfig();
+
+    ScheduledExecutorService getThreadPool();
+
+    EventService getEventService();
+
+    PlaceholderService getPlaceholderService();
+
+    @ApiStatus.Internal
+    FancyPlayerStorage getPlayerStorage();
+    FancyPlayerService getPlayerService();
+
+    @ApiStatus.Internal
+    PunishmentStorage getPunishmentStorage();
+    PunishmentService getPunishmentService();
+
+    @ApiStatus.Internal
+    CurrencyStorage getCurrencyStorage();
+    CurrencyService getCurrencyService();
+
+    @ApiStatus.Internal
+    PermissionStorage getPermissionStorage();
+    PermissionService getPermissionService();
+
+    @ApiStatus.Internal
+    ChatStorage getChatStorage();
+    ChatService getChatService();
+
+    TeleportRequestService getTeleportRequestService();
+
+    @ApiStatus.Internal
+    SpawnStorage getSpawnStorage();
+    SpawnService getSpawnService();
+
+    @ApiStatus.Internal
+    WarpStorage getWarpStorage();
+    WarpService getWarpService();
+
+    @ApiStatus.Internal
+    KitsStorage getKitsStorage();
+    KitsService getKitsService();
+
+    @ApiStatus.Internal
+    BackpacksStorage getBackpacksStorage();
+    BackpacksService getBackpacksService();
+
+    @ApiStatus.Internal
+    class InstanceHolder {
+        private static FancyCore instance;
+
+        @ApiStatus.Internal
+        public static FancyCore getInstance() {
+            return instance;
+        }
+
+        @ApiStatus.Internal
+        public static void setInstance(FancyCore fancyCore) {
+            if (instance != null) {
+                throw new IllegalStateException("FancyCore instance is already set!");
+            }
+
+            instance = fancyCore;
+        }
+    }
+}

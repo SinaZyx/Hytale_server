@@ -1,0 +1,108 @@
+package com.fancyinnovations.fancycore.api.player;
+
+import com.fancyinnovations.fancycore.api.chat.ChatRoom;
+import com.fancyinnovations.fancycore.api.moderation.Punishment;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
+import org.jetbrains.annotations.ApiStatus;
+import org.jetbrains.annotations.Nullable;
+
+/**
+ * Wrapper around the actual Player object from the Hytale API.
+ * This interface provides methods to interact with the player.
+ */
+public interface FancyPlayer {
+
+    /**
+     * Gets the player's data.
+     *
+     * @return the player's data.
+     */
+    FancyPlayerData getData();
+
+    /**
+     * Gets the actual player object from the Hytale API.
+     *
+     * @return the player object, or null if the player is offline.
+     */
+    @Nullable PlayerRef getPlayer();
+
+    /**
+     * Sets the actual player object from the Hytale API.
+     *
+     * @param player the player object.
+     */
+    @ApiStatus.Internal
+    void setPlayer(PlayerRef player);
+
+    /**
+     * Checks if the player has the specified permission (checks player permissions and group permissions).
+     *
+     * @param permission the permission to check.
+     * @return true if the player has the permission, false otherwise.
+     */
+    boolean checkPermission(String permission);
+
+    /**
+     * Checks if the player is in the specified group.
+     *
+     * @param group the group UUID to check.
+     * @return true if the player is in the group, false otherwise.
+     */
+    boolean isInGroup(String group);
+
+    /**
+     * Checks if the player is currently muted.
+     *
+     * @return the mute punishment if the player is muted, null otherwise.
+     */
+    Punishment isMuted();
+
+    /**
+     * Checks if the player is currently banned.
+     *
+     * @return the ban punishment if the player is banned, null otherwise.
+     */
+    Punishment isBanned();
+
+    /**
+     * Checks if the player is currently online.
+     *
+     * @return true if the player is online, false otherwise.
+     */
+    boolean isOnline();
+
+    /**
+     * Sends a message to the player.
+     *
+     * @param message the message to send.
+     */
+    void sendMessage(String message);
+
+    /**
+     * Gets the current chat room of the player.
+     *
+     * @return the current chat room.
+     */
+    ChatRoom getCurrentChatRoom();
+
+    /**
+     * Switches the player to a different chat room.
+     *
+     * @param room the chat room to switch to.
+     */
+    void switchChatRoom(ChatRoom room);
+
+    /**
+     * Gets the player to whom this player last replied.
+     *
+     * @return the player to whom this player last replied.
+     */
+    FancyPlayer getReplyTo();
+
+    /**
+     * Sets the player to whom this player last replied.
+     *
+     * @param player the player to whom this player last replied.
+     */
+    void setReplyTo(FancyPlayer player);
+}
