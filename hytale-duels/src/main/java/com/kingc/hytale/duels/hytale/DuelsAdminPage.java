@@ -146,9 +146,7 @@ public final class DuelsAdminPage extends InteractiveCustomUIPage<DuelsAdminPage
             String color = isSelected ? "#4fc3f7" : "#d7e0e8";
             String itemCount = kit.items() != null ? String.valueOf(kit.items().size()) : "0";
             String line = kit.displayName() + " (" + kit.id() + ") - " + itemCount + " items";
-            String entry = "Button { Name: \"Kit_" + escapeUiText(kit.id()) + "\"; "
-                + "Children: [ Label { Text: \"" + escapeUiText(line) + "\"; Style: (FontSize: 13, TextColor: " + color + "); } ]; "
-                + "Style: (BackgroundColor: #2a2a2a, Padding: 8); Anchor: (Bottom: 4); }";
+            String entry = "Label { Text: \"" + escapeUiText(line) + "\"; Style: (FontSize: 13, TextColor: " + color + "); Anchor: (Bottom: 6); }";
             commands.appendInline("#KitsList", entry);
         }
 
@@ -174,13 +172,10 @@ public final class DuelsAdminPage extends InteractiveCustomUIPage<DuelsAdminPage
         for (Arena arena : arenas) {
             boolean isSelected = arena.id().equals(selectedArena);
             boolean available = plugin.core().arenaService().isArenaAvailable(arena.id());
-            String statusColor = available ? "#4caf50" : "#f44336";
             String textColor = isSelected ? "#4fc3f7" : "#d7e0e8";
             String status = available ? "Libre" : "Occupee";
             String line = arena.displayName() + " (" + arena.id() + ") - " + status + " - Max: " + arena.maxPlayers();
-            String entry = "Button { Name: \"Arena_" + escapeUiText(arena.id()) + "\"; "
-                + "Children: [ Label { Text: \"" + escapeUiText(line) + "\"; Style: (FontSize: 13, TextColor: " + textColor + "); } ]; "
-                + "Style: (BackgroundColor: #2a2a2a, Padding: 8); Anchor: (Bottom: 4); }";
+            String entry = "Label { Text: \"" + escapeUiText(line) + "\"; Style: (FontSize: 13, TextColor: " + textColor + "); Anchor: (Bottom: 6); }";
             commands.appendInline("#ArenasList", entry);
         }
 
@@ -208,14 +203,10 @@ public final class DuelsAdminPage extends InteractiveCustomUIPage<DuelsAdminPage
         }
 
         for (Match match : matches) {
-            String stateColor = match.state() == MatchState.RUNNING ? "#4caf50" : "#ff9800";
             String team1Names = getPlayerNames(match.team1());
             String team2Names = getPlayerNames(match.team2());
             String line = match.id() + " | " + match.type().name() + " | " + team1Names + " vs " + team2Names;
-            String entry = "HorizontalLayout { Style: (BackgroundColor: #2a2a2a, Padding: 8); Anchor: (Bottom: 4); Children: [ "
-                + "Label { Text: \"" + escapeUiText(line) + "\"; Style: (FontSize: 12, TextColor: #d7e0e8); Anchor: (Right: 10); } "
-                + "Button { Name: \"EndMatch_" + escapeUiText(match.id()) + "\"; Children: [ Label { Text: \"Terminer\"; Style: (FontSize: 11, TextColor: #f44336); } ]; } "
-                + "]; }";
+            String entry = "Label { Text: \"" + escapeUiText(line) + "\"; Style: (FontSize: 12, TextColor: #d7e0e8); Anchor: (Bottom: 6); }";
             commands.appendInline("#MatchesList", entry);
         }
     }

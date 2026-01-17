@@ -154,12 +154,8 @@ public final class RankingMenuPage extends InteractiveCustomUIPage<RankingMenuPa
                 default -> stats.elo() + " ELO";
             };
 
-            String entry = "HorizontalLayout { Style: (BackgroundColor: " + bgColor + ", Padding: 8); Anchor: (Bottom: 2); Children: [ "
-                + "Label { Text: \"" + positionStr + "\"; Style: (FontSize: 12, TextColor: #9aa7b0, Width: 60); } "
-                + "Label { Text: \"" + escapeUiText(stats.playerName()) + "\"; Style: (FontSize: 13, TextColor: " + textColor + ", Width: 150); } "
-                + "Label { Text: \"" + rank.displayName() + "\"; Style: (FontSize: 11, TextColor: " + rank.color() + ", Width: 100); } "
-                + "Label { Text: \"" + statValue + "\"; Style: (FontSize: 12, TextColor: #d7e0e8, Alignment: Right); } "
-                + "]; }";
+            String line = positionStr + " | " + escapeUiText(stats.playerName()) + " | " + rank.displayName() + " | " + statValue;
+            String entry = "Label { Text: \"" + line + "\"; Style: (FontSize: 12, TextColor: " + textColor + "); Anchor: (Bottom: 6); }";
 
             commands.appendInline("#LeaderboardList", entry);
             position++;
@@ -189,17 +185,17 @@ public final class RankingMenuPage extends InteractiveCustomUIPage<RankingMenuPa
         commands.set("#StatBestStreak.TextSpans", Message.raw(String.valueOf(stats.bestWinStreak())));
         commands.set("#StatTotalMatches.TextSpans", Message.raw(String.valueOf(stats.totalMatches())));
 
-        // Progression vers le rang suivant
+        // Progression vers le rang suivant (barre de 400px max)
         if (rank != Rank.CHAMPION) {
             int eloNeeded = nextRank.minElo() - stats.elo();
-            int progress = (int) (((double)(stats.elo() - rank.minElo()) / (nextRank.minElo() - rank.minElo())) * 100);
+            int progress = (int) (((double)(stats.elo() - rank.minElo()) / (nextRank.minElo() - rank.minElo())) * 400);
             commands.set("#NextRankName.TextSpans", Message.raw(nextRank.displayName()));
             commands.set("#NextRankElo.TextSpans", Message.raw("+" + eloNeeded + " ELO"));
-            commands.set("#ProgressBar.Width", Math.max(5, progress) + "%");
+            commands.set("#ProgressBar.Anchor", "(Height: 8, Width: " + Math.max(10, progress) + ")");
         } else {
             commands.set("#NextRankName.TextSpans", Message.raw("Rang maximum!"));
             commands.set("#NextRankElo.TextSpans", Message.raw(""));
-            commands.set("#ProgressBar.Width", "100%");
+            commands.set("#ProgressBar.Anchor", "(Height: 8, Width: 400)");
         }
     }
 
@@ -214,11 +210,8 @@ public final class RankingMenuPage extends InteractiveCustomUIPage<RankingMenuPa
                 rank.minElo() + "+" :
                 rank.minElo() + " - " + rank.maxElo();
 
-            String entry = "HorizontalLayout { Style: (BackgroundColor: #2a2a2a, Padding: 6); Anchor: (Bottom: 2); Children: [ "
-                + "Label { Text: \"" + rank.displayName() + "\"; Style: (FontSize: 13, TextColor: " + rank.color() + ", Width: 120); } "
-                + "Label { Text: \"" + eloRange + " ELO\"; Style: (FontSize: 11, TextColor: #9aa7b0, Width: 120); } "
-                + "Label { Text: \"" + playersInRank + " joueurs\"; Style: (FontSize: 11, TextColor: #6c7a89, Alignment: Right); } "
-                + "]; }";
+            String line = rank.displayName() + " | " + eloRange + " ELO | " + playersInRank + " joueurs";
+            String entry = "Label { Text: \"" + line + "\"; Style: (FontSize: 12, TextColor: " + rank.color() + "); Anchor: (Bottom: 6); }";
 
             commands.appendInline("#RanksList", entry);
         }

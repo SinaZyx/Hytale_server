@@ -14,7 +14,6 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 public final class HelpMenuPage extends InteractiveCustomUIPage<HelpMenuPage.HelpEventData> {
-    // Same path format as faction plugin
     private static final String PAGE_UI = "Pages/HelpMenu.ui";
 
     private final HytaleDuelsPlugin plugin;
