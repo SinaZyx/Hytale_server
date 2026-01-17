@@ -46,3 +46,14 @@ bin/
 .DS_Store
 
 hytale-src/
+
+### Modified Configuration Files ###
+settings.gradle.kts
+build.gradle.kts
+fc-api/build.gradle.kts
+buildSrc/build.gradle.kts
+libraries/ui-helper/build.gradle.kts
+
+### JDK Download ###
+jdk25/
+*.zip

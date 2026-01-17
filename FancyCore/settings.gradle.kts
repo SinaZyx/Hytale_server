@@ -1,7 +1,5 @@
-rootProject.name = "hytale-plugins"
+rootProject.name = "FancyCore"
 
-include(":plugins:fancycore")
-include(":plugins:fancycore:fc-api")
-
-include(":libraries:version-checker")
-include(":libraries:ui-helper")
+include("fc-api")
+include("libraries:version-checker")
+include("libraries:ui-helper")

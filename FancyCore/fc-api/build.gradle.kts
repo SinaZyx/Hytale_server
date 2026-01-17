@@ -1,11 +1,11 @@
 plugins {
     id("java-library")
     id("maven-publish")
-    id("com.gradleup.shadow")
+    id("com.gradleup.shadow") version "8.3.0"
 }
 
 dependencies {
-    compileOnly(files("../../../libraries/hytale-server/HytaleServer.jar")) // TODO (HTEA): update to maven repo when available
+    compileOnly(files("C:/Users/fores/AppData/Roaming/Hytale/install/release/package/game/latest/Server/HytaleServer.jar")) // TODO (HTEA): update to maven repo when available
 
     compileOnly("de.oliver.FancyAnalytics:logger:0.0.9")
     compileOnly("org.jetbrains:annotations:26.0.2-1")

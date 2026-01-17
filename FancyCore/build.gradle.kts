@@ -3,7 +3,7 @@ import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
 plugins {
     id("java-library")
     id("maven-publish")
-    id("com.gradleup.shadow")
+    id("com.gradleup.shadow") version "8.3.0"
 }
 
 allprojects {
@@ -22,9 +22,9 @@ allprojects {
 dependencies {
     // TODO (HTEA): Update dependency when available
 //    compileOnly("com.hypixel.hytale:HytaleServer-parent:1.0-SNAPSHOT")
-    compileOnly(files("../../libraries/hytale-server/HytaleServer.jar"))
+    compileOnly(files("C:/Users/fores/AppData/Roaming/Hytale/install/release/package/game/latest/Server/HytaleServer.jar"))
 
-    implementation(project(":plugins:fancycore:fc-api"))
+    implementation(project(":fc-api"))
 
     implementation(project(":libraries:version-checker"))
     implementation(project(":libraries:ui-helper"))
@@ -73,11 +73,11 @@ tasks.register<JavaExec>("runServer") {
 
 //    jvmArgs("-XX:AOTCache=HytaleServer.aot")
 
-    javaLauncher.set(
-        javaToolchains.launcherFor {
-            languageVersion.set(JavaLanguageVersion.of(25))
-        }
-    )
+//    javaLauncher.set(
+//        javaToolchains.launcherFor {
+//            languageVersion.set(JavaLanguageVersion.of(25))
+//        }
+//    )
 
     standardInput = System.`in`
 }
@@ -87,7 +87,7 @@ tasks {
         archiveBaseName.set("FancyCore")
         archiveClassifier.set("")
 
-        dependsOn(":plugins:fancycore:fc-api:shadowJar")
+        dependsOn(":fc-api:shadowJar")
     }
 
     compileJava {
@@ -121,7 +121,7 @@ tasks {
 }
 
 java {
-    toolchain.languageVersion.set(JavaLanguageVersion.of(25))
+    // toolchain.languageVersion.set(JavaLanguageVersion.of(25))
 }
 
 val gitCommitHash: Provider<String> = providers.exec {

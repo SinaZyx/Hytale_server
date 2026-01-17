@@ -4,7 +4,7 @@ plugins {
 }
 
 dependencies {
-    compileOnly(files("../hytale-server/HytaleServer.jar"))
+    compileOnly(files("C:/Users/fores/AppData/Roaming/Hytale/install/release/package/game/latest/Server/HytaleServer.jar"))
 
     compileOnly("de.oliver.FancyAnalytics:logger:0.0.9")
     implementation("de.oliver.FancyAnalytics:java-sdk:0.0.5")

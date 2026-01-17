@@ -17,13 +17,13 @@ repositories {
 }
 
 java {
-    toolchain {
-        languageVersion.set(JavaLanguageVersion.of(25))
-    }
+//    toolchain {
+//        languageVersion.set(JavaLanguageVersion.of(25))
+//    }
 }
 
 kotlin {
-    jvmToolchain(25)
+//    jvmToolchain(25)
 }
 
 tasks.withType<org.jetbrains.kotlin.gradle.tasks.KotlinCompile> {
