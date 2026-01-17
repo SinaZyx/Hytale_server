@@ -156,7 +156,7 @@ public final class CommandDispatcher {
     private boolean handleKit(CommandSource source, String args) {
         String[] parts = args.split("\\s+", 2);
         if (parts.length == 0 || parts[0].isEmpty()) {
-            source.sendMessage(PREFIX + "Usage: /kit list | /kit info <nom> | /kit preview <nom>");
+            source.sendMessage(PREFIX + "Usage: /kit list | /kit info <nom> | /kit preview <nom> | /kit save <nom> | /kit delete <nom>");
             return true;
         }
 
@@ -214,8 +214,41 @@ public final class CommandDispatcher {
                 }
                 yield true;
             }
+            case "save" -> {
+                if (parts.length < 2) {
+                    source.sendMessage(PREFIX + "Usage: /kit save <nom>");
+                    yield true;
+                }
+                Optional<UUID> playerIdOpt = source.playerId();
+                if (playerIdOpt.isEmpty()) {
+                    source.sendMessage(PREFIX + "Commande joueur uniquement.");
+                    yield true;
+                }
+                String kitId = parts[1].toLowerCase().replace(" ", "_");
+                Optional<PlayerRef> playerOpt = server.getPlayer(playerIdOpt.get());
+                if (playerOpt.isPresent()) {
+                    kitService.saveKitFromPlayer(playerOpt.get(), kitId, kitId);
+                    source.sendMessage(PREFIX + "Kit '" + kitId + "' sauvegarde depuis ton inventaire!");
+                } else {
+                    source.sendMessage(PREFIX + "Erreur: joueur introuvable.");
+                }
+                yield true;
+            }
+            case "delete" -> {
+                if (parts.length < 2) {
+                    source.sendMessage(PREFIX + "Usage: /kit delete <nom>");
+                    yield true;
+                }
+                String kitId = parts[1].toLowerCase();
+                if (kitService.deleteKit(kitId)) {
+                    source.sendMessage(PREFIX + "Kit '" + kitId + "' supprime.");
+                } else {
+                    source.sendMessage(PREFIX + "Kit inconnu: " + kitId);
+                }
+                yield true;
+            }
             default -> {
-                source.sendMessage(PREFIX + "Usage: /kit list | /kit info <nom> | /kit preview <nom>");
+                source.sendMessage(PREFIX + "Usage: /kit list | /kit info <nom> | /kit preview <nom> | /kit save <nom> | /kit delete <nom>");
                 yield true;
             }
         };

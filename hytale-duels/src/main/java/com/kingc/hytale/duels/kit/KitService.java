@@ -55,6 +55,24 @@ public final class KitService {
         }
     }
 
+    /**
+     * Saves the player's current inventory and armor as a new kit.
+     */
+    public void saveKitFromPlayer(PlayerRef player, String kitId, String displayName) {
+        var inventoryItems = server.getInventory(player);
+        var armorSlots = server.getArmor(player); // [helmet, chestplate, leggings, boots]
+
+        var builder = KitDefinition.builder(kitId)
+            .displayName(displayName)
+            .items(inventoryItems);
+
+        if (armorSlots != null && armorSlots.length >= 4) {
+            builder.armor(armorSlots[0], armorSlots[1], armorSlots[2], armorSlots[3]);
+        }
+
+        repository.add(builder.build());
+    }
+
     public void save() throws IOException {
         repository.save();
     }

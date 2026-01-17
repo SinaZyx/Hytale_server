@@ -12,4 +12,8 @@ public interface ServerAdapter {
     void clearInventory(PlayerRef player);
     void applyEffect(PlayerRef player, String effectType, int amplifier, int durationTicks);
     void clearEffects(PlayerRef player);
+
+    // Reading methods for Kit saving
+    java.util.List<ItemStack> getInventory(PlayerRef player);
+    ItemStack[] getArmor(PlayerRef player); // [helmet, chestplate, leggings, boots]
 }

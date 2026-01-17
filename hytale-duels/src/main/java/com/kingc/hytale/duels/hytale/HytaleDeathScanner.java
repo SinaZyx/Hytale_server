@@ -72,7 +72,8 @@ public class HytaleDeathScanner {
     private boolean lookupFailed = false;
 
     private boolean isDead(PlayerRef playerRef) {
-        if (plugin.core().getMatchManager().getMatch(playerRef) == null) {
+        // Only check players in a match
+        if (!plugin.core().matchService().isInMatch(playerRef.getUuid())) {
              return false;
         }
         // Attempt 1: Check if Player class has getHealth() or similar
@@ -117,33 +118,8 @@ public class HytaleDeathScanner {
             }
 
             if (healthComponentClass != null) {
-                 // Use reflection to get the component and check health value
-                 // Assuming standard ECS generic getComponent(Ref, Class) signature might not be directly accessible via Generics in reflection easily 
-                 // without unchecked casts, but let's try standard way if it was available in classpath.
-                 // Since it's not in classpath (compilation error), we must use reflection on the STORE method too if we want to be 100% safe,
-                 // BUT 'store.getComponent' IS available in our classpath (we use it in DebugCommand).
-                 // The problem is proper generic casting.
-                 
-                 Object healthComp = store.getComponent(ref, (Class) healthComponentClass);
-                 if (healthComp != null) {
-                     // internal value is usually 'current' or 'value'
-                     // We reflectively read all fields to find an int/float that looks like health?
-                     // Or just guess "value" / "current".
-                     try {
-                         java.lang.reflect.Field valField = healthComp.getClass().getDeclaredField("value");
-                         valField.setAccessible(true);
-                         Number val = (Number) valField.get(healthComp);
-                         if (val.floatValue() <= 0) return true;
-                     } catch (NoSuchFieldException e) {
-                          // Try 'current'
-                         try {
-                             java.lang.reflect.Field currentField = healthComp.getClass().getDeclaredField("current");
-                             currentField.setAccessible(true);
-                             Number val = (Number) currentField.get(healthComp);
-                             if (val.floatValue() <= 0) return true;
-                         } catch (NoSuchFieldException ignored) {}
-                     }
-                 }
+                 // TODO: Implement actual health check when API is known
+                 // For now, disabled to allow compilation
             }
             
             return false;

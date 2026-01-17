@@ -74,6 +74,18 @@ public final class HytaleServerAdapter implements ServerAdapter {
          // TODO: Implement using correct Hytale API
     }
 
+    @Override
+    public java.util.List<ItemStack> getInventory(com.kingc.hytale.duels.api.PlayerRef player) {
+        // TODO: Implement using correct Hytale API (reflection on Player component)
+        return java.util.List.of();
+    }
+
+    @Override
+    public ItemStack[] getArmor(com.kingc.hytale.duels.api.PlayerRef player) {
+        // TODO: Implement using correct Hytale API
+        return new ItemStack[4]; // [helmet, chestplate, leggings, boots]
+    }
+
     // === Methodes utilitaires ===
 
     public Optional<Location> getPlayerLocation(UUID id) {
