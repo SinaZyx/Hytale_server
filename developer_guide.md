@@ -354,7 +354,36 @@ Quelques classes utiles repérées :
 
 ---
 
-## 9. Checklist pour Développeur "Native"
+## 10. Formatage et Couleurs
+
+### API Native (Message Builder)
+Hytale n'utilise pas de "ChatColor" comme Minecraft, mais un système de composants (JSON-like) avec support Hexadécimal natif.
+
+```java
+import com.hypixel.hytale.server.core.Message;
+
+// Texte Rouge
+Message msg = Message.raw("Attention !").color("#FF0000");
+
+// Texte Gras et Italique
+Message style = Message.raw("Important").bold(true).italic(true);
+
+// Combinaison
+Message full = Message.join(msg, Message.raw(" "), style);
+player.sendMessage(full);
+```
+
+### Avec FancyCore (Legacy Codes)
+Si vous utilisez FancyCore, il convertit automatiquement les anciens codes couleurs (`&a`, `&6`, `&l`) en composants Hytale.
+
+```java
+// FancyCoreUtils est un exemple fictif, voir ColorUtils dans le code de FancyCore
+player.sendMessage(ColorUtils.colour("&aCeci est vert et &lGras !"));
+```
+
+---
+
+## 11. Checklist pour Développeur "Native"
 
 Si vous créez un plugin sans FancyCore :
 1.  [ ] Créer un projet Gradle avec `HytaleServer.jar` en dépendance (`compileOnly`).
