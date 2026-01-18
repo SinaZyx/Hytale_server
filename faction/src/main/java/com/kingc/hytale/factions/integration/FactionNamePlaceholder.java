@@ -35,6 +35,6 @@ public class FactionNamePlaceholder implements PlaceholderProvider {
         }
 
         Optional<Faction> factionOpt = plugin.core().service().findFactionByMember(playerId);
-        return factionOpt.map(Faction::name).orElse("");
+        return factionOpt.map(f -> "&a[" + f.name() + "]&r ").orElse("");
     }
 }

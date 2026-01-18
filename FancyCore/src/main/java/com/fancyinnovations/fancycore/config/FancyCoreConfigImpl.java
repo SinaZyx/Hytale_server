@@ -80,7 +80,7 @@ public class FancyCoreConfigImpl implements FancyCoreConfig {
                         CHAT_FORMAT_PATH,
                         "The default chat format for messages.",
                         false,
-                        "&6[&e%chat_room%&6]&r %player_group_prefix% %player_nickname%&7: &r%message%",
+                        "&6[&e%chat_room%&6]&r %faction_name%%player_group_prefix% %player_nickname%&7: &r%message%",
                         false,
                         String.class
                 )
