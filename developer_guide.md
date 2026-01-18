@@ -187,15 +187,116 @@ if (PermissionsModule.get().hasPermission(playerUUID, "monplugin.admin")) {
 
 ---
 
-## 5. Inventaires & Items
+## 5. Interface Utilisateur (GUI / Menus)
 
-Les imports révèlent une gestion d'inventaire native.
-- **ItemStack** : `com.hypixel.hytale.server.core.inventory.ItemStack`
-- **Container** : `com.hypixel.hytale.server.core.inventory.container.ItemContainer`
+Hytale permet de créer des interfaces dynamiques via HTML/CSS (fichier `.ui`) et de les contrôler via Java.
+
+### Créer une Page Interactive
+Il faut étendre `InteractiveCustomUIPage`.
+
+```java
+import com.hypixel.hytale.server.core.entity.entities.player.pages.InteractiveCustomUIPage;
+import com.hypixel.hytale.server.core.ui.builder.UICommandBuilder;
+import com.hypixel.hytale.server.core.ui.builder.UIEventBuilder;
+
+// InteractiveCustomUIPage<VotreDataType>
+public class MonMenu extends InteractiveCustomUIPage<MonMenuData> {
+
+    public MonMenu(PlayerRef player, BuilderCodec<MonMenuData> codec) {
+        super(player, CustomPageLifetime.CanDismiss, codec);
+    }
+
+    @Override
+    public void build(Ref<EntityStore> ref, UICommandBuilder cmd, UIEventBuilder event, Store<EntityStore> store) {
+        // Construction de l'UI
+        // Charger le fichier .ui
+        // cmd.page("Pages/MonMenu.ui");
+        
+        // Modifier un text
+        // cmd.text("#Titre", "Bienvenue sur le menu");
+        
+        // Ajouter un event click
+        // event.onClick("#BoutonStart", "action:start_game");
+    }
+
+    @Override
+    public void handleDataEvent(Ref<EntityStore> ref, Store<EntityStore> store, MonMenuData data) {
+        super.handleDataEvent(ref, store, data);
+        
+        // Réagir aux clics
+        // if (data.getAction().equals("start_game")) { ... }
+    }
+}
+```
+
+### Ouvrir le Menu
+```java
+// Récupérer le composant Player de l'entité
+Player playerEntity = store.getComponent(ref, Player.getComponentType());
+playerEntity.getPageManager().openCustomPage(ref, store, new MonMenu(...));
+```
 
 ---
 
-## Checklist pour Développeur "Native"
+## 6. Mécaniques de Jeu (Mini-Jeux)
+
+### Téléportation (Système de Composants)
+C'est un pattern récurrent : on n'appelle pas `player.teleport()`, on **ajoute un composant** `Teleport` à l'entité.
+
+```java
+import com.hypixel.hytale.server.core.modules.entity.teleport.Teleport;
+
+// Code à exécuter sur le Thread du Monde cible
+targetWorld.execute(() -> {
+    // Création du composant
+    Teleport tpComponent = new Teleport(
+        targetWorld, 
+        new Vector3d(x, y, z), // Position
+        new Vector3f(yaw, pitch, 0) // Rotation
+    );
+    
+    // Application
+    store.addComponent(playerRef, Teleport.getComponentType(), tpComponent);
+});
+```
+
+### Kits & Inventaire
+Manipulation directe des containers d'items.
+
+```java
+import com.hypixel.hytale.server.core.inventory.ItemStack;
+import com.hypixel.hytale.server.core.inventory.container.ItemContainer;
+
+// Récupérer l'inventaire
+Player player = ...;
+ItemContainer hotbar = player.getInventory().getHotbar();
+
+// Créer un item (ID Hytale)
+ItemStack sword = new ItemStack("hytale:iron_sword");
+
+// Ajouter l'item
+if (hotbar.canAddItemStack(sword)) {
+    hotbar.addItemStack(sword);
+}
+```
+
+### Gestion de l'Économie
+Il n'y a pas d'économie native ("Coins") dans l'API Hytale. Vous devez créer votre propre Map/Base de données.
+
+```java
+// Exemple simple
+public class EconomyService {
+    private Map<UUID, Double> balances = new ConcurrentHashMap<>();
+    
+    public void addMoney(UUID player, double amount) {
+        balances.merge(player, amount, Double::sum);
+    }
+}
+```
+
+---
+
+## 7. Checklist pour Développeur "Native"
 
 Si vous créez un plugin sans FancyCore :
 1.  [ ] Créer un projet Gradle avec `HytaleServer.jar` en dépendance (`compileOnly`).
@@ -204,3 +305,4 @@ Si vous créez un plugin sans FancyCore :
 4.  [ ] Utiliser `CommandManager` pour vos commandes.
 5.  [ ] Utiliser `getEventRegistry()` pour vos listeners.
 6.  [ ] Gérer scrupuleusement le Threading (le serveur Hytale semble très asynchrone par défaut).
+7.  [ ] Pour les GUIs : Étendre `InteractiveCustomUIPage` et gérer les `.ui` (HTML/CSS).
