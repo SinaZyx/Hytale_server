@@ -1,200 +1,206 @@
-# Guide du Développeur - Fancy Core & Hytale Plugin Development
+# Documentation API Native Hytale (Rétro-ingénierie)
 
-Ce document est une référence technique destinée aux développeurs souhaitant créer des plugins ou des addons basés sur **Fancy Core** pour le serveur Hytale.
+Ce document est le fruit d'une analyse du code de **FancyCore** pour en extraire les mécanismes de l'**API Serveur Native de Hytale**.
+Il sert de guide pour créer un plugin Hytale "From Scratch", sans utiliser FancyCore.
 
 > [!WARNING]
-> **Statut de la documentation** : Ce guide est basé sur l'analyse statique du code source v0.0.1 (Janvier 2026). Certaines API internes du jeu (`com.hypixel.hytale...`) sont sujettes à changement.
+> **API Non Officielle** : Hytale n'a pas encore publié de documentation officielle. Ces informations sont déduites du code existant et concernent probablement une version "Alpha/Beta" du serveur.
 
 ---
 
-## A. Vue d'ensemble
+## 1. Structure d'un Plugin
 
-**Fancy Core** agit comme un framework centralisé ("Core") qui unifie les systèmes essentiels d'un serveur (économie, chat, permissions, données joueurs). Il encapsule l'API native du serveur Hytale pour fournir une couche d'abstraction plus stable et riche aux autres plugins.
+Tout plugin semble devoir étendre la classe `com.hypixel.hytale.server.core.plugin.JavaPlugin`.
 
-### Architecture
-- **Noyau (Module `fc-api`)** : Contient toutes les interfaces, événements et objets de données (`FancyPlayer`, `Currency`, `ChatRoom`). C'est la seule dépendance nécessaire pour créer un addon.
-- **Implémentation (Module `FancyCore`)** : Contient la logique métier, le stockage (JSON/Mongo), et les commandes.
-- **Cycle de vie** : Le plugin est un `JavaPlugin` standard Hytale qui initialise un registre de services (`Service Locator`).
-
-### Dépendances Techniques
-- **Java** : Version 25 (Preview/Bleeding Edge).
-- **Hytale Server API** : Dépendance locale `HytaleServer.jar`.
-- **Système de Build** : Gradle (Kotlin DSL).
-
----
-
-## B. Concepts & Cycle de Vie
-
-### 1. Point d'Entrée
-Tout plugin dépend de `FancyCore` et peut accéder à son API via le singleton `FancyCore.get()`.
-
+### Déclaration (Main Class)
 ```java
-// Accès global à l'API
-FancyCore api = FancyCore.get();
+import com.hypixel.hytale.server.core.plugin.JavaPlugin;
+import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
+import javax.annotation.Nonnull;
+
+public class MonPluginHytale extends JavaPlugin {
+
+    // Constructeur obligatoire
+    public MonPluginHytale(@Nonnull JavaPluginInit init) {
+        super(init);
+    }
+
+    @Override
+    protected void setup() {
+        // Appelé au chargement initial (avant le démarrage du monde ?)
+        // C'est ici qu'on instancie les managers/services
+    }
+
+    @Override
+    public void start() {
+        // Appelé quand le serveur démarre
+        // Enregistrement des commandes et listeners
+        registerCommands();
+        registerListeners();
+    }
+
+    @Override
+    protected void shutdown() {
+        // Appelé à l'arrêt du serveur
+    }
+}
 ```
 
-### 2. Services (Service Locator Pattern)
-Fancy Core expose ses fonctionnalités via des "Services". Ne jamais instancier les services manuellement.
-
-| Service | Accesseur | Rôle |
-| :--- | :--- | :--- |
-| **FancyPlayerService** | `api.getPlayerService()` | Gestion des données étendues des joueurs (`FancyPlayer`). |
-| **EventService** | `api.getEventService()` | Bus d'événements personnalisé de Fancy Core. |
-| **ChatService** | `api.getChatService()` | Canaux, mutes, messagerie privée. |
-| **CurrencyService** | `api.getCurrencyService()` | Économie multi-devises. |
-| **PermissionService** | `api.getPermissionService()` | Groupes et permissions. |
+### Manifeste (`hytale.json` ou `version.json`)
+Le serveur détecte probablement les plugins via un fichier JSON à la racine du JAR (non visible dans le code Java, mais le build script mentionne `manifest.json`).
 
 ---
 
-## C. API & Événements (Déduits)
+## 2. Système de Commandes
 
-### Objet Clé : `FancyPlayer`
-Wrapper autour du `PlayerRef` natif de Hytale.
-- **Obtention** : `FancyPlayerService.get().getByUUID(uuid)` ou `get().getOnlinePlayers()`.
-- **Méthodes Utiles** :
-  - `sendMessage(String)` : Envoi de message.
-  - `hasPermission(String)` : Vérification de permission unifiée.
-  - `getData()` : Accès aux métadonnées persistantes (`FancyPlayerData`).
-  - `switchChatRoom(ChatRoom)` : Changement de canal.
+Hytale utilise un système de commandes hiérarchique via `CommandManager`.
 
-### Bus d'Événements (Custom)
-Fancy Core possède son propre système d'événements, séparé de celui de Hytale (`EventRegistry`), pour les événements de haut niveau.
-
-**Événements Clés** :
-- `PlayerJoinedEvent` / `PlayerLeftEvent` (Chargement des données FancyPlayer terminé).
-- `PlayerChatEvent` (Message chat, cancellable).
-- `PrivateMessageSentEvent` (PM).
-- `PlayerPunishedEvent` (Ban/Mute/Kick).
-
----
-
-## D. Guide "How-to" (Recettes)
-
-### 1. Créer une Commande
-Les commandes étendent `CommandBase` (API Hytale native).
+### Créer une commande simple
+Il faut étendre `CommandBase`.
 
 ```java
+import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
+import com.hypixel.hytale.server.core.command.system.CommandContext;
+import com.hypixel.hytale.server.core.Message;
+import org.jetbrains.annotations.NotNull;
+
 public class MaCommande extends CommandBase {
 
-    // Définition d'un argument obligatoire
-    private final RequiredArg<String> nomArg = this.withRequiredArg("nom", "Description", ArgTypes.STRING);
-
     public MaCommande() {
-        super("moncommande", "Description de la commande");
-        requirePermission("monplugin.commande.use"); // Permission requise
+        // Nom de la commande, Description
+        super("bonjour", "Affiche un message de bienvenue");
+    }
+
+    @Override
+    protected void executeSync(@NotNull CommandContext ctx) {
+        // Vérifier si c'est un joueur
+        if (ctx.isPlayer()) {
+            ctx.sendMessage(Message.raw("Bonjour joueur !"));
+        } else {
+            ctx.sendMessage(Message.raw("Bonjour console !"));
+        }
+    }
+}
+```
+
+### Arguments Typés
+L'API fournit un système d'arguments typés (`RequiredArg`).
+
+```java
+import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
+import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
+
+public class TeleportCmd extends CommandBase {
+
+    // Définition de l'argument (Nom, Description, Type)
+    private final RequiredArg<String> playerArg = this.withRequiredArg("joueur", "Nom du joueur", ArgTypes.STRING);
+
+    public TeleportCmd() {
+        super("tp", "Téléporte un joueur");
     }
 
     @Override
     protected void executeSync(CommandContext ctx) {
-        if (!ctx.isPlayer()) {
-            ctx.sendMessage(Message.raw("Seuls les joueurs peuvent faire ça !"));
-            return;
-        }
-
-        // Récupération de l'argument
-        String nom = nomArg.get(ctx);
-        
-        // Interaction avec Fancy Core
-        FancyPlayer fp = FancyPlayerService.get().getByUUID(ctx.sender().getUuid());
-        fp.sendMessage("Bonjour " + nom + " !");
+        // Récupération de la valeur
+        String targetName = playerArg.get(ctx);
+        // ... logique
     }
 }
+```
 
-// Enregistrement (dans onStart)
+### Enregistrement
+```java
+import com.hypixel.hytale.server.core.command.system.CommandManager;
+
+// Dans la méthode start() du plugin
 CommandManager.get().register(new MaCommande());
 ```
 
-### 2. Écouter un Événement FancyCore
-Utilisez `EventService` pour écouter les événements métier.
+---
+
+## 3. Système d'Événements
+
+Les événements sont gérés par `EventRegistry`. Il semble y avoir une distinction entre événements synchrones et asynchrones.
+
+### Événements Connus
+Classes situées dans `com.hypixel.hytale.server.core.event.events.player.*` :
+- `PlayerJoinEvent` / `PlayerConnectEvent`
+- `PlayerLeaveEvent` / `PlayerDisconnectEvent`
+- `PlayerChatEvent`
+- `PlayerReadyEvent`
+
+### Écouter un événement
+L'approche semble être fonctionnelle (référence de méthode) plutôt que par annotations `@EventHandler`.
 
 ```java
-import com.fancyinnovations.fancycore.api.events.chat.PrivateMessageSentEvent;
-import com.fancyinnovations.fancycore.api.events.service.EventListener;
+import com.hypixel.hytale.event.EventRegistry;
+import com.hypixel.hytale.server.core.event.events.player.PlayerConnectEvent;
 
-public class MonListener implements EventListener<PrivateMessageSentEvent> {
+public class MonPlugin extends JavaPlugin {
+    
     @Override
-    public void on(PrivateMessageSentEvent event) {
-        String message = event.getMessage();
-        FancyPlayer sender = event.getSender();
+    public void start() {
+        EventRegistry registry = this.getEventRegistry();
         
-        // Logique custom
-        System.out.println(sender.getName() + " a envoyé un MP : " + message);
+        // Enregistrement global
+        registry.registerGlobal(PlayerConnectEvent.class, this::onPlayerConnect);
+    }
+    
+    private void onPlayerConnect(PlayerConnectEvent event) {
+        System.out.println("Un joueur se connecte !");
     }
 }
-
-// Enregistrement (dans onStart)
-FancyCore.get().getEventService().registerListener(PrivateMessageSentEvent.class, new MonListener());
 ```
 
-### 3. Manipuler l'Économie
-```java
-CurrencyService eco = FancyCore.get().getCurrencyService();
-Currency gold = eco.getCurrency("Or"); // Récupérer la devise par nom
+### Événements Asynchrones (Chat)
+Le chat semble être géré de manière asynchrone via `CompletableFuture`.
 
-if (eco.has(player, gold, 50.0)) {
-    eco.withdraw(player, gold, 50.0);
-    player.sendMessage("Achat effectué !");
-} else {
-    player.sendMessage("Pas assez d'or !");
+```java
+registry.registerAsyncGlobal(PlayerChatEvent.class, future -> 
+    future.thenApply(event -> {
+        // Logique de chat (Thread-Safe requise !)
+        // event.setCancelled(true);
+        return event;
+    })
+);
+```
+
+---
+
+## 4. Manipulation du Monde et des Joueurs
+
+### PlayerRef
+Le joueur n'est pas manipulé directement via une entité "Bukkit-like", mais souvent via `PlayerRef` ou des composants ECS (Entity Component System).
+
+- **Package** : `com.hypixel.hytale.server.core.universe.PlayerRef`
+- **Récupération** : Probablement via `Universe.get().getPlayer(...)`.
+
+### Permissions
+Hytale possède un module de permission natif.
+```java
+import com.hypixel.hytale.server.core.permissions.PermissionsModule;
+
+if (PermissionsModule.get().hasPermission(playerUUID, "monplugin.admin")) {
+    // ...
 }
 ```
 
-### 4. Personnaliser le Chat (Préfixes & Placeholders)
-Le système de chat de FancyCore repose sur des **Placeholders**. Pour afficher le préfixe d'un joueur, vous n'avez pas besoin de coder, mais de configurer le format.
+---
 
-**Configuration (config.json)** :
-```json
-"chatFormat": "[%player_group_prefix%] %player_name%: %message%"
-```
+## 5. Inventaires & Items
 
-**Utilisation dans le code (PlaceholderAPI)** :
-Si vous créez votre propre système de message, utilisez le service pour parser les textes :
-```java
-String rawText = "Bonjour %player_name% !";
-String parsed = FancyCore.get().getPlaceholderService().parse(player, rawText);
-player.sendMessage(parsed);
-```
-
-**Placeholders Natifs Disponibles** :
-- `%player_name%` : Nom du joueur.
-- `%player_group_prefix%` : Préfixe du groupe le plus élevé (via `Group.setPrefix()`).
-- `%player_group_suffix%` : Suffixe du groupe.
-- `%player_balance_formatted%` : Solde formaté.
-- `%player_ping%` : Latence.
-
-### 5. Gérer les Données Joueur
-```java
-FancyPlayer fp = FancyPlayerService.get().getPlayer(playerRef);
-FancyPlayerData data = fp.getData();
-
-// Exemple hypothétique (selon l'implémentation de FancyPlayerData non visible ici mais probable)
-// data.set("mon_attribut", "valeur");
-// FancyPlayerService.get().save(fp);
-```
+Les imports révèlent une gestion d'inventaire native.
+- **ItemStack** : `com.hypixel.hytale.server.core.inventory.ItemStack`
+- **Container** : `com.hypixel.hytale.server.core.inventory.container.ItemContainer`
 
 ---
 
-## E. Checklist Création Nouveau Plugin
+## Checklist pour Développeur "Native"
 
-- [ ] **Dépendances** : Ajouter `FancyCore` (ou `fc-api`) et `HytaleServer.jar` au classpath/Gradle.
-- [ ] **Main Class** : Étendre `JavaPlugin`.
-- [ ] **Config** : Créer `hytale.json` (ou `manifest.json`, à vérifier) dans `src/main/resources` avec le nom, version et main-class.
-- [ ] **Lifecycle** : Implémenter `start()` et `setup()`.
-- [ ] **Services** : Ne pas recréer de gestionnaire d'économie ou de chat, utiliser ceux de FancyCore.
-- [ ] **Logging** : Utiliser `getFancyLogger()` hérité ou fourni par Fancy Core pour des logs uniformisés.
-
----
-
-## F. Incertitudes & Vérifications
-Ces points sont déduits du code mais nécessitent une validation in-game.
-
-1.  [ ] **Format du Manifeste** : Le build script mentionne `manifest.json` ET `version.json`. Le standard Hytale est souvent `hytale.json`. Vérifiez quel fichier est réellement chargé par le serveur.
-2.  [ ] **Persistence** : Le code montre du stockage JSON et MongoDB (`mongodb-driver`). Vérifiez dans `config` quel mode est activé par défaut.
-3.  [ ] **Event Sync/Async** : Le `ChatEvent` est géré de manière asynchrone via `CompletableFuture` dans `FancyCorePlugin`. Vos listeners doivent être Thread-Safe.
-
-## G. Glossaire
-- **CMD** : Suffixe utilisé pour les classes de commandes (ex: `BanCMD`).
-- **Service** : Singleton gérant une feature (ex: `ChatService`).
-- **Storage** : Couche d'accès aux données (JSON/DB).
-- **PlayerRef** : Référence native Hytale vers un joueur (peut être hors ligne/online).
-- **FancyPlayer** : Surcouche riche ajoutée par ce plugin.
+Si vous créez un plugin sans FancyCore :
+1.  [ ] Créer un projet Gradle avec `HytaleServer.jar` en dépendance (`compileOnly`).
+2.  [ ] Créer le `hytale.json` (ou `manifest.json`).
+3.  [ ] Étendre `JavaPlugin`.
+4.  [ ] Utiliser `CommandManager` pour vos commandes.
+5.  [ ] Utiliser `getEventRegistry()` pour vos listeners.
+6.  [ ] Gérer scrupuleusement le Threading (le serveur Hytale semble très asynchrone par défaut).
