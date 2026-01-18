@@ -2,18 +2,25 @@ package com.kingc.hytale.factions.integration;
 
 import com.fancyinnovations.fancycore.api.placeholders.PlaceholderProvider;
 import com.fancyinnovations.fancycore.api.player.FancyPlayer;
-import com.kingc.hytale.factions.hytale.HytaleFactionsPlugin;
+import com.fancyinnovations.fancycore.api.player.FancyPlayerData;
+import com.kingc.hytale.factions.FactionsPlugin;
 import com.kingc.hytale.factions.model.Faction;
 
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 public class FactionNamePlaceholder implements PlaceholderProvider {
 
-    private final HytaleFactionsPlugin plugin;
+    private final Supplier<FactionsPlugin> pluginSupplier;
 
-    public FactionNamePlaceholder(HytaleFactionsPlugin plugin) {
-        this.plugin = plugin;
+    public FactionNamePlaceholder(Supplier<FactionsPlugin> pluginSupplier) {
+        this.pluginSupplier = pluginSupplier;
+    }
+
+    @Override
+    public String getName() {
+        return "Faction Name";
     }
 
     @Override
@@ -22,19 +29,26 @@ public class FactionNamePlaceholder implements PlaceholderProvider {
     }
 
     @Override
-    public String onPlaceholderRequest(FancyPlayer player, String params) {
-        if (player == null || !player.isOnline()) {
+    public String parse(FancyPlayer player, String input) {
+        if (player == null) {
             return "";
         }
-
-        UUID playerId = player.getUUID();
-        // Assuming access to FactionsPlugin service via HytaleFactionsPlugin helper
-        // We might need to expose the service more cleanly, but code showed 'core()' method accessing 'plugin'.
-        if (plugin.core() == null || plugin.core().service() == null) {
+        FancyPlayerData data = player.getData();
+        if (data == null) {
             return "";
         }
-
-        Optional<Faction> factionOpt = plugin.core().service().findFactionByMember(playerId);
-        return factionOpt.map(f -> "&a[" + f.name() + "]&r ").orElse("");
+        UUID playerId = data.getUUID();
+        if (playerId == null) {
+            return "";
+        }
+        FactionsPlugin plugin = pluginSupplier.get();
+        if (plugin == null) {
+            return "";
+        }
+        Optional<Faction> faction = plugin.service().findFactionByMember(playerId);
+        if (faction.isPresent()) {
+            return faction.get().name();
+        }
+        return "";
     }
 }

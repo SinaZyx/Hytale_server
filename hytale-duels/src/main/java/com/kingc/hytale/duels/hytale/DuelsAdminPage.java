@@ -66,17 +66,29 @@ public final class DuelsAdminPage extends InteractiveCustomUIPage<DuelsAdminPage
             return;
         }
 
+        // Parse action:id format for dynamic bindings
+        String actionId = null;
+        if (action.contains(":")) {
+            int idx = action.indexOf(':');
+            actionId = action.substring(idx + 1);
+            action = action.substring(0, idx);
+        }
+
         switch (action) {
             // Kit actions
             case "kit_create" -> handleKitCreate(data);
-            case "kit_select" -> handleKitSelect(data);
+            case "kit_create_prompt" -> handleKitCreatePrompt();
+            case "kit_select" -> handleKitSelectById(actionId);
             case "kit_delete" -> handleKitDelete();
+            case "kit_delete_direct" -> handleKitDeleteDirectById(actionId);
             case "kit_save" -> handleKitSave(data);
 
             // Arena actions
             case "arena_create" -> handleArenaCreate(data);
-            case "arena_select" -> handleArenaSelect(data);
+            case "arena_create_prompt" -> handleArenaCreatePrompt();
+            case "arena_select" -> handleArenaSelectById(actionId);
             case "arena_delete" -> handleArenaDelete();
+            case "arena_delete_direct" -> handleArenaDeleteDirectById(actionId);
             case "arena_setspawn1" -> handleArenaSetSpawn(1);
             case "arena_setspawn2" -> handleArenaSetSpawn(2);
 
@@ -137,23 +149,38 @@ public final class DuelsAdminPage extends InteractiveCustomUIPage<DuelsAdminPage
 
         if (kits.isEmpty()) {
             commands.appendInline("#KitsList",
-                "Label { Text: \"Aucun kit\"; Style: (Alignment: Center, FontSize: 12, TextColor: #9aa7b0); }");
+                "Label { Text: \"Aucun kit - Utilisez /kit save <nom>\"; Style: (Alignment: Center, FontSize: 12, TextColor: #9aa7b0); }");
             return;
         }
 
         for (KitDefinition kit : kits) {
             boolean isSelected = kit.id().equals(selectedKit);
-            String color = isSelected ? "#4fc3f7" : "#d7e0e8";
+            String bgColor = isSelected ? "#2a3a50" : "#0a1119";
+            String textColor = isSelected ? "#4fc3f7" : "#d7e0e8";
             String itemCount = kit.items() != null ? String.valueOf(kit.items().size()) : "0";
-            String line = kit.displayName() + " (" + kit.id() + ") - " + itemCount + " items";
-            String entry = "Label { Text: \"" + escapeUiText(line) + "\"; Style: (FontSize: 13, TextColor: " + color + "); Anchor: (Bottom: 6); }";
-            commands.appendInline("#KitsList", entry);
+            
+            // Create a clickable row with kit info
+            String kitRow = "Group #Kit_" + kit.id() + " { " +
+                "LayoutMode: Left; " +
+                "Background: " + bgColor + "; " +
+                "Anchor: (Height: 32, Bottom: 2); " +
+                "Padding: (Full: 5); " +
+                "TextButton { " +
+                    "Text: \"" + escapeUiText(kit.displayName()) + " (" + itemCount + " items)\"; " +
+                    "Style: (FontSize: 12, TextColor: " + textColor + "); " +
+                    "Anchor: (Width: 300); " +
+                "} " +
+                "TextButton #KitEdit_" + kit.id() + " { Text: \"Editer\"; Anchor: (Width: 60, Right: 5); } " +
+                "TextButton #KitDel_" + kit.id() + " { Text: \"X\"; Anchor: (Width: 30); } " +
+            "}";
+            commands.appendInline("#KitsList", kitRow);
         }
 
         if (selectedKit != null) {
             plugin.core().kitService().getKit(selectedKit).ifPresent(kit -> {
-                commands.set("#KitNameInput.Value", kit.displayName());
-                commands.set("#KitIconInput.Value", kit.iconItem() != null ? kit.iconItem() : "");
+                String info = "Kit selectionne: " + kit.displayName() + " - " + 
+                    (kit.items() != null ? kit.items().size() : 0) + " items";
+                commands.set("#KitEditPanel.Visible", true);
             });
         }
     }
@@ -165,28 +192,42 @@ public final class DuelsAdminPage extends InteractiveCustomUIPage<DuelsAdminPage
 
         if (arenas.isEmpty()) {
             commands.appendInline("#ArenasList",
-                "Label { Text: \"Aucune arene\"; Style: (Alignment: Center, FontSize: 12, TextColor: #9aa7b0); }");
+                "Label { Text: \"Aucune arene - Utilisez /arena create <nom>\"; Style: (Alignment: Center, FontSize: 12, TextColor: #9aa7b0); }");
             return;
         }
 
         for (Arena arena : arenas) {
             boolean isSelected = arena.id().equals(selectedArena);
             boolean available = plugin.core().arenaService().isArenaAvailable(arena.id());
+            String bgColor = isSelected ? "#2a3a50" : "#0a1119";
             String textColor = isSelected ? "#4fc3f7" : "#d7e0e8";
             String status = available ? "Libre" : "Occupee";
-            String line = arena.displayName() + " (" + arena.id() + ") - " + status + " - Max: " + arena.maxPlayers();
-            String entry = "Label { Text: \"" + escapeUiText(line) + "\"; Style: (FontSize: 13, TextColor: " + textColor + "); Anchor: (Bottom: 6); }";
-            commands.appendInline("#ArenasList", entry);
+            int spawn1 = arena.team1Spawns() != null ? arena.team1Spawns().size() : 0;
+            int spawn2 = arena.team2Spawns() != null ? arena.team2Spawns().size() : 0;
+            
+            String arenaRow = "Group #Arena_" + arena.id() + " { " +
+                "LayoutMode: Left; " +
+                "Background: " + bgColor + "; " +
+                "Anchor: (Height: 32, Bottom: 2); " +
+                "Padding: (Full: 5); " +
+                "TextButton { " +
+                    "Text: \"" + escapeUiText(arena.displayName()) + " [" + status + "] (T1:" + spawn1 + " T2:" + spawn2 + ")\"; " +
+                    "Style: (FontSize: 12, TextColor: " + textColor + "); " +
+                    "Anchor: (Width: 350); " +
+                "} " +
+                "TextButton #ArenaEdit_" + arena.id() + " { Text: \"Editer\"; Anchor: (Width: 60, Right: 5); } " +
+                "TextButton #ArenaDel_" + arena.id() + " { Text: \"X\"; Anchor: (Width: 30); } " +
+            "}";
+            commands.appendInline("#ArenasList", arenaRow);
         }
 
         if (selectedArena != null) {
             plugin.core().arenaService().getArena(selectedArena).ifPresent(arena -> {
-                commands.set("#ArenaNameInput.Value", arena.displayName());
-                commands.set("#ArenaMaxPlayersInput.Value", String.valueOf(arena.maxPlayers()));
                 int spawn1Count = arena.team1Spawns() != null ? arena.team1Spawns().size() : 0;
                 int spawn2Count = arena.team2Spawns() != null ? arena.team2Spawns().size() : 0;
                 commands.set("#ArenaSpawnsInfo.TextSpans",
                     Message.raw("Spawns Team1: " + spawn1Count + " | Spawns Team2: " + spawn2Count));
+                commands.set("#ArenaEditPanel.Visible", true);
             });
         }
     }
@@ -213,8 +254,8 @@ public final class DuelsAdminPage extends InteractiveCustomUIPage<DuelsAdminPage
 
     private void bindActions(UIEventBuilder events) {
         bindNavigation(events);
-        // Note: Input fields removed from simplified UI
-        // Use commands instead: /kit save <name>, /kit delete <name>, etc.
+        bindKitActions(events);
+        bindArenaActions(events);
     }
 
     private void bindNavigation(UIEventBuilder events) {
@@ -224,6 +265,46 @@ public final class DuelsAdminPage extends InteractiveCustomUIPage<DuelsAdminPage
             EventData.of(AdminEventData.KEY_ACTION, "tab_arenas"));
         events.addEventBinding(CustomUIEventBindingType.Activating, "#NavMatchesButton",
             EventData.of(AdminEventData.KEY_ACTION, "tab_matches"));
+    }
+
+    private void bindKitActions(UIEventBuilder events) {
+        // Bind static buttons
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#KitCreateButton",
+            EventData.of(AdminEventData.KEY_ACTION, "kit_create_prompt"));
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#KitSaveButton",
+            EventData.of(AdminEventData.KEY_ACTION, "kit_save"));
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#KitDeleteButton",
+            EventData.of(AdminEventData.KEY_ACTION, "kit_delete"));
+        
+        // Bind dynamic kit buttons (encode ID in action string)
+        for (KitDefinition kit : plugin.core().kitService().getAllKits()) {
+            events.addEventBinding(CustomUIEventBindingType.Activating, "#KitEdit_" + kit.id(),
+                EventData.of(AdminEventData.KEY_ACTION, "kit_select:" + kit.id()));
+            events.addEventBinding(CustomUIEventBindingType.Activating, "#KitDel_" + kit.id(),
+                EventData.of(AdminEventData.KEY_ACTION, "kit_delete_direct:" + kit.id()));
+        }
+    }
+
+    private void bindArenaActions(UIEventBuilder events) {
+        // Bind static buttons
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#ArenaCreateButton",
+            EventData.of(AdminEventData.KEY_ACTION, "arena_create_prompt"));
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#ArenaSaveButton",
+            EventData.of(AdminEventData.KEY_ACTION, "arena_save"));
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#ArenaDeleteButton",
+            EventData.of(AdminEventData.KEY_ACTION, "arena_delete"));
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#ArenaSetSpawn1Button",
+            EventData.of(AdminEventData.KEY_ACTION, "arena_setspawn1"));
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#ArenaSetSpawn2Button",
+            EventData.of(AdminEventData.KEY_ACTION, "arena_setspawn2"));
+        
+        // Bind dynamic arena buttons (encode ID in action string)
+        for (Arena arena : plugin.core().arenaService().getAllArenas()) {
+            events.addEventBinding(CustomUIEventBindingType.Activating, "#ArenaEdit_" + arena.id(),
+                EventData.of(AdminEventData.KEY_ACTION, "arena_select:" + arena.id()));
+            events.addEventBinding(CustomUIEventBindingType.Activating, "#ArenaDel_" + arena.id(),
+                EventData.of(AdminEventData.KEY_ACTION, "arena_delete_direct:" + arena.id()));
+        }
     }
 
     // === Kit Handlers ===
@@ -255,6 +336,10 @@ public final class DuelsAdminPage extends InteractiveCustomUIPage<DuelsAdminPage
 
     private void handleKitSelect(AdminEventData data) {
         String kitId = normalize(data.getKitId());
+        handleKitSelectById(kitId);
+    }
+
+    private void handleKitSelectById(String kitId) {
         if (kitId != null && plugin.core().kitService().kitExists(kitId)) {
             selectedKit = kitId;
         }
@@ -268,6 +353,30 @@ public final class DuelsAdminPage extends InteractiveCustomUIPage<DuelsAdminPage
         if (plugin.core().kitService().deleteKit(selectedKit)) {
             sendNotice("Kit '" + selectedKit + "' supprime.");
             selectedKit = null;
+            plugin.flush();
+        }
+    }
+
+    private void handleKitCreatePrompt() {
+        // Close UI and tell player to use command
+        sendNotice("Utilisez: /kit save <nom> pour creer un kit depuis votre inventaire.");
+    }
+
+    private void handleKitDeleteDirect(AdminEventData data) {
+        String kitId = normalize(data.getKitId());
+        handleKitDeleteDirectById(kitId);
+    }
+
+    private void handleKitDeleteDirectById(String kitId) {
+        if (kitId == null) {
+            sendNotice("Kit non trouve.");
+            return;
+        }
+        if (plugin.core().kitService().deleteKit(kitId)) {
+            sendNotice("Kit '" + kitId + "' supprime.");
+            if (kitId.equals(selectedKit)) {
+                selectedKit = null;
+            }
             plugin.flush();
         }
     }
@@ -326,6 +435,10 @@ public final class DuelsAdminPage extends InteractiveCustomUIPage<DuelsAdminPage
 
     private void handleArenaSelect(AdminEventData data) {
         String arenaId = normalize(data.getArenaId());
+        handleArenaSelectById(arenaId);
+    }
+
+    private void handleArenaSelectById(String arenaId) {
         if (arenaId != null && plugin.core().arenaService().getArena(arenaId).isPresent()) {
             selectedArena = arenaId;
         }
@@ -339,6 +452,31 @@ public final class DuelsAdminPage extends InteractiveCustomUIPage<DuelsAdminPage
         if (plugin.core().arenaService().removeArena(selectedArena)) {
             sendNotice("Arene '" + selectedArena + "' supprimee.");
             selectedArena = null;
+            plugin.flush();
+        } else {
+            sendNotice("Impossible de supprimer (arene en cours d'utilisation).");
+        }
+    }
+
+    private void handleArenaCreatePrompt() {
+        sendNotice("Utilisez: /arena create <nom> pour creer une arene.");
+    }
+
+    private void handleArenaDeleteDirect(AdminEventData data) {
+        String arenaId = normalize(data.getArenaId());
+        handleArenaDeleteDirectById(arenaId);
+    }
+
+    private void handleArenaDeleteDirectById(String arenaId) {
+        if (arenaId == null) {
+            sendNotice("Arene non trouvee.");
+            return;
+        }
+        if (plugin.core().arenaService().removeArena(arenaId)) {
+            sendNotice("Arene '" + arenaId + "' supprimee.");
+            if (arenaId.equals(selectedArena)) {
+                selectedArena = null;
+            }
             plugin.flush();
         } else {
             sendNotice("Impossible de supprimer (arene en cours d'utilisation).");
@@ -392,8 +530,7 @@ public final class DuelsAdminPage extends InteractiveCustomUIPage<DuelsAdminPage
             .map(id -> plugin.core().matchService().getPlayerMatch(id)
                 .map(m -> "Joueur")
                 .orElse("?"))
-            .reduce((a, b) -> a + ", " + b)
-            .orElse("?");
+            .collect(java.util.stream.Collectors.joining(", "));
     }
 
     private void sendNotice(String message) {

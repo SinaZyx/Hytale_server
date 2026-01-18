@@ -44,9 +44,15 @@ public final class FactionSettings {
     public String claimLeaveTitle = "Territoire";
     public String claimLeaveSubtitle = "{wilderness}";
     public String wildernessLabel = "Zone sauvage";
-    public float claimTitleFadeIn = 0.2f;
-    public float claimTitleStay = 1.6f;
-    public float claimTitleFadeOut = 0.4f;
+    public float claimTitleFadeIn = 0.3f;
+    public float claimTitleStay = 3.5f;
+    public float claimTitleFadeOut = 0.5f;
+    // Couleurs pour les différentes relations (format hex)
+    public String colorOwn = "#00FF00";       // Vert - Votre faction
+    public String colorAlly = "#00FFFF";      // Cyan - Allié
+    public String colorEnemy = "#FF0000";     // Rouge - Ennemi
+    public String colorNeutral = "#FFFF00";   // Jaune - Neutre
+    public String colorWilderness = "#AAAAAA"; // Gris - Zone sauvage
     public List<String> claimWorldAllowList = new ArrayList<>();
     public List<String> claimWorldDenyList = new ArrayList<>();
     public String roleForInvite = "OFFICER";
@@ -121,6 +127,11 @@ public final class FactionSettings {
         claimTitleFadeIn = other.claimTitleFadeIn;
         claimTitleStay = other.claimTitleStay;
         claimTitleFadeOut = other.claimTitleFadeOut;
+        colorOwn = other.colorOwn;
+        colorAlly = other.colorAlly;
+        colorEnemy = other.colorEnemy;
+        colorNeutral = other.colorNeutral;
+        colorWilderness = other.colorWilderness;
         claimWorldAllowList = new ArrayList<>(other.claimWorldAllowList);
         claimWorldDenyList = new ArrayList<>(other.claimWorldDenyList);
         roleForInvite = other.roleForInvite;
@@ -226,13 +237,28 @@ public final class FactionSettings {
             wildernessLabel = "Zone sauvage";
         }
         if (claimTitleFadeIn <= 0f) {
-            claimTitleFadeIn = 0.2f;
+            claimTitleFadeIn = 0.3f;
         }
         if (claimTitleStay <= 0f) {
-            claimTitleStay = 1.6f;
+            claimTitleStay = 3.5f;
         }
         if (claimTitleFadeOut <= 0f) {
-            claimTitleFadeOut = 0.4f;
+            claimTitleFadeOut = 0.5f;
+        }
+        if (colorOwn == null || colorOwn.isBlank()) {
+            colorOwn = "#00FF00";
+        }
+        if (colorAlly == null || colorAlly.isBlank()) {
+            colorAlly = "#00FFFF";
+        }
+        if (colorEnemy == null || colorEnemy.isBlank()) {
+            colorEnemy = "#FF0000";
+        }
+        if (colorNeutral == null || colorNeutral.isBlank()) {
+            colorNeutral = "#FFFF00";
+        }
+        if (colorWilderness == null || colorWilderness.isBlank()) {
+            colorWilderness = "#AAAAAA";
         }
         if (claimWorldAllowList == null) {
             claimWorldAllowList = new ArrayList<>();

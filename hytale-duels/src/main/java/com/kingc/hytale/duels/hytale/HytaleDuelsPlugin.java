@@ -4,10 +4,11 @@ import com.hypixel.hytale.server.core.event.events.ShutdownEvent;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
 import com.kingc.hytale.duels.DuelsPlugin;
+import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.server.core.entity.entities.player.pages.InteractiveCustomUIPage;
 
 import javax.annotation.Nonnull;
 import java.io.IOException;
-import java.nio.file.Path;
 
 public final class HytaleDuelsPlugin extends JavaPlugin {
     private static final com.hypixel.hytale.logger.HytaleLogger LOGGER = com.hypixel.hytale.logger.HytaleLogger.forEnclosingClass();
@@ -23,9 +24,8 @@ public final class HytaleDuelsPlugin extends JavaPlugin {
     @Override
     protected void setup() {
         try {
-            this.serverAdapter = new HytaleServerAdapter();
-            Path dataDir = getDataDirectory();
-            this.core = new DuelsPlugin(dataDir, serverAdapter);
+            this.serverAdapter = new HytaleServerAdapter(this);
+            this.core = new DuelsPlugin(getDataDirectory(), serverAdapter);
             
             this.deathScanner = new HytaleDeathScanner(this);
             this.deathScanner.start();
@@ -49,6 +49,8 @@ public final class HytaleDuelsPlugin extends JavaPlugin {
         registry.registerCommand(new RankingCommand(this));
         registry.registerCommand(new DuelsAdminCommand(this));
         registry.registerCommand(new DuelsDebugCommand(this));
+        registry.registerCommand(new PipeCommand(this));
+        registry.registerCommand(new SetLobbyCommand(this));
     }
 
     private void registerEvents() {

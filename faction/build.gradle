@@ -51,13 +51,19 @@ javadoc {
     options.addStringOption('Xdoclint:-missing', '-quiet')
 }
 
+// Configure Java compilation like FancyCore
+compileJava {
+    options.encoding = 'UTF-8'
+    options.release = 25
+}
+
 // Adds the Hytale server as a build dependency, allowing you to reference and
 // compile against their code. This requires you to have Hytale installed using
 // the official launcher for now.
 dependencies {
     implementation(files("$hytaleHome/install/$patchline/package/game/latest/Server/HytaleServer.jar"))
     implementation 'com.google.code.gson:gson:2.11.0'
-    compileOnly 'com.fancyinnovations:fc-api:0.4.0'
+    compileOnly 'com.fancyinnovations:fc-api:0.4.1'
 }
 
 // Create the working directory to run the server if it does not already exist.

@@ -11,7 +11,8 @@ public final class Match {
     private final List<UUID> team1;
     private final List<UUID> team2;
     private final long createdAt;
-    private MatchState state;
+    
+    private MatchState state = MatchState.WAITING;
     private long startedAt;
     private long endedAt;
     private List<UUID> winners;
@@ -24,55 +25,30 @@ public final class Match {
         this.team1 = List.copyOf(team1);
         this.team2 = List.copyOf(team2);
         this.createdAt = createdAt;
-        this.state = MatchState.WAITING;
     }
 
-    public String id() {
-        return id;
-    }
-
-    public String matchId() {
-        return id;
-    }
-
-    public long startedAt() {
-        return startedAt;
-    }
-
-    public String arenaId() {
-        return arenaId;
-    }
-
-    public String kitId() {
-        return kitId;
-    }
-
-    public MatchType type() {
-        return type;
-    }
-
-    public List<UUID> team1() {
-        return team1;
-    }
-
-    public List<UUID> team2() {
-        return team2;
-    }
+    public String id() { return id; }
+    public String matchId() { return id; } // Alias
+    public String arenaId() { return arenaId; }
+    public String kitId() { return kitId; }
+    public MatchType type() { return type; }
+    public List<UUID> team1() { return team1; }
+    public List<UUID> team2() { return team2; }
+    public long createdAt() { return createdAt; }
+    public long startedAt() { return startedAt; }
 
     public List<UUID> allPlayers() {
         return java.util.stream.Stream.concat(team1.stream(), team2.stream()).toList();
     }
 
-    public long createdAt() {
-        return createdAt;
-    }
+    public MatchState state() { return state; }
 
-    public MatchState state() {
-        return state;
+    public void setStarting() {
+        this.state = MatchState.STARTING;
     }
 
     public void start(long now) {
-        this.state = MatchState.RUNNING;
+        this.state = MatchState.PLAYING;
         this.startedAt = now;
     }
 
@@ -82,9 +58,7 @@ public final class Match {
         this.endedAt = now;
     }
 
-    public List<UUID> winners() {
-        return winners;
-    }
+    public List<UUID> winners() { return winners; }
 
     public boolean isPlayerInMatch(UUID playerId) {
         return team1.contains(playerId) || team2.contains(playerId);
@@ -94,5 +68,12 @@ public final class Match {
         if (team1.contains(playerId)) return 1;
         if (team2.contains(playerId)) return 2;
         return 0;
+    }
+
+    public enum MatchState {
+        WAITING,
+        STARTING,
+        PLAYING,
+        FINISHED
     }
 }

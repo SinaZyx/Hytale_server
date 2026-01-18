@@ -9,9 +9,21 @@ public interface ServerAdapter {
     Optional<PlayerRef> getPlayerByName(String name);
     void giveItems(PlayerRef player, ItemStack... items);
     void setArmor(PlayerRef player, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots);
+    
+    /**
+     * Teleports the player to the server lobby/spawn.
+     */
+    void teleportToLobby(PlayerRef player);
     void clearInventory(PlayerRef player);
     void applyEffect(PlayerRef player, String effectType, int amplifier, int durationTicks);
     void clearEffects(PlayerRef player);
+
+    // Visual effects
+    void showTitle(PlayerRef player, String title, String subtitle, String color, float fadeIn, float stay, float fadeOut);
+
+    default void showTitle(PlayerRef player, String title, String subtitle, String color) {
+        showTitle(player, title, subtitle, color, 0.3f, 3.5f, 0.5f);
+    }
 
     // Reading methods for Kit saving
     java.util.List<ItemStack> getInventory(PlayerRef player);

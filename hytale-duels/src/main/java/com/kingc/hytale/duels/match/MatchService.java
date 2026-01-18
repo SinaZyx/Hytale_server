@@ -139,9 +139,34 @@ public final class MatchService {
         }
 
         teleportAndEquipPlayers(match, arena, kitOpt.get());
-        match.start(now);
-
+        initiateMatchCountdown(match); // Call the new countdown method
+        
         return Result.success("Match demarre dans " + arena.displayName() + "!");
+    }
+
+    private void initiateMatchCountdown(Match match) {
+        match.setStarting();
+
+        // Countdown avec titres visuels
+        showTitleToAll(match, "3", "Preparez-vous...", "#FFFF00", 0.1f, 0.8f, 0.1f);
+        timeoutScheduler.schedule(() -> showTitleToAll(match, "2", "Preparez-vous...", "#FFA500", 0.1f, 0.8f, 0.1f), 1, java.util.concurrent.TimeUnit.SECONDS);
+        timeoutScheduler.schedule(() -> showTitleToAll(match, "1", "Preparez-vous...", "#FF6600", 0.1f, 0.8f, 0.1f), 2, java.util.concurrent.TimeUnit.SECONDS);
+        timeoutScheduler.schedule(() -> {
+            match.start(clock.getAsLong());
+            showTitleToAll(match, "COMBAT!", "", "#FF0000", 0.2f, 1.5f, 0.3f);
+        }, 3, java.util.concurrent.TimeUnit.SECONDS);
+    }
+
+    private void showTitleToAll(Match match, String title, String subtitle, String color, float fadeIn, float stay, float fadeOut) {
+        for (UUID uuid : match.allPlayers()) {
+            server.getPlayer(uuid).ifPresent(p -> server.showTitle(p, title, subtitle, color, fadeIn, stay, fadeOut));
+        }
+    }
+
+    private void broadcast(Match match, String message) {
+        match.allPlayers().forEach(uuid -> 
+            server.getPlayer(uuid).ifPresent(p -> p.sendMessage(message))
+        );
     }
 
     private void teleportAndEquipPlayers(Match match, Arena arena, KitDefinition kit) {
@@ -185,6 +210,17 @@ public final class MatchService {
         if (!winners.isEmpty()) {
             updateRankings(match, winners);
         }
+
+        // Return to lobby
+        timeoutScheduler.schedule(() -> {
+            for (java.util.UUID uuid : match.allPlayers()) {
+                 server.getPlayer(uuid).ifPresent(p -> {
+                     server.clearInventory(p);
+                     server.teleportToLobby(p);
+                     p.sendMessage("&7Returned to lobby.");
+                 });
+            }
+        }, 3, java.util.concurrent.TimeUnit.SECONDS); // Delay lobby TP by 3 seconds to see results
     }
 
     private void updateRankings(Match match, List<UUID> winners) {
@@ -227,18 +263,26 @@ public final class MatchService {
         }
 
         Match match = activeMatches.get(matchId);
-        if (match == null || match.state() != MatchState.RUNNING) {
+        if (match == null || match.state() != Match.MatchState.PLAYING) {
             return;
         }
 
         int team = match.getTeamOf(playerId);
         List<UUID> winners = (team == 1) ? match.team2() : match.team1();
+        List<UUID> losers = (team == 1) ? match.team1() : match.team2();
         endMatch(matchId, winners);
 
+        // Titres visuels pour victoire/défaite
         for (UUID winnerId : winners) {
-            server.getPlayer(winnerId).ifPresent(p -> p.sendMessage("[Duels] Victoire!"));
+            server.getPlayer(winnerId).ifPresent(p -> {
+                server.showTitle(p, "VICTOIRE!", "+ELO", "#00FF00", 0.3f, 3.5f, 0.5f);
+            });
         }
-        server.getPlayer(playerId).ifPresent(p -> p.sendMessage("[Duels] Defaite."));
+        for (UUID loserId : losers) {
+            server.getPlayer(loserId).ifPresent(p -> {
+                server.showTitle(p, "DEFAITE", "-ELO", "#FF0000", 0.3f, 3.5f, 0.5f);
+            });
+        }
     }
 
     public boolean isInMatch(UUID playerId) {
@@ -271,7 +315,7 @@ public final class MatchService {
         long now = clock.getAsLong();
         
         for (Match match : activeMatches.values()) {
-            if (match.state() != MatchState.RUNNING) continue;
+            if (match.state() != Match.MatchState.PLAYING) continue;
             
             long elapsed = now - match.startedAt();
             
@@ -295,18 +339,28 @@ public final class MatchService {
     private void endMatchAsDraw(String matchId) {
         Match match = activeMatches.remove(matchId);
         if (match == null) return;
-        
+
         warnedMatches.remove(matchId);
-        
+
         for (UUID playerId : match.allPlayers()) {
             playerToMatch.remove(playerId);
-            server.getPlayer(playerId).ifPresent(p -> 
-                p.sendMessage("[Duels] ⏱ Temps ecoule! Match nul.")
-            );
+            server.getPlayer(playerId).ifPresent(p -> {
+                server.showTitle(p, "MATCH NUL", "Temps ecoule!", "#AAAAAA", 0.3f, 3.5f, 0.5f);
+            });
         }
-        
+
         arenaService.releaseArena(match.arenaId());
         // No ELO change for draw
+
+        // Return to lobby after delay
+        timeoutScheduler.schedule(() -> {
+            for (UUID uuid : match.allPlayers()) {
+                server.getPlayer(uuid).ifPresent(p -> {
+                    server.clearInventory(p);
+                    server.teleportToLobby(p);
+                });
+            }
+        }, 3, java.util.concurrent.TimeUnit.SECONDS);
     }
 
     public void shutdown() {

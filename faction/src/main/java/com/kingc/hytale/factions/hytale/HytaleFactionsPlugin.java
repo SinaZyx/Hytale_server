@@ -86,11 +86,11 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         // FancyCore Integration
         try {
             Class.forName("com.fancyinnovations.fancycore.main.FancyCorePlugin");
-            com.fancyinnovations.fancycore.main.FancyCore.get().getPlaceholderService()
-                .registerProvider(new com.kingc.hytale.factions.integration.FactionNamePlaceholder(this));
-            LOGGER.info("Linked with FancyCore for placeholders!");
+            com.fancyinnovations.fancycore.api.placeholders.PlaceholderService.get()
+                .registerProvider(new com.kingc.hytale.factions.integration.FactionNamePlaceholder(() -> plugin));
+            LOGGER.atInfo().log("Linked with FancyCore for placeholders!");
         } catch (Throwable e) {
-            LOGGER.info("FancyCore not found (or error linking), placeholders disabled.");
+            LOGGER.atInfo().log("FancyCore not found (or error linking), placeholders disabled.");
         }
 
         startClaimScanner();
@@ -284,15 +284,53 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         if (!useTitle && !useChat) {
             return;
         }
+
+        UUID playerId = playerRef.getUuid();
         String factionName;
+        String color;
+        String relationPrefix = "";
+
         if (nowWild) {
             factionName = settings.wildernessLabel;
+            color = settings.colorWilderness;
+            relationPrefix = "";
         } else if (ownerId.isPresent()) {
-            Optional<Faction> faction = plugin.service().getFactionById(ownerId.get());
-            factionName = faction.map(Faction::name).orElse("Faction inconnue");
+            UUID claimOwnerId = ownerId.get();
+            Optional<Faction> claimFaction = plugin.service().getFactionById(claimOwnerId);
+            factionName = claimFaction.map(Faction::name).orElse("Faction inconnue");
+
+            // Déterminer la relation
+            Optional<Faction> playerFaction = plugin.service().findFactionByMember(playerId);
+            if (playerFaction.isPresent()) {
+                Faction myFaction = playerFaction.get();
+                if (myFaction.id().equals(claimOwnerId)) {
+                    // Notre propre faction
+                    color = settings.colorOwn;
+                    relationPrefix = "[Votre Territoire] ";
+                } else if (myFaction.allies().contains(claimOwnerId)) {
+                    // Faction alliée
+                    color = settings.colorAlly;
+                    relationPrefix = "[Allié] ";
+                } else if (myFaction.enemies().contains(claimOwnerId)) {
+                    // Faction ennemie
+                    color = settings.colorEnemy;
+                    relationPrefix = "[Ennemi] ";
+                } else {
+                    // Faction neutre
+                    color = settings.colorNeutral;
+                    relationPrefix = "[Neutre] ";
+                }
+            } else {
+                // Joueur sans faction - tout est neutre
+                color = settings.colorNeutral;
+                relationPrefix = "";
+            }
         } else {
             factionName = settings.wildernessLabel;
+            color = settings.colorWilderness;
+            relationPrefix = "";
         }
+
         String worldName = location.world();
         String titleTemplate = nowWild ? settings.claimLeaveTitle : settings.claimEnterTitle;
         String subtitleTemplate = nowWild ? settings.claimLeaveSubtitle : settings.claimEnterSubtitle;
@@ -301,13 +339,13 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
 
         if (useChat) {
             String chat = subtitleText == null || subtitleText.isBlank()
-                    ? titleText
-                    : titleText + ": " + subtitleText;
-            playerRef.sendMessage(Message.raw("[Factions] " + chat));
+                    ? relationPrefix + titleText
+                    : relationPrefix + titleText + ": " + subtitleText;
+            playerRef.sendMessage(Message.raw("[Factions] " + chat).color(color));
         }
         if (useTitle) {
-            Message title = Message.raw(titleText);
-            Message subtitle = Message.raw(subtitleText);
+            Message title = Message.raw(titleText).color(color);
+            Message subtitle = Message.raw(relationPrefix + subtitleText).color(color);
             EventTitleUtil.showEventTitleToPlayer(
                     playerRef,
                     title,
@@ -366,17 +404,20 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
             }
         }
 
-        Entity targetEntity = event.getTargetEntity();
-        if (targetEntity instanceof Player targetPlayer) {
-            UUID targetId = targetPlayer.getUuid();
-            if (targetId == null) {
-                return;
-            }
-            if (!plugin.service().canDamage(attacker.getUuid(), targetId)) {
-                event.setCancelled(true);
-                attacker.sendMessage(Message.raw("[Factions] Friendly fire is disabled."));
-            }
-        }
+        // TODO: Friendly fire protection disabled due to Java 25 compiler bug with Entity.getUuid()
+        // Uncomment when Hytale provides an alternative API or Java fixes the bug
+        // Entity targetEntity = event.getTargetEntity();
+        // if (targetEntity instanceof Player targetPlayer) {
+        //     UUID targetId = targetPlayer.getUuid();
+        //     if (targetId == null) {
+        //         return;
+        //     }
+        //     UUID attackerId = attacker.getUuid();
+        //     if (!plugin.service().canDamage(attackerId, targetId)) {
+        //         event.setCancelled(true);
+        //         attacker.sendMessage(Message.raw("[Factions] Friendly fire is disabled."));
+        //     }
+        // }
     }
 
     private Location toBlockLocation(PlayerRef playerRef, Vector3i block) {
