@@ -83,6 +83,16 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         getEventRegistry().register(PlayerMouseButtonEvent.class, this::handleMouseEvent);
         getEventRegistry().register(PlayerChatEvent.class, "chat", this::handleChat);
 
+        // FancyCore Integration
+        try {
+            Class.forName("com.fancyinnovations.fancycore.main.FancyCorePlugin");
+            com.fancyinnovations.fancycore.main.FancyCore.get().getPlaceholderService()
+                .registerProvider(new com.kingc.hytale.factions.integration.FactionNamePlaceholder(this));
+            LOGGER.info("Linked with FancyCore for placeholders!");
+        } catch (Throwable e) {
+            LOGGER.info("FancyCore not found (or error linking), placeholders disabled.");
+        }
+
         startClaimScanner();
         LOGGER.atInfo().log("Loaded " + getName() + " v" + getManifest().getVersion());
     }
