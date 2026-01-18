@@ -139,7 +139,30 @@ if (eco.has(player, gold, 50.0)) {
 }
 ```
 
-### 4. Gérer les Données Joueur
+### 4. Personnaliser le Chat (Préfixes & Placeholders)
+Le système de chat de FancyCore repose sur des **Placeholders**. Pour afficher le préfixe d'un joueur, vous n'avez pas besoin de coder, mais de configurer le format.
+
+**Configuration (config.json)** :
+```json
+"chatFormat": "[%player_group_prefix%] %player_name%: %message%"
+```
+
+**Utilisation dans le code (PlaceholderAPI)** :
+Si vous créez votre propre système de message, utilisez le service pour parser les textes :
+```java
+String rawText = "Bonjour %player_name% !";
+String parsed = FancyCore.get().getPlaceholderService().parse(player, rawText);
+player.sendMessage(parsed);
+```
+
+**Placeholders Natifs Disponibles** :
+- `%player_name%` : Nom du joueur.
+- `%player_group_prefix%` : Préfixe du groupe le plus élevé (via `Group.setPrefix()`).
+- `%player_group_suffix%` : Suffixe du groupe.
+- `%player_balance_formatted%` : Solde formaté.
+- `%player_ping%` : Latence.
+
+### 5. Gérer les Données Joueur
 ```java
 FancyPlayer fp = FancyPlayerService.get().getPlayer(playerRef);
 FancyPlayerData data = fp.getData();
