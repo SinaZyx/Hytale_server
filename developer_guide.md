@@ -296,13 +296,72 @@ public class EconomyService {
 
 ---
 
-## 7. Checklist pour Développeur "Native"
+---
+
+## 7. Threading & Sédules (Important !)
+
+Contrairement à Bukkit/Spigot qui fournit un `BukkitScheduler`, Hytale semble encourager l'utilisation de **Java Standard** pour l'asynchrone, et de `World.execute()` pour le synchrone.
+
+### Exécuter une tâche répétée
+FancyCore instancie son propre `ScheduledExecutorService` :
+
+```java
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+
+public class MonPlugin extends JavaPlugin {
+    private ScheduledExecutorService scheduler;
+
+    @Override
+    public void start() {
+        scheduler = Executors.newScheduledThreadPool(2);
+        
+        // Tâche toutes les secondes
+        scheduler.scheduleAtFixedRate(() -> {
+            System.out.println("Tâche de fond...");
+        }, 0, 1, TimeUnit.SECONDS);
+    }
+    
+    @Override
+    public void shutdown() {
+        scheduler.shutdown();
+    }
+}
+```
+
+### Revenir sur le Thread Principal (Synchronisation)
+Si vous devez modifier le monde depuis une tâche asynchrone, vous **DEVEZ** utiliser `world.execute()`.
+
+```java
+// Dans le thread asynchrone
+String playerName = "Bob";
+Universe.get().getWorld("world").execute(() -> {
+    // Ici on est "Safe" pour modifier des blocs ou entités
+    PlayerRef player = ...;
+    player.sendMessage(Message.raw("Coucou " + playerName));
+});
+```
+
+---
+
+## 8. Utilitaires & Divers
+
+Quelques classes utiles repérées :
+
+- **`com.hypixel.hytale.server.core.NameMatching`** : Probablement utilisé pour la complétion de noms ou la recherche floue de joueurs.
+- **`com.hypixel.hytale.server.core.io.ServerManager`** : Pour obtenir des infos sur le serveur (Uptime, IP, version ?).
+- **`com.hypixel.hytale.component.Ref` / `Store`** : Hytale utilise une architecture **ECS (Entity Component System)** très marquée. On ne manipule pas des objets `Player` directement, mais des `Ref<EntityStore>` qui contiennent des composants (`Transform`, `Player`, `Inventory`).
+
+---
+
+## 9. Checklist pour Développeur "Native"
 
 Si vous créez un plugin sans FancyCore :
 1.  [ ] Créer un projet Gradle avec `HytaleServer.jar` en dépendance (`compileOnly`).
 2.  [ ] Créer le `hytale.json` (ou `manifest.json`).
-3.  [ ] Étendre `JavaPlugin`.
+3.  [ ] Étendre `JavaPlugin` et gérer son cycle de vie (`start`/`shutdown`).
 4.  [ ] Utiliser `CommandManager` pour vos commandes.
 5.  [ ] Utiliser `getEventRegistry()` pour vos listeners.
-6.  [ ] Gérer scrupuleusement le Threading (le serveur Hytale semble très asynchrone par défaut).
-7.  [ ] Pour les GUIs : Étendre `InteractiveCustomUIPage` et gérer les `.ui` (HTML/CSS).
+6.  [ ] **Threading** : Créer votre propre `ExecutorService` pour les timers.
+7.  [ ] **ECS** : Apprendre à manipuler `Store`, `Ref` et `Component`.
+8.  [ ] Pour les GUIs : Étendre `InteractiveCustomUIPage`.
