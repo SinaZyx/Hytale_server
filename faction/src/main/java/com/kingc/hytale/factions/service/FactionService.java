@@ -841,13 +841,6 @@ public final class FactionService {
         return Optional.ofNullable(store.factions().get(id));
     }
 
-    public Optional<Faction> getFactionById(UUID factionId) {
-        if (factionId == null) {
-            return Optional.empty();
-        }
-        return Optional.ofNullable(store.factions().get(factionId));
-    }
-
     public Map<UUID, Faction> factions() {
         return Collections.unmodifiableMap(store.factions());
     }

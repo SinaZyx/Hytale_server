@@ -35,6 +35,10 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
 
     private final HytaleFactionsPlugin plugin;
     private String activeTab = "manage";
+    private String cachedFactionName;
+    private String cachedPlayerName;
+    private String cachedDescription;
+    private String cachedBordersSeconds;
 
     public FactionsMenuPage(HytaleFactionsPlugin plugin, PlayerRef playerRef) {
         super(playerRef, CustomPageLifetime.CanDismissOrCloseThroughInteraction, FactionsMenuEventData.CODEC);
@@ -55,6 +59,7 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
         buildEventHistory(commands);
         buildPerks(commands);
         applyTabState(commands);
+        applyCachedInputs(commands);
         bindActions(events);
     }
 
@@ -63,6 +68,7 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
         if (data == null) {
             return;
         }
+        cacheInputs(data);
         String action = normalize(data.getAction());
         if (action == null) {
             return;
@@ -82,7 +88,7 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
             case "create" -> buildCommand("create", requireFactionName(data));
             case "rename" -> buildCommand("rename", requireFactionName(data));
             case "desc" -> buildDescriptionCommand(data);
-            case "info" -> buildOptionalCommand("info", normalize(data.getFactionName()));
+            case "info" -> buildOptionalCommand("info", resolveFactionName(data));
             case "who" -> buildCommand("who", requirePlayerName(data));
             case "map" -> "f map";
             case "borders" -> buildBordersCommand(data);
@@ -101,7 +107,7 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
             case "home" -> "f home";
             case "claim" -> "f claim";
             case "unclaim" -> "f unclaim";
-            case "stats" -> buildOptionalCommand("stats", normalize(data.getPlayerName()));
+            case "stats" -> buildOptionalCommand("stats", resolvePlayerName(data));
             case "top_kills" -> "f top kills";
             case "top_kdr" -> "f top kdr";
             case "top_factions" -> "f top factions";
@@ -135,6 +141,7 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
         buildEventHistory(commands);
         buildPerks(commands);
         applyTabState(commands);
+        applyCachedInputs(commands);
         bindActions(events);
         sendUpdate(commands, events, false);
     }
@@ -328,6 +335,7 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
     }
 
     private void bindActions(UIEventBuilder events) {
+        bindInputTracking(events);
         bindNavigation(events);
         bindClose(events);
         addAction(events, "#CreateButton", "create", true, false);
@@ -360,6 +368,18 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
         addAction(events, "#WarDeclareButton", "war_declare", true, false);
         addAction(events, "#WarStatusButton", "war_status", false, false);
         addAction(events, "#WarSurrenderButton", "war_surrender", false, false);
+    }
+
+    private void bindInputTracking(UIEventBuilder events) {
+        addInputBinding(events, "#FactionNameInput", FactionsMenuEventData.KEY_FACTION_NAME);
+        addInputBinding(events, "#PlayerNameInput", FactionsMenuEventData.KEY_PLAYER_NAME);
+        addInputBinding(events, "#DescriptionInput", FactionsMenuEventData.KEY_DESCRIPTION);
+        addInputBinding(events, "#BordersSecondsInput", FactionsMenuEventData.KEY_BORDERS_SECONDS);
+    }
+
+    private void addInputBinding(UIEventBuilder events, String elementId, String key) {
+        events.addEventBinding(CustomUIEventBindingType.ValueChanged, elementId,
+                EventData.of(key, elementId + ".Value"));
     }
 
     private void bindClose(UIEventBuilder events) {
@@ -468,8 +488,54 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
         events.addEventBinding(CustomUIEventBindingType.Activating, elementId, data);
     }
 
+    private void cacheInputs(FactionsMenuEventData data) {
+        if (data.getFactionName() != null) {
+            cachedFactionName = data.getFactionName();
+        }
+        if (data.getPlayerName() != null) {
+            cachedPlayerName = data.getPlayerName();
+        }
+        if (data.getDescription() != null) {
+            cachedDescription = data.getDescription();
+        }
+        if (data.getBordersSeconds() != null) {
+            cachedBordersSeconds = data.getBordersSeconds();
+        }
+    }
+
+    private void applyCachedInputs(UICommandBuilder commands) {
+        if (cachedFactionName != null) {
+            commands.set("#FactionNameInput.Value", cachedFactionName);
+        }
+        if (cachedPlayerName != null) {
+            commands.set("#PlayerNameInput.Value", cachedPlayerName);
+        }
+        if (cachedDescription != null) {
+            commands.set("#DescriptionInput.Value", cachedDescription);
+        }
+        if (cachedBordersSeconds != null) {
+            commands.set("#BordersSecondsInput.Value", cachedBordersSeconds);
+        }
+    }
+
+    private String resolveFactionName(FactionsMenuEventData data) {
+        return normalize(data.getFactionName() != null ? data.getFactionName() : cachedFactionName);
+    }
+
+    private String resolvePlayerName(FactionsMenuEventData data) {
+        return normalize(data.getPlayerName() != null ? data.getPlayerName() : cachedPlayerName);
+    }
+
+    private String resolveDescription(FactionsMenuEventData data) {
+        return normalize(data.getDescription() != null ? data.getDescription() : cachedDescription);
+    }
+
+    private String resolveBordersSeconds(FactionsMenuEventData data) {
+        return normalize(data.getBordersSeconds() != null ? data.getBordersSeconds() : cachedBordersSeconds);
+    }
+
     private String requireFactionName(FactionsMenuEventData data) {
-        String name = normalize(data.getFactionName());
+        String name = resolveFactionName(data);
         if (name == null) {
             sendNotice("Nom de faction requis.");
             return null;
@@ -478,7 +544,7 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
     }
 
     private String requirePlayerName(FactionsMenuEventData data) {
-        String name = normalize(data.getPlayerName());
+        String name = resolvePlayerName(data);
         if (name == null) {
             sendNotice("Nom de joueur requis.");
             return null;
@@ -508,7 +574,7 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
     }
 
     private String buildDescriptionCommand(FactionsMenuEventData data) {
-        String description = normalize(data.getDescription());
+        String description = resolveDescription(data);
         if (description == null) {
             return "f desc";
         }
@@ -516,7 +582,7 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
     }
 
     private String buildBordersCommand(FactionsMenuEventData data) {
-        String raw = normalize(data.getBordersSeconds());
+        String raw = resolveBordersSeconds(data);
         if (raw == null) {
             return "f borders 30";
         }

@@ -3,14 +3,18 @@ plugins {
     id("maven-publish")
 }
 
+val hytaleServerJar = rootProject.file("../HytaleServer.jar").takeIf { it.exists() }
+    ?: file("C:/Users/fores/AppData/Roaming/Hytale/install/release/package/game/latest/Server/HytaleServer.jar")
+
 dependencies {
-    compileOnly(files("C:/Users/fores/AppData/Roaming/Hytale/install/release/package/game/latest/Server/HytaleServer.jar"))
+    compileOnly(files(hytaleServerJar))
 
     compileOnly("de.oliver.FancyAnalytics:logger:0.0.9")
     implementation("de.oliver.FancyAnalytics:java-sdk:0.0.5")
     compileOnly("com.fancyinnovations.fancyspaces:java-sdk:0.0.3")
 
     compileOnly("com.google.code.gson:gson:2.13.2")
+    compileOnly("javax.annotation:javax.annotation-api:1.3.2")
     compileOnly("org.jetbrains:annotations:26.0.2-1")
 }
 

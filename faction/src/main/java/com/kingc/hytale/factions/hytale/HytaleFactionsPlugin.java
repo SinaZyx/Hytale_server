@@ -7,6 +7,7 @@ import com.hypixel.hytale.server.core.entity.Entity;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.event.events.ShutdownEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerConnectEvent;
+import com.hypixel.hytale.server.core.event.events.player.PlayerInteractEvent;
 import com.hypixel.hytale.server.core.event.events.ecs.BreakBlockEvent;
 import com.hypixel.hytale.server.core.event.events.ecs.PlaceBlockEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerMouseButtonEvent;
@@ -130,7 +131,8 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         getEventRegistry().register(PlayerChatEvent.class, "chat", this::handleChat);
         getEventRegistry().register(KillFeedEvent.KillerMessage.class, this::handleKillFeed);
 
-        // Block protection events (ECS - more reliable than MouseButtonEvent)
+        // Block protection events (player interaction exposes player + block)
+        getEventRegistry().registerGlobal(PlayerInteractEvent.class, this::handlePlayerInteract);
         getEventRegistry().registerGlobal(BreakBlockEvent.class, this::handleBreakBlock);
         getEventRegistry().registerGlobal(PlaceBlockEvent.class, this::handlePlaceBlock);
 
@@ -475,7 +477,7 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         int count = Math.max(1, settings.factionCreateParticleCount);
         double y = location.y() + settings.factionCreateParticleHeightOffset;
         Vector3d position = new Vector3d(location.x(), y, location.z());
-        world.execute(() -> ParticleUtil.spawnParticles(world, particleAsset, position, count));
+        world.execute(() -> spawnParticles(world, particleAsset, position, count));
 
         PlayerRef playerRef = Universe.get().getPlayer(actorId);
         if (playerRef != null) {
@@ -555,12 +557,12 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         double conquestY = location.y() + settings.conquestParticleHeightOffset;
 
         world.execute(() -> {
-            ParticleUtil.spawnParticles(world, particleAsset, position, count);
+            spawnParticles(world, particleAsset, position, count);
             if (isClaim) {
                 spawnClaimPillar(world, settings, centerX, location.y(), centerZ);
                 if (conquestActive) {
                     Vector3d conquestPos = new Vector3d(centerX, conquestY, centerZ);
-                    ParticleUtil.spawnParticles(world, conquestAsset, conquestPos, conquestCount);
+                    spawnParticles(world, conquestAsset, conquestPos, conquestCount);
                 }
             }
         });
@@ -992,6 +994,17 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         return text;
     }
 
+    private void spawnParticles(World world, String asset, Vector3d position, int count) {
+        if (world == null || asset == null || position == null) {
+            return;
+        }
+        int repeat = Math.max(1, count);
+        Store<EntityStore> store = world.getEntityStore().getStore();
+        for (int i = 0; i < repeat; i++) {
+            ParticleUtil.spawnParticleEffect(asset, position, store);
+        }
+    }
+
     private void spawnClaimPillar(World world, FactionSettings settings, double centerX, double baseY, double centerZ) {
         int height = Math.max(1, settings.claimPillarHeight);
         int step = Math.max(1, settings.claimPillarStep);
@@ -999,7 +1012,7 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         String asset = normalizeParticleAsset(settings.claimPillarParticleAsset);
         for (int offset = 0; offset <= height; offset += step) {
             Vector3d position = new Vector3d(centerX, baseY + offset, centerZ);
-            ParticleUtil.spawnParticles(world, asset, position, count);
+            spawnParticles(world, asset, position, count);
         }
     }
 
@@ -1017,7 +1030,7 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
             return;
         }
         Vector3d spawnPos = new Vector3d(position.getX(), position.getY() + heightOffset, position.getZ());
-        world.execute(() -> ParticleUtil.spawnParticles(world, particleAsset, spawnPos, count));
+        world.execute(() -> spawnParticles(world, particleAsset, spawnPos, count));
     }
 
     private Location toLocation(PlayerRef playerRef) {
@@ -1122,7 +1135,7 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
             int x = startX;
             for (int z = startZ; z <= endZ; z += step) {
                 Vector3d position = new Vector3d(x + 0.5, y, z + 0.5);
-                ParticleUtil.spawnParticles(world, particleAsset, position, count);
+                spawnParticles(world, particleAsset, position, count);
             }
             return;
         }
@@ -1130,7 +1143,7 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
             int z = startZ;
             for (int x = startX; x <= endX; x += step) {
                 Vector3d position = new Vector3d(x + 0.5, y, z + 0.5);
-                ParticleUtil.spawnParticles(world, particleAsset, position, count);
+                spawnParticles(world, particleAsset, position, count);
             }
         }
     }
@@ -1142,62 +1155,48 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         return asset;
     }
 
-    // ==================== BLOCK PROTECTION (ECS Events) ====================
+    // ==================== BLOCK PROTECTION (Interaction Events) ====================
 
-    private void handleBreakBlock(BreakBlockEvent event) {
-        if (plugin == null || event.isCancelled()) {
+    private void handlePlayerInteract(PlayerInteractEvent event) {
+        if (plugin == null || event == null) {
             return;
         }
-
-        UUID playerId = event.getPlayerUuid();
-        if (playerId == null) {
+        Ref<EntityStore> playerEntity = event.getPlayerRef();
+        if (playerEntity == null || !playerEntity.isValid()) {
             return;
         }
-
-        Vector3i blockPos = event.getBlockPosition();
+        Store<EntityStore> store = playerEntity.getStore();
+        PlayerRef playerRef = store.getComponent(playerEntity, PlayerRef.getComponentType());
+        if (playerRef == null) {
+            return;
+        }
+        Vector3i blockPos = event.getTargetBlock();
         if (blockPos == null) {
             return;
         }
-
-        World world = event.getWorld();
-        String worldName = world != null ? world.getName() : "unknown";
+        World world = Universe.get().getWorld(playerRef.getWorldUuid());
+        String worldName = world != null ? world.getName() : playerRef.getWorldUuid().toString();
         Location location = new Location(worldName, blockPos.getX(), blockPos.getY(), blockPos.getZ(), 0f, 0f);
-
-        if (!plugin.canBuild(new HytalePlayerRef(playerId), location)) {
+        if (!plugin.canBuild(new HytalePlayerRef(playerRef), location)) {
             event.setCancelled(true);
-            PlayerRef playerRef = Universe.get().getPlayer(playerId);
-            if (playerRef != null) {
-                playerRef.sendMessage(Message.raw("[Factions] You cannot break blocks here.").color(plugin.settings().colorEnemy));
-            }
+            playerRef.sendMessage(Message.raw("[Factions] You cannot build here.").color(plugin.settings().colorEnemy));
         }
     }
 
+    private void handleBreakBlock(BreakBlockEvent event) {
+        if (plugin == null) {
+            return;
+        }
+        // BreakBlockEvent data access is not documented in developer_guide.md.
+        // Keep this handler as a placeholder until supported APIs are defined.
+    }
+
     private void handlePlaceBlock(PlaceBlockEvent event) {
-        if (plugin == null || event.isCancelled()) {
+        if (plugin == null) {
             return;
         }
-
-        UUID playerId = event.getPlayerUuid();
-        if (playerId == null) {
-            return;
-        }
-
-        Vector3i blockPos = event.getBlockPosition();
-        if (blockPos == null) {
-            return;
-        }
-
-        World world = event.getWorld();
-        String worldName = world != null ? world.getName() : "unknown";
-        Location location = new Location(worldName, blockPos.getX(), blockPos.getY(), blockPos.getZ(), 0f, 0f);
-
-        if (!plugin.canBuild(new HytalePlayerRef(playerId), location)) {
-            event.setCancelled(true);
-            PlayerRef playerRef = Universe.get().getPlayer(playerId);
-            if (playerRef != null) {
-                playerRef.sendMessage(Message.raw("[Factions] You cannot place blocks here.").color(plugin.settings().colorEnemy));
-            }
-        }
+        // PlaceBlockEvent data access is not documented in developer_guide.md.
+        // Keep this handler as a placeholder until supported APIs are defined.
     }
 
     // ==================== LEGACY MOUSE EVENT (for PvP protection) ====================

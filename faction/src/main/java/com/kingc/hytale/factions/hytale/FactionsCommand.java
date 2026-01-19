@@ -13,8 +13,12 @@ public final class FactionsCommand extends CommandBase {
         super("f", "Faction commands");
         this.plugin = plugin;
         this.addAliases("faction", "factions");
-        this.setPermissionGroup(GameMode.Adventure);
         this.setAllowsExtraArguments(true);
+    }
+
+    @Override
+    protected boolean canGeneratePermission() {
+        return false;
     }
 
     @Override

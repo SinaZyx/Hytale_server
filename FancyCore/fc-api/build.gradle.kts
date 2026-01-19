@@ -4,9 +4,13 @@ plugins {
     id("com.gradleup.shadow") version "8.3.0"
 }
 
-dependencies {
-    compileOnly(files("C:/Users/fores/AppData/Roaming/Hytale/install/release/package/game/latest/Server/HytaleServer.jar")) // TODO (HTEA): update to maven repo when available
+val hytaleServerJar = rootProject.file("../HytaleServer.jar").takeIf { it.exists() }
+    ?: file("C:/Users/fores/AppData/Roaming/Hytale/install/release/package/game/latest/Server/HytaleServer.jar")
 
+dependencies {
+    compileOnly(files(hytaleServerJar)) // TODO (HTEA): update to maven repo when available
+
+    compileOnly("com.google.code.gson:gson:2.13.2")
     compileOnly("de.oliver.FancyAnalytics:logger:0.0.9")
     compileOnly("org.jetbrains:annotations:26.0.2-1")
 }

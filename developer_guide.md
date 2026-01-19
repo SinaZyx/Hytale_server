@@ -465,7 +465,7 @@ getEventRegistry().registerAsyncGlobal(PlayerChatEvent.class, future ->
 );
 
 // Propriétés événement
-event.getPlayerRef()    // Joueur concerné
+event.getPlayerRef()    // PlayerRef (PlayerRefEvent) ou Ref<EntityStore> (PlayerEvent)
 event.setCancelled(true) // Annuler
 event.getContent()      // Contenu chat
 event.setSender()       // Modifier expéditeur
@@ -524,6 +524,7 @@ if (damageData != null && damageData.getLastCombatAction() != null) {
 | `TeleportHistory` | `com.hypixel.hytale.builtin.teleport.components` | Historique téléportations |
 | `Vector3d` | `com.hypixel.hytale.math.vector` | Vecteur 3D double (positions) |
 | `Vector3f` | `com.hypixel.hytale.math.vector` | Vecteur 3D float (rotations) |
+| `Vector3i` | `com.hypixel.hytale.math.vector` | Vecteur 3D int (blocs) |
 | `Transform` | `com.hypixel.hytale.math.vector` | Position + rotation combinées |
 
 **Méthodes clés :**
@@ -759,6 +760,30 @@ com.hypixel.hytale
 | `PlayerSetupDisconnectEvent` | `server.core.event.events.player` | Setup déconnexion |
 | `PlayerRefEvent` | `server.core.event.events.player` | Événement avec PlayerRef |
 
+**PlayerInteractEvent (signatures HytaleServer.jar) :**
+- `getPlayerRef()` -> `Ref<EntityStore>` (via `PlayerEvent`)
+- `getTargetBlock()` -> `Vector3i`
+- `getItemInHand()` -> `ItemStack`
+- `getActionType()` -> `InteractionType`
+- `isCancelled()` / `setCancelled(boolean)`
+
+Exemple (player + bloc) :
+```java
+getEventRegistry().registerGlobal(PlayerInteractEvent.class, event -> {
+    Ref<EntityStore> playerEntity = event.getPlayerRef();
+    if (playerEntity == null || !playerEntity.isValid()) {
+        return;
+    }
+    Store<EntityStore> store = playerEntity.getStore();
+    PlayerRef player = store.getComponent(playerEntity, PlayerRef.getComponentType());
+    Vector3i block = event.getTargetBlock();
+    if (player == null || block == null) {
+        return;
+    }
+    // Utiliser player + block
+});
+```
+
 ### 14.2 Événements ECS (Gameplay)
 
 | Classe | Package | Description |
@@ -773,6 +798,36 @@ com.hypixel.hytale
 | `CraftRecipeEvent` | `server.core.event.events.ecs` | Craft d'une recette |
 | `SwitchActiveSlotEvent` | `server.core.event.events.ecs` | Changer de slot actif |
 | `ChangeGameModeEvent` | `server.core.event.events.ecs` | Changer de mode de jeu |
+
+**Signatures vérifiées (HytaleServer.jar) :**
+- `BreakBlockEvent` : `getItemInHand()`, `getTargetBlock()`, `getBlockType()`, `setTargetBlock(Vector3i)`
+- `PlaceBlockEvent` : `getItemInHand()`, `getTargetBlock()`, `setTargetBlock(Vector3i)`, `getRotation()`, `setRotation(RotationTuple)`
+- `DamageBlockEvent` : `getItemInHand()`, `getTargetBlock()`, `setTargetBlock(Vector3i)`, `getBlockType()`, `getCurrentDamage()`, `getDamage()`, `setDamage(float)`
+- `UseBlockEvent` : `getInteractionType()`, `getContext()`, `getTargetBlock()`, `getBlockType()`
+- `UseBlockEvent.Pre` : `isCancelled()` / `setCancelled(boolean)`
+
+Note : `BreakBlockEvent` / `PlaceBlockEvent` / `DamageBlockEvent` ne donnent pas directement le joueur ou le monde.
+
+**InteractionContext (UseBlockEvent)** :
+- `getEntity()` / `getOwningEntity()` -> `Ref<EntityStore>` (entité à l'origine de l'action)
+
+Exemple (résoudre un PlayerRef depuis UseBlockEvent.Pre) :
+```java
+getEventRegistry().registerGlobal(UseBlockEvent.Pre.class, event -> {
+    InteractionContext ctx = event.getContext();
+    Ref<EntityStore> actorRef = ctx == null ? null : ctx.getEntity();
+    if (actorRef == null || !actorRef.isValid()) {
+        return;
+    }
+    Store<EntityStore> store = actorRef.getStore();
+    PlayerRef player = store.getComponent(actorRef, PlayerRef.getComponentType());
+    if (player == null) {
+        return;
+    }
+    Vector3i block = event.getTargetBlock();
+    // Utiliser player + block
+});
+```
 
 ### 14.3 Événements Entités
 
@@ -958,9 +1013,14 @@ import com.hypixel.hytale.server.core.universe.world.ParticleUtil;
 
 // Spawner des particules à une position
 world.execute(() -> {
-    ParticleUtil.spawnParticles(world, "hytale:smoke", position, count);
+    Store<EntityStore> store = world.getEntityStore().getStore();
+    for (int i = 0; i < count; i++) {
+        ParticleUtil.spawnParticleEffect("hytale:smoke", position, store);
+    }
 });
 ```
+
+Note : `ParticleUtil` expose `spawnParticleEffect(...)` dans `HytaleServer.jar` (pas de `spawnParticles(...)`).
 
 ---
 

@@ -1,6 +1,7 @@
 plugins {
     id 'java'
     id 'org.jetbrains.gradle.plugin.idea-ext' version '1.3'
+    id 'com.gradleup.shadow' version '8.3.0'
 }
 
 import org.gradle.internal.os.OperatingSystem
@@ -12,7 +13,12 @@ repositories {
     mavenCentral()
 }
 
+def localServerJar = file("$projectDir/../HytaleServer.jar")
+
 ext {
+    if (localServerJar.exists()) {
+        hytaleServerJar = localServerJar
+    }
     if (project.hasProperty('hytale_home')) {
         hytaleHome = project.findProperty('hytale_home')
     }
@@ -33,11 +39,14 @@ ext {
     }
 }
 
-if (!project.hasProperty('hytaleHome')) {
+if (!project.hasProperty('hytaleHome') && !localServerJar.exists()) {
     throw new GradleException('Your Hytale install could not be detected automatically. If you are on an unsupported platform or using a custom install location, please define the install location using the hytale_home property.');
 }
-else if (!file(project.findProperty('hytaleHome')).exists()) {
+else if (!localServerJar.exists() && !file(project.findProperty('hytaleHome')).exists()) {
     throw new GradleException("Failed to find Hytale at the expected location. Please make sure you have installed the game. The expected location can be changed using the hytale_home property. Currently looking in ${project.findProperty('hytaleHome')}")
+}
+if (!project.hasProperty('hytaleServerJar')) {
+    hytaleServerJar = file("$hytaleHome/install/$patchline/package/game/latest/Server/HytaleServer.jar")
 }
 
 java {
@@ -61,9 +70,16 @@ compileJava {
 // compile against their code. This requires you to have Hytale installed using
 // the official launcher for now.
 dependencies {
-    implementation(files("$hytaleHome/install/$patchline/package/game/latest/Server/HytaleServer.jar"))
+    compileOnly(files(hytaleServerJar))
     implementation 'com.google.code.gson:gson:2.11.0'
-    compileOnly 'com.fancyinnovations:fc-api:0.4.1'
+    if (file("$projectDir/../FancyCore/fc-api/build/libs").exists()) {
+        implementation fileTree("$projectDir/../FancyCore/fc-api/build/libs") {
+            include "fc-api-*.jar"
+            exclude "*-sources.jar", "*-javadoc.jar", "*-all.jar"
+        }
+    } else {
+        implementation 'com.fancyinnovations:fc-api:0.4.1'
+    }
 }
 
 // Create the working directory to run the server if it does not already exist.
@@ -143,6 +159,18 @@ tasks.register('generateVSCodeLaunch') {
         ]
         launchFile.text = groovy.json.JsonOutput.prettyPrint(groovy.json.JsonOutput.toJson(launchConfig))
     }
+}
+
+tasks.named('shadowJar') {
+    archiveClassifier = ''
+}
+
+tasks.named('jar') {
+    archiveClassifier = 'thin'
+}
+
+tasks.named('assemble') {
+    dependsOn tasks.named('shadowJar')
 }
 
 task compareEvents {

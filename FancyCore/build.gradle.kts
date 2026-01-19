@@ -1,10 +1,14 @@
 import com.github.jengelman.gradle.plugins.shadow.tasks.ShadowJar
+import org.gradle.jvm.tasks.Jar
 
 plugins {
     id("java-library")
     id("maven-publish")
     id("com.gradleup.shadow") version "8.3.0"
 }
+
+val hytaleServerJar = rootProject.file("../HytaleServer.jar").takeIf { it.exists() }
+    ?: file("C:/Users/fores/AppData/Roaming/Hytale/install/release/package/game/latest/Server/HytaleServer.jar")
 
 allprojects {
     group = "com.fancyinnovations"
@@ -22,7 +26,7 @@ allprojects {
 dependencies {
     // TODO (HTEA): Update dependency when available
 //    compileOnly("com.hypixel.hytale:HytaleServer-parent:1.0-SNAPSHOT")
-    compileOnly(files("C:/Users/fores/AppData/Roaming/Hytale/install/release/package/game/latest/Server/HytaleServer.jar"))
+    compileOnly(files(hytaleServerJar))
 
     implementation(project(":fc-api"))
 
@@ -88,6 +92,14 @@ tasks {
         archiveClassifier.set("")
 
         dependsOn(":fc-api:shadowJar")
+    }
+
+    jar {
+        archiveClassifier.set("thin")
+    }
+
+    assemble {
+        dependsOn(shadowJar)
     }
 
     compileJava {
