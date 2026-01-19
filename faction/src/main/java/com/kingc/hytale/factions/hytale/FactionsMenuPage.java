@@ -335,7 +335,7 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
     }
 
     private void bindActions(UIEventBuilder events) {
-        bindInputTracking(events);
+        // Input tracking removed - values are sent with button actions instead
         bindNavigation(events);
         bindClose(events);
         addAction(events, "#CreateButton", "create", true, false);
@@ -607,7 +607,7 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
     }
 
     private void sendNotice(String message) {
-        playerRef.sendMessage(Message.raw(PREFIX + message));
+        playerRef.sendMessage(FactionMessages.format(message));
     }
 
     private Optional<Faction> getCurrentFaction() {

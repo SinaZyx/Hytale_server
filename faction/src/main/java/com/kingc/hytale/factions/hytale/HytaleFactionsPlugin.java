@@ -136,16 +136,8 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         getEventRegistry().registerGlobal(BreakBlockEvent.class, this::handleBreakBlock);
         getEventRegistry().registerGlobal(PlaceBlockEvent.class, this::handlePlaceBlock);
 
-        // FancyCore Integration
-        try {
-            Class.forName("com.fancyinnovations.fancycore.main.FancyCorePlugin");
-            com.fancyinnovations.fancycore.api.placeholders.PlaceholderService.get()
-                .registerProvider(new com.kingc.hytale.factions.integration.FactionNamePlaceholder(() -> plugin));
-            registerFancyCoreEvents();
-            LOGGER.atInfo().log("Linked with FancyCore (placeholders + warps).");
-        } catch (Throwable e) {
-            LOGGER.atInfo().log("FancyCore not found (or error linking), placeholders disabled.");
-        }
+        // FancyCore Integration - delayed to ensure FancyCore is fully started
+        claimScanner.schedule(this::initFancyCoreIntegration, 3, TimeUnit.SECONDS);
 
         startClaimScanner();
         startWarTicker();

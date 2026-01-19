@@ -19,7 +19,7 @@ public final class HytalePlayerRef implements PlayerRef {
 
     @Override
     public void sendMessage(String message) {
-        ref.sendMessage(Message.raw(message));
+        ref.sendMessage(FactionMessages.parseAndFormat(message));
     }
 
     @Override

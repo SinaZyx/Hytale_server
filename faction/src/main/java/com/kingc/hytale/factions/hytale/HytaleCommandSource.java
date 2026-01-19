@@ -18,7 +18,7 @@ public final class HytaleCommandSource implements CommandSource {
 
     @Override
     public void sendMessage(String message) {
-        ctx.sendMessage(Message.raw(message));
+        ctx.sendMessage(FactionMessages.parseAndFormat(message));
     }
 
     @Override

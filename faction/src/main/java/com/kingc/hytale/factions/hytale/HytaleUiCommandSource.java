@@ -17,7 +17,7 @@ public final class HytaleUiCommandSource implements CommandSource {
 
     @Override
     public void sendMessage(String message) {
-        playerRef.sendMessage(Message.raw(message));
+        playerRef.sendMessage(FactionMessages.parseAndFormat(message));
     }
 
     @Override

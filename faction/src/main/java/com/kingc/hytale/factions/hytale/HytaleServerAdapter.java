@@ -88,7 +88,7 @@ public final class HytaleServerAdapter implements ServerAdapter {
         if (ref == null) {
             return;
         }
-        ref.sendMessage(Message.raw(message));
+        ref.sendMessage(FactionMessages.parseAndFormat(message));
     }
 
     @Override

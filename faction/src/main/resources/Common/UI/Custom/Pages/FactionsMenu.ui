@@ -1,4 +1,4 @@
-$C = "../Common.ui";
+// Self-contained Factions Menu UI - no external dependencies
 
 @NavButtonStyle = TextButtonStyle(
   Default: (Background: #0f1721, LabelStyle: (FontSize: 13, TextColor: #96a9be, RenderBold: true, HorizontalAlignment: Start, VerticalAlignment: Center)),
@@ -18,7 +18,20 @@ $C = "../Common.ui";
   Pressed: (Background: #1b2532, LabelStyle: (FontSize: 12, TextColor: #96a9be, RenderBold: true, HorizontalAlignment: Center, VerticalAlignment: Center))
 );
 
-$C.@PageOverlay {
+@InputFieldStyle = InputFieldStyle(FontSize: 14, TextColor: #ffffff);
+@InputFieldPlaceholderStyle = InputFieldStyle(FontSize: 14, TextColor: #6e7da1);
+
+@FactionScrollbarStyle = ScrollbarStyle(
+  Spacing: 6,
+  Size: 6,
+  Background: #1a2330,
+  Handle: #3b4552,
+  HoveredHandle: #4b5562,
+  DraggedHandle: #5b6572
+);
+
+Group {
+  Background: #000000(0.45);
   LayoutMode: Middle;
 
   Group #Root {
@@ -288,9 +301,13 @@ $C.@PageOverlay {
           Anchor: (Bottom: 6);
         }
 
-        $C.@TextField #FactionNameInput {
-          Anchor: (Width: 420);
+        TextField #FactionNameInput {
+          Anchor: (Width: 420, Height: 38);
+          Background: #0a1119;
+          Style: @InputFieldStyle;
+          PlaceholderStyle: @InputFieldPlaceholderStyle;
           PlaceholderText: "Nom de faction";
+          Padding: (Horizontal: 10);
         }
 
         Group { Anchor: (Height: 8); }
@@ -301,9 +318,13 @@ $C.@PageOverlay {
           Anchor: (Bottom: 6);
         }
 
-        $C.@TextField #DescriptionInput {
-          Anchor: (Width: 420);
+        TextField #DescriptionInput {
+          Anchor: (Width: 420, Height: 38);
+          Background: #0a1119;
+          Style: @InputFieldStyle;
+          PlaceholderStyle: @InputFieldPlaceholderStyle;
           PlaceholderText: "Description de la faction";
+          Padding: (Horizontal: 10);
         }
       }
 
@@ -320,9 +341,13 @@ $C.@PageOverlay {
           Anchor: (Bottom: 6);
         }
 
-        $C.@TextField #PlayerNameInput {
-          Anchor: (Width: 420);
+        TextField #PlayerNameInput {
+          Anchor: (Width: 420, Height: 38);
+          Background: #0a1119;
+          Style: @InputFieldStyle;
+          PlaceholderStyle: @InputFieldPlaceholderStyle;
           PlaceholderText: "Pseudo joueur";
+          Padding: (Horizontal: 10);
         }
       }
 
@@ -404,7 +429,7 @@ $C.@PageOverlay {
 
             Group #MembersList {
               LayoutMode: TopScrolling;
-              ScrollbarStyle: $C.@DefaultScrollbarStyle;
+              ScrollbarStyle: @FactionScrollbarStyle;
               Anchor: (Height: 150);
             }
           }
@@ -448,7 +473,7 @@ $C.@PageOverlay {
 
             Group #AlliesList {
               LayoutMode: TopScrolling;
-              ScrollbarStyle: $C.@DefaultScrollbarStyle;
+              ScrollbarStyle: @FactionScrollbarStyle;
               Anchor: (Height: 120);
             }
           }
@@ -525,9 +550,13 @@ $C.@PageOverlay {
           Anchor: (Bottom: 6);
         }
 
-        $C.@TextField #BordersSecondsInput {
-          Anchor: (Width: 160);
+        TextField #BordersSecondsInput {
+          Anchor: (Width: 160, Height: 38);
+          Background: #0a1119;
+          Style: @InputFieldStyle;
+          PlaceholderStyle: @InputFieldPlaceholderStyle;
           PlaceholderText: "30";
+          Padding: (Horizontal: 10);
         }
       }
 
@@ -570,7 +599,7 @@ $C.@PageOverlay {
 
             Group #CombatStatsList {
               LayoutMode: TopScrolling;
-              ScrollbarStyle: $C.@DefaultScrollbarStyle;
+              ScrollbarStyle: @FactionScrollbarStyle;
               Anchor: (Height: 160);
             }
           }
@@ -615,7 +644,7 @@ $C.@PageOverlay {
 
             Group #WarStatusList {
               LayoutMode: TopScrolling;
-              ScrollbarStyle: $C.@DefaultScrollbarStyle;
+              ScrollbarStyle: @FactionScrollbarStyle;
               Anchor: (Height: 140);
             }
           }
@@ -637,7 +666,7 @@ $C.@PageOverlay {
 
         Group #LeaderboardList {
           LayoutMode: TopScrolling;
-          ScrollbarStyle: $C.@DefaultScrollbarStyle;
+          ScrollbarStyle: @FactionScrollbarStyle;
           Anchor: (Height: 180);
         }
       }
@@ -657,7 +686,7 @@ $C.@PageOverlay {
 
         Group #EventsList {
           LayoutMode: TopScrolling;
-          ScrollbarStyle: $C.@DefaultScrollbarStyle;
+          ScrollbarStyle: @FactionScrollbarStyle;
           Anchor: (Height: 180);
         }
       }
@@ -677,7 +706,7 @@ $C.@PageOverlay {
 
         Group #PerksList {
           LayoutMode: TopScrolling;
-          ScrollbarStyle: $C.@DefaultScrollbarStyle;
+          ScrollbarStyle: @FactionScrollbarStyle;
           Anchor: (Height: 140);
         }
       }
@@ -697,7 +726,7 @@ $C.@PageOverlay {
 
       Group #FactionsList {
         LayoutMode: TopScrolling;
-        ScrollbarStyle: $C.@DefaultScrollbarStyle;
+        ScrollbarStyle: @FactionScrollbarStyle;
         Anchor: (Height: 560);
       }
     }
