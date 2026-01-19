@@ -92,8 +92,11 @@ public class ChatRoomImpl implements ChatRoom {
             return;
         }
 
-        String parsedMessage = FancyCorePlugin.get().getConfig().getChatFormat()
-                .replace("%message%", sender.getData().getChatColor() +message)
+        String format = FancyCorePlugin.get().getConfig().getChatFormat();
+        boolean usesChatColorPlaceholder = format.contains("%player_chat_color%");
+        String messageValue = usesChatColorPlaceholder ? message : sender.getData().getChatColor() + message;
+        String parsedMessage = format
+                .replace("%message%", messageValue)
                 .replace("%chat_room%", name);
         parsedMessage = FancyCore.get().getPlaceholderService().parse(sender, parsedMessage);
 

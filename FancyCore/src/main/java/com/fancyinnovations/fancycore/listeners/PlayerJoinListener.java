@@ -17,6 +17,9 @@ import com.fancyinnovations.fancycore.player.FancyPlayerDataImpl;
 import com.fancyinnovations.fancycore.player.FancyPlayerImpl;
 import com.fancyinnovations.fancycore.player.service.FancyPlayerServiceImpl;
 import com.fancyinnovations.fancycore.utils.TimeUtils;
+import com.hypixel.hytale.protocol.SoundCategory;
+import com.hypixel.hytale.server.core.Message;
+import com.hypixel.hytale.server.core.asset.type.soundevent.config.SoundEvent;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.entity.UUIDComponent;
@@ -25,13 +28,29 @@ import com.hypixel.hytale.server.core.event.events.player.PlayerConnectEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerReadyEvent;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.entity.teleport.Teleport;
+import com.hypixel.hytale.server.core.universe.Universe;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.world.SoundUtil;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
+import com.hypixel.hytale.server.core.util.EventTitleUtil;
 
+import java.util.Set;
+import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.TimeUnit;
 
 public class PlayerJoinListener {
 
     private final static FancyPlayerServiceImpl playerService = (FancyPlayerServiceImpl) FancyCorePlugin.get().getPlayerService();
+    private static final Set<UUID> FIRST_JOIN_OVERLAY_PENDING = ConcurrentHashMap.newKeySet();
+    private static final String FIRST_JOIN_TITLE = "Bienvenue dans le serveur PVP FACTION";
+    private static final String FIRST_JOIN_SUBTITLE = "";
+    private static final String FIRST_JOIN_SOUND_ASSET = "hytale:alarm_bell";
+    private static final float FIRST_JOIN_SOUND_VOLUME = 0.8f;
+    private static final float FIRST_JOIN_SOUND_PITCH = 1.0f;
+    private static final float FIRST_JOIN_FADE_IN = 0.5f;
+    private static final float FIRST_JOIN_STAY = 2.0f;
+    private static final float FIRST_JOIN_FADE_OUT = 0.5f;
 
     public static void onPlayerConnect(PlayerConnectEvent event) {
         boolean firstJoin = false;
@@ -78,6 +97,7 @@ public class PlayerJoinListener {
 
         if (firstJoin) {
             fp.setJoinedAt(System.currentTimeMillis());
+            FIRST_JOIN_OVERLAY_PENDING.add(fp.getData().getUUID());
             for (FancyPlayer onlinePlayer : playerService.getOnlinePlayers()) {
                 String firstJoinMsg = PlaceholderService.get().parse(fp, FancyCore.get().getConfig().getFirstJoinMessage());
                 onlinePlayer.sendMessage(firstJoinMsg);
@@ -116,6 +136,7 @@ public class PlayerJoinListener {
         Store<EntityStore> store = event.getPlayerRef().getStore();
 
         UUIDComponent uuidComponent = ref.getStore().getComponent(ref, UUIDComponent.getComponentType());
+        UUID playerId = uuidComponent.getUuid();
         FancyPlayerImpl fp = (FancyPlayerImpl) playerService.getByUUID(uuidComponent.getUuid());
         if (fp == null) {
             return;
@@ -131,11 +152,36 @@ public class PlayerJoinListener {
             }
         }
 
+        if (playerId != null && FIRST_JOIN_OVERLAY_PENDING.remove(playerId)) {
+            PlayerRef playerRef = Universe.get().getPlayer(playerId);
+            if (playerRef != null) {
+                sendFirstJoinOverlay(playerRef);
+            }
+        }
+
         String joinMsg = PlaceholderService.get().parse(fp, FancyCore.get().getConfig().getJoinMessage());
         fp.sendMessage(joinMsg);
     }
 
     public static void onAddPlayerToWorld(AddPlayerToWorldEvent event) {
         event.setBroadcastJoinMessage(false);
+    }
+
+    private static void sendFirstJoinOverlay(PlayerRef playerRef) {
+        EventTitleUtil.showEventTitleToPlayer(
+                playerRef,
+                Message.raw(FIRST_JOIN_TITLE),
+                Message.raw(FIRST_JOIN_SUBTITLE),
+                true,
+                EventTitleUtil.DEFAULT_ZONE,
+                FIRST_JOIN_FADE_IN,
+                FIRST_JOIN_STAY,
+                FIRST_JOIN_FADE_OUT
+        );
+
+        int soundId = SoundEvent.getAssetMap().getIndexOrDefault(FIRST_JOIN_SOUND_ASSET, SoundEvent.EMPTY_ID);
+        if (soundId != SoundEvent.EMPTY_ID) {
+            SoundUtil.playSoundEvent2dToPlayer(playerRef, soundId, SoundCategory.SFX, FIRST_JOIN_SOUND_VOLUME, FIRST_JOIN_SOUND_PITCH);
+        }
     }
 }

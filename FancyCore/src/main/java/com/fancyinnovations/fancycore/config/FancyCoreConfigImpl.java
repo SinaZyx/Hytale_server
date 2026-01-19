@@ -80,7 +80,7 @@ public class FancyCoreConfigImpl implements FancyCoreConfig {
                         CHAT_FORMAT_PATH,
                         "The default chat format for messages.",
                         false,
-                        "&6[&e%chat_room%&6]&r %faction_name%%player_group_prefix% %player_nickname%&7: &r%message%",
+                        "&8[&6%chat_room%&8]&r %player_group_prefix%%faction_name%&f&l%player_nickname%&r&7 > &r%player_chat_color%%message%",
                         false,
                         String.class
                 )
@@ -102,7 +102,7 @@ public class FancyCoreConfigImpl implements FancyCoreConfig {
                         PRIVATE_MESSAGES_FORMAT_PATH,
                         "The format for private messages between players.",
                         false,
-                        "&e<&6&l%sender% &e-> &6&l%receiver%&e> &r%message%",
+                        "&7(&6PM&7) &e%sender% &7-> &e%receiver%&7: &r%message%",
                         false,
                         String.class
                 )
@@ -113,7 +113,7 @@ public class FancyCoreConfigImpl implements FancyCoreConfig {
                         JOIN_MESSAGE_PATH,
                         "The message displayed when a player joins the server.",
                         false,
-                        "&6%player_name% &ehas joined the game.",
+                        "&8[&a+&8]&r &a%player_name% &7joined the server.",
                         false,
                         String.class
                 )
@@ -124,7 +124,7 @@ public class FancyCoreConfigImpl implements FancyCoreConfig {
                         FIRST_JOIN_MESSAGE_PATH,
                         "The message displayed when a player joins the server for the first time.",
                         false,
-                        "&eWelcome &6%player_name% &eto the server for the first time!",
+                        "&8[&a+&8]&r &a%player_name% &7joined for the first time.",
                         false,
                         String.class
                 )
@@ -135,7 +135,7 @@ public class FancyCoreConfigImpl implements FancyCoreConfig {
                         LEAVE_MESSAGE_PATH,
                         "The message displayed when a player leaves the server.",
                         false,
-                        "&6%player_name% &ehas left the game.",
+                        "&8[&c-&8]&r &c%player_name% &7left the server.",
                         false,
                         String.class
                 )
