@@ -481,6 +481,7 @@ event.setSender()       // Modifier expéditeur
 | `Player` | `com.hypixel.hytale.server.core.entity.entities` | Composant Player (ECS) |
 | `Entity` | `com.hypixel.hytale.server.core.entity` | Entité de base |
 | `UUIDComponent` | `com.hypixel.hytale.server.core.entity` | Composant UUID |
+| `DamageDataComponent` | `com.hypixel.hytale.server.core.entity.damage` | Timers de combat (lastCombatAction, lastDamageTime) |
 | `Ref<T>` | `com.hypixel.hytale.component` | Référence générique ECS |
 | `Store<T>` | `com.hypixel.hytale.component` | Stockage de composants |
 | `PlayerDeathPositionData` | `com.hypixel.hytale.server.core.entity.entities.player.data` | Position de mort |
@@ -498,6 +499,12 @@ playerRef.getPacketHandler().disconnect() // Kick
 
 // ECS - Récupérer composant
 Player player = store.getComponent(ref, Player.getComponentType());
+
+// Combat - temps de dernier hit
+DamageDataComponent damageData = store.getComponent(ref, DamageDataComponent.getComponentType());
+if (damageData != null && damageData.getLastCombatAction() != null) {
+    long lastCombatMs = damageData.getLastCombatAction().toEpochMilli();
+}
 ```
 
 ---
@@ -776,6 +783,56 @@ com.hypixel.hytale
 | `LivingEntityInventoryChangeEvent` | `server.core.event.events.entity` | Changement inventaire |
 | `LivingEntityUseBlockEvent` | `server.core.event.events.entity` | Entité utilise bloc |
 | `KillFeedEvent` | `server.core.modules.entity.damage.event` | Kill feed (mort) |
+
+#### KillFeedEvent details
+
+Nested event classes (from `KillFeedEvent`):
+
+- `KillFeedEvent.KillerMessage`
+  - `getDamage()` -> `Damage`
+  - `getTargetRef()` -> `Ref<EntityStore>` (target/decedent ref)
+  - `getMessage()` / `setMessage(Message)`
+- `KillFeedEvent.DecedentMessage`
+  - `getDamage()` -> `Damage`
+  - `getMessage()` / `setMessage(Message)`
+- `KillFeedEvent.Display`
+  - `getDamage()` -> `Damage`
+  - `getIcon()` / `setIcon(String)`
+  - `getBroadcastTargets()` -> `List<PlayerRef>`
+
+Damage source access:
+
+- `Damage.getSource()` -> `Damage.Source`
+- `Damage.EntitySource.getRef()` -> `Ref<EntityStore>`
+
+Example (killer + victim UUID from `KillerMessage`):
+```java
+getEventRegistry().registerGlobal(KillFeedEvent.KillerMessage.class, event -> {
+    Damage damage = event.getDamage();
+    Damage.Source source = damage.getSource();
+    if (!(source instanceof Damage.EntitySource)) {
+        return;
+    }
+
+    Ref<EntityStore> killerRef = ((Damage.EntitySource) source).getRef();
+    Ref<EntityStore> victimRef = event.getTargetRef();
+    if (killerRef == null || !killerRef.isValid() || victimRef == null || !victimRef.isValid()) {
+        return;
+    }
+
+    Store<EntityStore> killerStore = killerRef.getStore();
+    Store<EntityStore> victimStore = victimRef.getStore();
+    PlayerRef killerPlayer = killerStore.getComponent(killerRef, PlayerRef.getComponentType());
+    PlayerRef victimPlayer = victimStore.getComponent(victimRef, PlayerRef.getComponentType());
+    if (killerPlayer == null || victimPlayer == null) {
+        return;
+    }
+
+    UUID killerId = killerPlayer.getUuid();
+    UUID victimId = victimPlayer.getUuid();
+    // Use killerId / victimId
+});
+```
 
 ### 14.4 Événements Permissions
 

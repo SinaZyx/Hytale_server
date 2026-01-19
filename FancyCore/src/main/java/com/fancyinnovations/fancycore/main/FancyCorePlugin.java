@@ -46,6 +46,7 @@ import com.fancyinnovations.fancycore.inventory.service.BackpacksServiceImpl;
 import com.fancyinnovations.fancycore.inventory.service.KitsServiceImpl;
 import com.fancyinnovations.fancycore.inventory.storage.json.BackpacksJsonStorage;
 import com.fancyinnovations.fancycore.inventory.storage.json.KitsJsonStorage;
+import com.fancyinnovations.fancycore.listeners.CombatTagListener;
 import com.fancyinnovations.fancycore.listeners.PlayerChatListener;
 import com.fancyinnovations.fancycore.listeners.PlayerJoinListener;
 import com.fancyinnovations.fancycore.listeners.PlayerLeaveListener;
@@ -74,6 +75,7 @@ import com.google.gson.Gson;
 import com.hypixel.hytale.event.EventRegistry;
 import com.hypixel.hytale.server.core.command.system.CommandManager;
 import com.hypixel.hytale.server.core.event.events.player.*;
+import com.hypixel.hytale.server.core.modules.entity.damage.event.KillFeedEvent;
 import com.hypixel.hytale.server.core.permissions.PermissionsModule;
 import com.hypixel.hytale.server.core.permissions.provider.PermissionProvider;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
@@ -377,6 +379,7 @@ public class FancyCorePlugin extends JavaPlugin implements FancyCore {
         eventRegistry.registerGlobal(PlayerReadyEvent.class, PlayerJoinListener::onPlayerReady);
         eventRegistry.registerGlobal(AddPlayerToWorldEvent.class, PlayerJoinListener::onAddPlayerToWorld);
         eventRegistry.registerGlobal(PlayerDisconnectEvent.class, PlayerLeaveListener::onPlayerLeave);
+        eventRegistry.register(KillFeedEvent.KillerMessage.class, CombatTagListener::onKillFeed);
 
         Function<CompletableFuture<PlayerChatEvent>, CompletableFuture<PlayerChatEvent>> handler = future ->
                 future.thenApply(event -> {

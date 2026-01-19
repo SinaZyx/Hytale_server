@@ -10,6 +10,7 @@ import com.hypixel.hytale.server.core.event.events.player.PlayerConnectEvent;
 import com.hypixel.hytale.server.core.event.events.ecs.BreakBlockEvent;
 import com.hypixel.hytale.server.core.event.events.ecs.PlaceBlockEvent;
 import com.hypixel.hytale.server.core.event.events.player.PlayerMouseButtonEvent;
+import com.hypixel.hytale.server.core.modules.entity.damage.Damage;
 import com.hypixel.hytale.server.core.modules.entity.damage.event.KillFeedEvent;
 import com.hypixel.hytale.server.core.plugin.JavaPlugin;
 import com.hypixel.hytale.server.core.plugin.JavaPluginInit;
@@ -127,7 +128,7 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         getEventRegistry().registerGlobal(PlayerConnectEvent.class, this::handlePlayerConnect);
         getEventRegistry().register(PlayerMouseButtonEvent.class, this::handleMouseEvent);
         getEventRegistry().register(PlayerChatEvent.class, "chat", this::handleChat);
-        getEventRegistry().register(KillFeedEvent.class, this::handleKillFeed);
+        getEventRegistry().register(KillFeedEvent.KillerMessage.class, this::handleKillFeed);
 
         // Block protection events (ECS - more reliable than MouseButtonEvent)
         getEventRegistry().registerGlobal(BreakBlockEvent.class, this::handleBreakBlock);
@@ -230,15 +231,36 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         }
     }
 
-    private void handleKillFeed(KillFeedEvent event) {
+    private void handleKillFeed(KillFeedEvent.KillerMessage event) {
         if (plugin == null) {
             return;
         }
+        Damage damage = event.getDamage();
+        Damage.Source source = damage.getSource();
+        if (!(source instanceof Damage.EntitySource)) {
+            return;
+        }
 
-        // Get killer and victim UUIDs from the event
-        UUID killerId = event.getKillerUuid();
-        UUID victimId = event.getVictimUuid();
+        Ref<EntityStore> killerRef = ((Damage.EntitySource) source).getRef();
+        Ref<EntityStore> victimRef = event.getTargetRef();
+        if (killerRef == null || !killerRef.isValid() || victimRef == null || !victimRef.isValid()) {
+            return;
+        }
 
+        Store<EntityStore> killerStore = killerRef.getStore();
+        Store<EntityStore> victimStore = victimRef.getStore();
+        if (killerStore == null || victimStore == null) {
+            return;
+        }
+
+        PlayerRef killerPlayer = killerStore.getComponent(killerRef, PlayerRef.getComponentType());
+        PlayerRef victimPlayer = victimStore.getComponent(victimRef, PlayerRef.getComponentType());
+        if (killerPlayer == null || victimPlayer == null) {
+            return;
+        }
+
+        UUID killerId = killerPlayer.getUuid();
+        UUID victimId = victimPlayer.getUuid();
         if (killerId == null || victimId == null) {
             return;
         }
@@ -419,6 +441,9 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
             borderViewUntil.remove(playerId);
             lastBorderParticleAt.remove(playerId);
             return "Border view disabled.";
+        }
+        if (secondsOverride != null && secondsOverride > 120) {
+            secondsOverride = 120;
         }
         Long until = borderViewUntil.get(playerId);
         boolean active = until != null && until > now;

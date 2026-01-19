@@ -2,6 +2,7 @@ package com.fancyinnovations.fancycore.commands.teleport;
 
 import com.fancyinnovations.fancycore.api.player.FancyPlayer;
 import com.fancyinnovations.fancycore.api.player.FancyPlayerService;
+import com.fancyinnovations.fancycore.commands.teleport.TeleportGuard;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.math.vector.Vector3d;
@@ -36,6 +37,12 @@ public class TeleportBackCMD extends CommandBase {
         FancyPlayer fp = FancyPlayerService.get().getByUUID(ctx.sender().getUuid());
         if (fp == null) {
             ctx.sendMessage(Message.raw("FancyPlayer not found."));
+            return;
+        }
+
+        String blockReason = TeleportGuard.checkSender(fp.getData().getUUID());
+        if (blockReason != null) {
+            fp.sendMessage(blockReason);
             return;
         }
 
@@ -110,6 +117,7 @@ public class TeleportBackCMD extends CommandBase {
 
                 // Add teleport component to sender
                 senderStore.addComponent(senderRef, Teleport.getComponentType(), teleport);
+                TeleportGuard.markTeleport(fp.getData().getUUID());
 
                 // Send success message
                 ctx.sendMessage(Message.raw("Teleported back to your previous location."));

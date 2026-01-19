@@ -3449,6 +3449,9 @@ com.hypixel.hytale.server.core.modules.entity.component.TransformComponent
 com.hypixel.hytale.server.core.modules.entity.component.WorldGenId
 com.hypixel.hytale.server.core.modules.entity.damage.commands.DesyncDamageCommand
 com.hypixel.hytale.server.core.modules.entity.damage.Damage
+com.hypixel.hytale.server.core.modules.entity.damage.Damage$EntitySource
+com.hypixel.hytale.server.core.modules.entity.damage.Damage$ProjectileSource
+com.hypixel.hytale.server.core.modules.entity.damage.Damage$Source
 com.hypixel.hytale.server.core.modules.entity.damage.DamageCalculatorSystems
 com.hypixel.hytale.server.core.modules.entity.damage.DamageCause
 com.hypixel.hytale.server.core.modules.entity.damage.DamageEventSystem
@@ -3459,6 +3462,9 @@ com.hypixel.hytale.server.core.modules.entity.damage.DeathItemLoss
 com.hypixel.hytale.server.core.modules.entity.damage.DeathSystems
 com.hypixel.hytale.server.core.modules.entity.damage.DeferredCorpseRemoval
 com.hypixel.hytale.server.core.modules.entity.damage.event.KillFeedEvent
+com.hypixel.hytale.server.core.modules.entity.damage.event.KillFeedEvent$DecedentMessage
+com.hypixel.hytale.server.core.modules.entity.damage.event.KillFeedEvent$Display
+com.hypixel.hytale.server.core.modules.entity.damage.event.KillFeedEvent$KillerMessage
 com.hypixel.hytale.server.core.modules.entity.damage.RespawnSystems
 com.hypixel.hytale.server.core.modules.entity.DespawnComponent
 com.hypixel.hytale.server.core.modules.entity.DespawnSystem

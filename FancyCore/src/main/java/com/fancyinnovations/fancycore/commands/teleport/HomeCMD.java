@@ -4,6 +4,7 @@ import com.fancyinnovations.fancycore.api.player.FancyPlayer;
 import com.fancyinnovations.fancycore.api.player.FancyPlayerService;
 import com.fancyinnovations.fancycore.api.player.Home;
 import com.fancyinnovations.fancycore.api.teleport.Location;
+import com.fancyinnovations.fancycore.commands.teleport.TeleportGuard;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.Message;
@@ -42,6 +43,12 @@ public class HomeCMD extends AbstractPlayerCommand {
             return;
         }
 
+        String blockReason = TeleportGuard.checkSender(fp.getData().getUUID());
+        if (blockReason != null) {
+            fp.sendMessage(blockReason);
+            return;
+        }
+
         Home home;
         if (nameArg.provided(ctx)) {
             home = fp.getData().getHome(nameArg.getName());
@@ -62,6 +69,7 @@ public class HomeCMD extends AbstractPlayerCommand {
 
         Teleport teleport = new Teleport(targetWorld, location.positionVec(), location.rotationVec());
         store.addComponent(ref, Teleport.getComponentType(), teleport);
+        TeleportGuard.markTeleport(fp.getData().getUUID());
 
         fp.sendMessage("Teleported to home '" + home.name() + "'.");
     }

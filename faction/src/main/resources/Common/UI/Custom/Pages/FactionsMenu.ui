@@ -511,9 +511,23 @@ $C.@PageOverlay {
         Group {
           LayoutMode: Left;
 
-          TextButton #InfoButton { Text: "Info"; Anchor: (Width: 150, Height: 28, Right: 8); Style: @ActionButtonStyle; }
-          TextButton #MapButton { Text: "Map"; Anchor: (Width: 150, Height: 28, Right: 8); Style: @ActionButtonStyle; }
-          TextButton #WhoButton { Text: "Who"; Anchor: (Width: 150, Height: 28); Style: @ActionButtonStyle; }
+          TextButton #InfoButton { Text: "Info"; Anchor: (Width: 140, Height: 28, Right: 8); Style: @ActionButtonStyle; }
+          TextButton #MapButton { Text: "Map"; Anchor: (Width: 140, Height: 28, Right: 8); Style: @ActionButtonStyle; }
+          TextButton #BordersButton { Text: "Frontieres"; Anchor: (Width: 140, Height: 28, Right: 8); Style: @ActionButtonStyle; }
+          TextButton #WhoButton { Text: "Who"; Anchor: (Width: 140, Height: 28); Style: @ActionButtonStyle; }
+        }
+
+        Group { Anchor: (Height: 8); }
+
+        Label {
+          Text: "Duree borders (sec, max 120)";
+          Style: (FontSize: 11, TextColor: #6e7da1, RenderUppercase: true);
+          Anchor: (Bottom: 6);
+        }
+
+        $C.@TextField #BordersSecondsInput {
+          Anchor: (Width: 160);
+          PlaceholderText: "30";
         }
       }
 

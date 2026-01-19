@@ -5,6 +5,7 @@ import com.fancyinnovations.fancycore.api.player.FancyPlayerService;
 import com.fancyinnovations.fancycore.api.teleport.Location;
 import com.fancyinnovations.fancycore.api.teleport.Warp;
 import com.fancyinnovations.fancycore.commands.arguments.FancyCoreArgs;
+import com.fancyinnovations.fancycore.commands.teleport.TeleportGuard;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.Message;
@@ -42,6 +43,12 @@ public class WarpCMD extends AbstractPlayerCommand {
             return;
         }
 
+        String blockReason = TeleportGuard.checkSender(fp.getData().getUUID());
+        if (blockReason != null) {
+            fp.sendMessage(blockReason);
+            return;
+        }
+
         Warp warp = warpArg.get(ctx);
 
         if (!PermissionsModule.get().hasPermission(fp.getData().getUUID(), "fancycore.warps." + warp.name())) {
@@ -54,6 +61,7 @@ public class WarpCMD extends AbstractPlayerCommand {
 
         Teleport teleport = new Teleport(targetWorld, location.positionVec(), location.rotationVec());
         store.addComponent(ref, Teleport.getComponentType(), teleport);
+        TeleportGuard.markTeleport(fp.getData().getUUID());
 
         fp.sendMessage("Teleported to spawn point.");
     }

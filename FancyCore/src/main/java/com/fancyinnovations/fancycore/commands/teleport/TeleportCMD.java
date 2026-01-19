@@ -2,6 +2,7 @@ package com.fancyinnovations.fancycore.commands.teleport;
 
 import com.fancyinnovations.fancycore.api.player.FancyPlayer;
 import com.fancyinnovations.fancycore.api.player.FancyPlayerService;
+import com.fancyinnovations.fancycore.commands.teleport.TeleportGuard;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.Message;
@@ -17,6 +18,8 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import org.jetbrains.annotations.NotNull;
+
+import java.util.UUID;
 
 public class TeleportCMD extends CommandBase {
 
@@ -35,6 +38,7 @@ public class TeleportCMD extends CommandBase {
         final Ref<EntityStore> targetRef;
         final PlayerRef destinationPlayerRef;
         final boolean isTwoArg;
+        final UUID senderId = ctx.isPlayer() ? ctx.sender().getUuid() : null;
 
         if (destinationArg.provided(ctx)) {
             // Two arguments: teleport target to destination
@@ -61,7 +65,7 @@ public class TeleportCMD extends CommandBase {
 
             FancyPlayer fp = FancyPlayerService.get().getByUUID(ctx.sender().getUuid());
             if (fp == null) {
-                fp.sendMessage("FancyPlayer not found.");
+                ctx.sendMessage(Message.raw("FancyPlayer not found."));
                 return;
             }
 
@@ -79,6 +83,21 @@ public class TeleportCMD extends CommandBase {
                 return;
             }
             destinationPlayerRef = targetArg.get(ctx);
+        }
+
+        if (senderId != null) {
+            String blockReason = TeleportGuard.checkSender(senderId);
+            if (blockReason != null) {
+                ctx.sendMessage(Message.raw(blockReason));
+                return;
+            }
+        }
+        if (isTwoArg) {
+            String targetBlock = TeleportGuard.checkTarget(targetPlayerRef.getUuid());
+            if (targetBlock != null) {
+                ctx.sendMessage(Message.raw("Target: " + targetBlock));
+                return;
+            }
         }
 
         Ref<EntityStore> destinationRef = destinationPlayerRef.getReference();
@@ -122,6 +141,9 @@ public class TeleportCMD extends CommandBase {
 
                 // Add teleport component to target player
                 targetStore.addComponent(targetRef, Teleport.getComponentType(), teleport);
+                if (senderId != null) {
+                    TeleportGuard.markTeleport(senderId);
+                }
 
                 // Send success message
                 if (isTwoArg) {
@@ -161,6 +183,9 @@ public class TeleportCMD extends CommandBase {
 
                     // Add teleport component to target player
                     targetStore.addComponent(targetRef, Teleport.getComponentType(), teleport);
+                    if (senderId != null) {
+                        TeleportGuard.markTeleport(senderId);
+                    }
 
                     // Send success message
                     if (isTwoArg) {

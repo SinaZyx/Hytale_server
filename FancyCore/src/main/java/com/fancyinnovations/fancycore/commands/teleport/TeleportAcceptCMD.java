@@ -3,6 +3,7 @@ package com.fancyinnovations.fancycore.commands.teleport;
 import com.fancyinnovations.fancycore.api.player.FancyPlayer;
 import com.fancyinnovations.fancycore.api.player.FancyPlayerService;
 import com.fancyinnovations.fancycore.api.teleport.TeleportRequestService;
+import com.fancyinnovations.fancycore.commands.teleport.TeleportGuard;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.Message;
@@ -43,6 +44,12 @@ public class TeleportAcceptCMD extends CommandBase {
             return;
         }
 
+        String blockReason = TeleportGuard.checkSender(target.getData().getUUID());
+        if (blockReason != null) {
+            target.sendMessage(blockReason);
+            return;
+        }
+
         TeleportRequestService requestService = TeleportRequestService.get();
         UUID senderUUID;
 
@@ -73,6 +80,13 @@ public class TeleportAcceptCMD extends CommandBase {
         if (sender == null || !sender.isOnline()) {
             ctx.sendMessage(Message.raw("The player who sent the request is no longer online."));
             requestService.removeAllRequests(target);
+            return;
+        }
+
+        String senderBlock = TeleportGuard.checkTarget(senderUUID);
+        if (senderBlock != null) {
+            target.sendMessage("Teleport refuse: " + senderBlock);
+            sender.sendMessage("Teleport refuse: " + senderBlock);
             return;
         }
 
@@ -132,6 +146,7 @@ public class TeleportAcceptCMD extends CommandBase {
 
                 // Add teleport component to sender
                 senderStore.addComponent(senderRef, Teleport.getComponentType(), teleport);
+                TeleportGuard.markTeleport(target.getData().getUUID());
 
                 // Send success messages
                 ctx.sendMessage(Message.raw("Accepted teleport request from " + sender.getData().getUsername() + "."));

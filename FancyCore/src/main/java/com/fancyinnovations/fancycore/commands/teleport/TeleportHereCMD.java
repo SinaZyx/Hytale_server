@@ -2,6 +2,7 @@ package com.fancyinnovations.fancycore.commands.teleport;
 
 import com.fancyinnovations.fancycore.api.player.FancyPlayer;
 import com.fancyinnovations.fancycore.api.player.FancyPlayerService;
+import com.fancyinnovations.fancycore.commands.teleport.TeleportGuard;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.Message;
@@ -40,6 +41,12 @@ public class TeleportHereCMD extends CommandBase {
             return;
         }
 
+        String blockReason = TeleportGuard.checkSender(fp.getData().getUUID());
+        if (blockReason != null) {
+            fp.sendMessage(blockReason);
+            return;
+        }
+
         // Get sender's location
         Ref<EntityStore> senderRef = ctx.senderAsPlayerRef();
         if (senderRef == null || !senderRef.isValid()) {
@@ -55,6 +62,12 @@ public class TeleportHereCMD extends CommandBase {
         Ref<EntityStore> targetRef = targetPlayerRef.getReference();
         if (targetRef == null || !targetRef.isValid()) {
             fp.sendMessage("Target player is not in a world.");
+            return;
+        }
+
+        String targetBlock = TeleportGuard.checkTarget(targetPlayerRef.getUuid());
+        if (targetBlock != null) {
+            fp.sendMessage("Target: " + targetBlock);
             return;
         }
 
@@ -90,6 +103,7 @@ public class TeleportHereCMD extends CommandBase {
 
                 // Add teleport component to target player
                 targetStore.addComponent(targetRef, Teleport.getComponentType(), teleport);
+                TeleportGuard.markTeleport(fp.getData().getUUID());
 
                 // Send success message
                 fp.sendMessage("Teleported " + targetPlayerRef.getUsername() + " to your location.");

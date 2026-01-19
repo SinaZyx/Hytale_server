@@ -85,6 +85,7 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
             case "info" -> buildOptionalCommand("info", normalize(data.getFactionName()));
             case "who" -> buildCommand("who", requirePlayerName(data));
             case "map" -> "f map";
+            case "borders" -> buildBordersCommand(data);
             case "invite" -> buildCommand("invite", requirePlayerName(data));
             case "accept" -> buildCommand("accept", requireFactionName(data));
             case "deny" -> buildCommand("deny", requireFactionName(data));
@@ -350,6 +351,7 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
         addAction(events, "#SetHomeButton", "sethome", false, false);
         addAction(events, "#HomeButton", "home", false, false);
         addAction(events, "#MapButton", "map", false, false);
+        addActionWithBordersSeconds(events, "#BordersButton", "borders");
         addAction(events, "#WhoButton", "who", false, true);
         addAction(events, "#StatsButton", "stats", false, true);
         addAction(events, "#TopKillsButton", "top_kills", false, false);
@@ -460,6 +462,12 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
         events.addEventBinding(CustomUIEventBindingType.Activating, elementId, data);
     }
 
+    private void addActionWithBordersSeconds(UIEventBuilder events, String elementId, String action) {
+        EventData data = EventData.of(FactionsMenuEventData.KEY_ACTION, action)
+                .append(FactionsMenuEventData.KEY_BORDERS_SECONDS, "#BordersSecondsInput.Value");
+        events.addEventBinding(CustomUIEventBindingType.Activating, elementId, data);
+    }
+
     private String requireFactionName(FactionsMenuEventData data) {
         String name = normalize(data.getFactionName());
         if (name == null) {
@@ -505,6 +513,24 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
             return "f desc";
         }
         return "f desc " + description;
+    }
+
+    private String buildBordersCommand(FactionsMenuEventData data) {
+        String raw = normalize(data.getBordersSeconds());
+        if (raw == null) {
+            return "f borders 30";
+        }
+        try {
+            int seconds = Integer.parseInt(raw);
+            if (seconds < 0) {
+                seconds = 0;
+            } else if (seconds > 120) {
+                seconds = 120;
+            }
+            return "f borders " + seconds;
+        } catch (NumberFormatException e) {
+            return "f borders";
+        }
     }
 
     private void appendListLabel(UICommandBuilder commands, String listId, String text, String color) {
@@ -571,6 +597,7 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
         static final String KEY_FACTION_NAME = "@FactionName";
         static final String KEY_PLAYER_NAME = "@PlayerName";
         static final String KEY_DESCRIPTION = "@Description";
+        static final String KEY_BORDERS_SECONDS = "@BordersSeconds";
 
         static final BuilderCodec<FactionsMenuEventData> CODEC = BuilderCodec.builder(FactionsMenuEventData.class, FactionsMenuEventData::new)
                 .append(new KeyedCodec<>(KEY_ACTION, Codec.STRING), FactionsMenuEventData::setAction, FactionsMenuEventData::getAction)
@@ -581,12 +608,15 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
                 .add()
                 .append(new KeyedCodec<>(KEY_DESCRIPTION, Codec.STRING), FactionsMenuEventData::setDescription, FactionsMenuEventData::getDescription)
                 .add()
+                .append(new KeyedCodec<>(KEY_BORDERS_SECONDS, Codec.STRING), FactionsMenuEventData::setBordersSeconds, FactionsMenuEventData::getBordersSeconds)
+                .add()
                 .build();
 
         private String action;
         private String factionName;
         private String playerName;
         private String description;
+        private String bordersSeconds;
 
         public FactionsMenuEventData() {
         }
@@ -607,6 +637,10 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
             return description;
         }
 
+        public String getBordersSeconds() {
+            return bordersSeconds;
+        }
+
         private void setAction(String action) {
             this.action = action;
         }
@@ -621,6 +655,10 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
 
         private void setDescription(String description) {
             this.description = description;
+        }
+
+        private void setBordersSeconds(String bordersSeconds) {
+            this.bordersSeconds = bordersSeconds;
         }
     }
 }

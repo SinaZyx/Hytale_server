@@ -2,6 +2,7 @@ package com.fancyinnovations.fancycore.commands.teleport;
 
 import com.fancyinnovations.fancycore.api.player.FancyPlayer;
 import com.fancyinnovations.fancycore.api.player.FancyPlayerService;
+import com.fancyinnovations.fancycore.commands.teleport.TeleportGuard;
 import com.hypixel.hytale.builtin.teleport.components.TeleportHistory;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
@@ -43,6 +44,12 @@ public class SwitchWorldCMD extends AbstractPlayerCommand {
             return;
         }
 
+        String blockReason = TeleportGuard.checkSender(fp.getData().getUUID());
+        if (blockReason != null) {
+            fp.sendMessage(blockReason);
+            return;
+        }
+
         World destinationWorld = worldNameArg.get(ctx);
 
         Transform spawnPoint = destinationWorld.getWorldConfig().getSpawnProvider().getSpawnPoint(ref, store);
@@ -61,6 +68,7 @@ public class SwitchWorldCMD extends AbstractPlayerCommand {
         teleportHistoryComponent.append(world, previousPos, previousRotation, "World " + destinationWorld.getName());
 
         store.addComponent(ref, Teleport.getComponentType(), new Teleport(destinationWorld, spawnPoint.getPosition(), spawnPoint.getRotation()));
+        TeleportGuard.markTeleport(fp.getData().getUUID());
         Vector3d spawnPos = spawnPoint.getPosition();
 
         fp.sendMessage("Teleported to world " + destinationWorld.getName() + " at spawn point (" + spawnPos.getX() + ", " + spawnPos.getY() + ", " + spawnPos.getZ() + ").");

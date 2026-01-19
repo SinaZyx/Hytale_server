@@ -2,6 +2,7 @@ package com.fancyinnovations.fancycore.commands.teleport;
 
 import com.fancyinnovations.fancycore.api.player.FancyPlayer;
 import com.fancyinnovations.fancycore.api.player.FancyPlayerService;
+import com.fancyinnovations.fancycore.commands.teleport.TeleportGuard;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.Message;
@@ -38,6 +39,12 @@ public class TeleportAllCMD extends CommandBase {
             return;
         }
 
+        String blockReason = TeleportGuard.checkSender(fp.getData().getUUID());
+        if (blockReason != null) {
+            fp.sendMessage(blockReason);
+            return;
+        }
+
         // Get sender's location
         Ref<EntityStore> senderRef = ctx.senderAsPlayerRef();
         if (senderRef == null || !senderRef.isValid()) {
@@ -69,6 +76,10 @@ public class TeleportAllCMD extends CommandBase {
             int count = 0;
 
             for (PlayerRef playerRef : playersToTeleport) {
+                String targetBlock = TeleportGuard.checkTarget(playerRef.getUuid());
+                if (targetBlock != null) {
+                    continue;
+                }
                 Ref<EntityStore> ref = playerRef.getReference();
                 if (ref == null || !ref.isValid()) {
                     continue;
@@ -94,6 +105,8 @@ public class TeleportAllCMD extends CommandBase {
                 playerStore.addComponent(ref, Teleport.getComponentType(), teleport);
                 count++;
             }
+
+            TeleportGuard.markTeleport(fp.getData().getUUID());
 
             // Send success message
             fp.sendMessage("Teleported " + count + " player(s) to your location.");
