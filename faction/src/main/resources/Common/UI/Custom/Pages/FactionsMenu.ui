@@ -110,7 +110,7 @@ $C.@PageOverlay {
 
       Group #NavToolsRow {
         LayoutMode: Left;
-        Anchor: (Height: 28, Bottom: 12);
+        Anchor: (Height: 28, Bottom: 6);
 
         Group #NavToolsIndicator {
           Anchor: (Width: 4, Height: 24, Right: 8);
@@ -120,6 +120,91 @@ $C.@PageOverlay {
 
         TextButton #NavToolsButton {
           Text: "Outils";
+          Anchor: (Width: 140, Height: 24);
+          Style: @NavButtonStyle;
+        }
+      }
+
+      Group #NavCombatRow {
+        LayoutMode: Left;
+        Anchor: (Height: 28, Bottom: 6);
+
+        Group #NavCombatIndicator {
+          Anchor: (Width: 4, Height: 24, Right: 8);
+          Background: #ff7f50;
+          Visible: false;
+        }
+
+        TextButton #NavCombatButton {
+          Text: "Combat";
+          Anchor: (Width: 140, Height: 24);
+          Style: @NavButtonStyle;
+        }
+      }
+
+      Group #NavWarRow {
+        LayoutMode: Left;
+        Anchor: (Height: 28, Bottom: 6);
+
+        Group #NavWarIndicator {
+          Anchor: (Width: 4, Height: 24, Right: 8);
+          Background: #ff4a4a;
+          Visible: false;
+        }
+
+        TextButton #NavWarButton {
+          Text: "Guerre";
+          Anchor: (Width: 140, Height: 24);
+          Style: @NavButtonStyle;
+        }
+      }
+
+      Group #NavLeaderboardRow {
+        LayoutMode: Left;
+        Anchor: (Height: 28, Bottom: 6);
+
+        Group #NavLeaderboardIndicator {
+          Anchor: (Width: 4, Height: 24, Right: 8);
+          Background: #ffcc4a;
+          Visible: false;
+        }
+
+        TextButton #NavLeaderboardButton {
+          Text: "Classement";
+          Anchor: (Width: 140, Height: 24);
+          Style: @NavButtonStyle;
+        }
+      }
+
+      Group #NavEventsRow {
+        LayoutMode: Left;
+        Anchor: (Height: 28, Bottom: 6);
+
+        Group #NavEventsIndicator {
+          Anchor: (Width: 4, Height: 24, Right: 8);
+          Background: #4ac6ff;
+          Visible: false;
+        }
+
+        TextButton #NavEventsButton {
+          Text: "Evenements";
+          Anchor: (Width: 140, Height: 24);
+          Style: @NavButtonStyle;
+        }
+      }
+
+      Group #NavPerksRow {
+        LayoutMode: Left;
+        Anchor: (Height: 28, Bottom: 12);
+
+        Group #NavPerksIndicator {
+          Anchor: (Width: 4, Height: 24, Right: 8);
+          Background: #9d8cff;
+          Visible: false;
+        }
+
+        TextButton #NavPerksButton {
+          Text: "Perks";
           Anchor: (Width: 140, Height: 24);
           Style: @NavButtonStyle;
         }
@@ -429,6 +514,157 @@ $C.@PageOverlay {
           TextButton #InfoButton { Text: "Info"; Anchor: (Width: 150, Height: 28, Right: 8); Style: @ActionButtonStyle; }
           TextButton #MapButton { Text: "Map"; Anchor: (Width: 150, Height: 28, Right: 8); Style: @ActionButtonStyle; }
           TextButton #WhoButton { Text: "Who"; Anchor: (Width: 150, Height: 28); Style: @ActionButtonStyle; }
+        }
+      }
+
+      Group #CombatView {
+        Background: #1a2330(0.95);
+        LayoutMode: Top;
+        Padding: (Full: 12);
+        Anchor: (Bottom: 10);
+        Visible: false;
+
+        Label {
+          Text: "Combat";
+          Style: (FontSize: 12, TextColor: #6e7da1, RenderUppercase: true, LetterSpacing: 1);
+          Anchor: (Bottom: 8);
+        }
+
+        Group {
+          LayoutMode: Left;
+
+          Group {
+            LayoutMode: Top;
+            Anchor: (Width: 220);
+
+            TextButton #StatsButton { Text: "Stats"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+            TextButton #TopKillsButton { Text: "Top kills"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+            TextButton #TopKdrButton { Text: "Top K/D"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+            TextButton #TopFactionsButton { Text: "Top factions"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+          }
+
+          Group {
+            FlexWeight: 1;
+            LayoutMode: Top;
+            Padding: (Left: 10);
+
+            Label {
+              Text: "Apercu";
+              Style: (FontSize: 11, TextColor: #6e7da1, RenderUppercase: true);
+              Anchor: (Bottom: 6);
+            }
+
+            Group #CombatStatsList {
+              LayoutMode: TopScrolling;
+              ScrollbarStyle: $C.@DefaultScrollbarStyle;
+              Anchor: (Height: 160);
+            }
+          }
+        }
+      }
+
+      Group #WarView {
+        Background: #1a2330(0.95);
+        LayoutMode: Top;
+        Padding: (Full: 12);
+        Anchor: (Bottom: 10);
+        Visible: false;
+
+        Label {
+          Text: "Guerre";
+          Style: (FontSize: 12, TextColor: #6e7da1, RenderUppercase: true, LetterSpacing: 1);
+          Anchor: (Bottom: 8);
+        }
+
+        Group {
+          LayoutMode: Left;
+
+          Group {
+            LayoutMode: Top;
+            Anchor: (Width: 220);
+
+            TextButton #WarDeclareButton { Text: "Declarer"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+            TextButton #WarStatusButton { Text: "Status"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+            TextButton #WarSurrenderButton { Text: "Reddition"; Anchor: (Height: 28, Bottom: 6); Style: @ActionButtonStyle; }
+          }
+
+          Group {
+            FlexWeight: 1;
+            LayoutMode: Top;
+            Padding: (Left: 10);
+
+            Label {
+              Text: "Etat de la guerre";
+              Style: (FontSize: 11, TextColor: #6e7da1, RenderUppercase: true);
+              Anchor: (Bottom: 6);
+            }
+
+            Group #WarStatusList {
+              LayoutMode: TopScrolling;
+              ScrollbarStyle: $C.@DefaultScrollbarStyle;
+              Anchor: (Height: 140);
+            }
+          }
+        }
+      }
+
+      Group #LeaderboardView {
+        Background: #1a2330(0.95);
+        LayoutMode: Top;
+        Padding: (Full: 12);
+        Anchor: (Bottom: 10);
+        Visible: false;
+
+        Label {
+          Text: "Classement";
+          Style: (FontSize: 12, TextColor: #6e7da1, RenderUppercase: true, LetterSpacing: 1);
+          Anchor: (Bottom: 8);
+        }
+
+        Group #LeaderboardList {
+          LayoutMode: TopScrolling;
+          ScrollbarStyle: $C.@DefaultScrollbarStyle;
+          Anchor: (Height: 180);
+        }
+      }
+
+      Group #EventsView {
+        Background: #1a2330(0.95);
+        LayoutMode: Top;
+        Padding: (Full: 12);
+        Anchor: (Bottom: 10);
+        Visible: false;
+
+        Label {
+          Text: "Evenements";
+          Style: (FontSize: 12, TextColor: #6e7da1, RenderUppercase: true, LetterSpacing: 1);
+          Anchor: (Bottom: 8);
+        }
+
+        Group #EventsList {
+          LayoutMode: TopScrolling;
+          ScrollbarStyle: $C.@DefaultScrollbarStyle;
+          Anchor: (Height: 180);
+        }
+      }
+
+      Group #PerksView {
+        Background: #1a2330(0.95);
+        LayoutMode: Top;
+        Padding: (Full: 12);
+        Anchor: (Bottom: 10);
+        Visible: false;
+
+        Label {
+          Text: "Perks";
+          Style: (FontSize: 12, TextColor: #6e7da1, RenderUppercase: true, LetterSpacing: 1);
+          Anchor: (Bottom: 8);
+        }
+
+        Group #PerksList {
+          LayoutMode: TopScrolling;
+          ScrollbarStyle: $C.@DefaultScrollbarStyle;
+          Anchor: (Height: 140);
         }
       }
     }

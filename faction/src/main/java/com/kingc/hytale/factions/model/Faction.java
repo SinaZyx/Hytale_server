@@ -20,6 +20,7 @@ public final class Faction {
     private String description;
     private Location home;
     private Integer powerOverride;
+    private double treasuryBalance;
 
     public Faction(UUID id, String name, long createdAtEpochMs, Map<UUID, MemberRole> members) {
         this(id, name, createdAtEpochMs, members, Set.of(), Set.of());
@@ -76,6 +77,18 @@ public final class Faction {
 
     public void setPowerOverride(Integer powerOverride) {
         this.powerOverride = powerOverride;
+    }
+
+    public double treasuryBalance() {
+        return treasuryBalance;
+    }
+
+    public void setTreasuryBalance(double treasuryBalance) {
+        this.treasuryBalance = treasuryBalance;
+    }
+
+    public void addTreasuryBalance(double amount) {
+        this.treasuryBalance += amount;
     }
 
     public Map<UUID, MemberRole> members() {

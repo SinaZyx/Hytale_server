@@ -1,44 +1,93 @@
 package com.kingc.hytale.factions.command;
 
+import com.kingc.hytale.factions.api.ClaimChangeType;
+import com.kingc.hytale.factions.api.ClaimEffectHandler;
 import com.kingc.hytale.factions.api.CommandSource;
+import com.kingc.hytale.factions.api.FactionCreateHandler;
 import com.kingc.hytale.factions.api.Location;
+import com.kingc.hytale.factions.api.MemberRoleChangeHandler;
 import com.kingc.hytale.factions.api.ServerAdapter;
+import com.kingc.hytale.factions.api.WarDeclareHandler;
 import com.kingc.hytale.factions.model.ClaimKey;
 import com.kingc.hytale.factions.model.Faction;
+import com.kingc.hytale.factions.model.FactionCombatStats;
+import com.kingc.hytale.factions.model.MemberCombatStats;
 import com.kingc.hytale.factions.model.MemberRole;
+import com.kingc.hytale.factions.model.NotificationEntry;
+import com.kingc.hytale.factions.model.NotificationType;
+import com.kingc.hytale.factions.model.War;
+import com.kingc.hytale.factions.service.CombatService;
 import com.kingc.hytale.factions.service.FactionService;
 import com.kingc.hytale.factions.service.FactionSettings;
 import com.kingc.hytale.factions.service.Result;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.function.BiFunction;
 import java.util.function.Supplier;
 
 public final class CommandDispatcher {
     private static final String PREFIX = "[Factions] ";
 
     private final FactionService service;
+    private final CombatService combatService;
     private final ServerAdapter server;
     private final FactionSettings settings;
     private final Supplier<Result<Void>> reloadHandler;
-    private java.util.function.Function<java.util.UUID, String> chatToggleHandler;
+    private java.util.function.Function<UUID, String> chatToggleHandler;
+    private BiFunction<UUID, Integer, String> borderToggleHandler;
+    private java.util.function.Function<UUID, String> worldMapToggleHandler;
+    private ClaimEffectHandler claimEffectHandler;
+    private FactionCreateHandler factionCreateHandler;
+    private WarDeclareHandler warDeclareHandler;
+    private MemberRoleChangeHandler memberRoleChangeHandler;
 
     public CommandDispatcher(FactionService service, ServerAdapter server, FactionSettings settings, Supplier<Result<Void>> reloadHandler) {
-        this(service, server, settings, reloadHandler, null);
+        this(service, null, server, settings, reloadHandler, null);
     }
 
-    public CommandDispatcher(FactionService service, ServerAdapter server, FactionSettings settings, Supplier<Result<Void>> reloadHandler, java.util.function.Function<java.util.UUID, String> chatToggleHandler) {
+    public CommandDispatcher(FactionService service, CombatService combatService, ServerAdapter server, FactionSettings settings, Supplier<Result<Void>> reloadHandler) {
+        this(service, combatService, server, settings, reloadHandler, null);
+    }
+
+    public CommandDispatcher(FactionService service, CombatService combatService, ServerAdapter server, FactionSettings settings, Supplier<Result<Void>> reloadHandler, java.util.function.Function<UUID, String> chatToggleHandler) {
         this.service = service;
+        this.combatService = combatService;
         this.server = server;
         this.settings = settings;
         this.reloadHandler = reloadHandler;
         this.chatToggleHandler = chatToggleHandler;
     }
 
-    public void setChatToggleHandler(java.util.function.Function<java.util.UUID, String> handler) {
+    public void setChatToggleHandler(java.util.function.Function<UUID, String> handler) {
         this.chatToggleHandler = handler;
+    }
+
+    public void setBorderToggleHandler(BiFunction<UUID, Integer, String> handler) {
+        this.borderToggleHandler = handler;
+    }
+
+    public void setWorldMapToggleHandler(java.util.function.Function<UUID, String> handler) {
+        this.worldMapToggleHandler = handler;
+    }
+
+    public void setClaimEffectHandler(ClaimEffectHandler handler) {
+        this.claimEffectHandler = handler;
+    }
+
+    public void setFactionCreateHandler(FactionCreateHandler handler) {
+        this.factionCreateHandler = handler;
+    }
+
+    public void setWarDeclareHandler(WarDeclareHandler handler) {
+        this.warDeclareHandler = handler;
+    }
+
+    public void setMemberRoleChangeHandler(MemberRoleChangeHandler handler) {
+        this.memberRoleChangeHandler = handler;
     }
 
     public boolean handle(CommandSource source, String commandLine) {
@@ -92,6 +141,10 @@ public final class CommandDispatcher {
             case "claim" -> handleClaim(source);
             case "unclaim" -> handleUnclaim(source);
             case "chat" -> handleChatToggle(source);
+            case "borders" -> handleBorders(source, parts);
+            case "stats" -> handleStats(source, parts);
+            case "top" -> handleTop(source, parts);
+            case "war" -> handleWar(source, parts);
             default -> {
                 send(source, "Unknown subcommand. Use /f help.");
                 return false;
@@ -111,6 +164,13 @@ public final class CommandDispatcher {
         }
         Result<Faction> result = service.createFaction(playerId, parts[1]);
         send(source, result.message());
+        if (result.ok() && factionCreateHandler != null) {
+            Optional<Location> location = server.getPlayerLocation(playerId);
+            if (location.isPresent() && result.value() != null) {
+                Faction faction = result.value();
+                factionCreateHandler.handle(playerId, location.get(), faction.id(), faction.name());
+            }
+        }
     }
 
     private void handleRename(CommandSource source, String[] parts) {
@@ -237,6 +297,13 @@ public final class CommandDispatcher {
             send(source, line);
         }
         send(source, map.legend());
+
+        if (worldMapToggleHandler != null) {
+            String message = worldMapToggleHandler.apply(playerId);
+            if (message != null && !message.isBlank()) {
+                send(source, message);
+            }
+        }
     }
 
     private void handleInvites(CommandSource source) {
@@ -270,6 +337,39 @@ public final class CommandDispatcher {
             return;
         }
         String mode = parts[1].toLowerCase(Locale.ROOT);
+        if (mode.equals("history") || mode.equals("list")) {
+            NotificationType type = null;
+            Integer limit = null;
+            if (parts.length >= 3) {
+                type = NotificationType.fromString(parts[2]);
+                if (type == null) {
+                    Integer parsed = parseInt(parts[2]);
+                    if (parsed == null) {
+                        send(source, "Unknown type. Use: minor, major, war, territory, role, system.");
+                        return;
+                    }
+                    limit = parsed;
+                }
+            }
+            if (parts.length >= 4) {
+                limit = parseInt(parts[3]);
+                if (limit == null) {
+                    send(source, "Usage: /f notify history [type] [limit]");
+                    return;
+                }
+            }
+            int max = limit != null ? limit : settings.notificationHistoryLimit;
+            List<NotificationEntry> history = service.getNotificationHistory(playerId, type, max);
+            if (history.isEmpty()) {
+                send(source, "No notifications.");
+                return;
+            }
+            send(source, "Notifications (" + history.size() + "):");
+            for (NotificationEntry entry : history) {
+                send(source, "[" + entry.type().name().toLowerCase(Locale.ROOT) + "] " + entry.title() + " - " + entry.message());
+            }
+            return;
+        }
         if (mode.equals("on")) {
             service.setNotificationsEnabled(playerId, true);
             send(source, "Notifications enabled.");
@@ -280,7 +380,7 @@ public final class CommandDispatcher {
             send(source, "Notifications disabled.");
             return;
         }
-        send(source, "Usage: /f notify <on|off>");
+        send(source, "Usage: /f notify <on|off|history>");
     }
 
     private void handleAdmin(CommandSource source, String[] parts) {
@@ -474,6 +574,15 @@ public final class CommandDispatcher {
         }
         Result<Void> result = service.promote(playerId, targetId.get());
         send(source, result.message());
+        if (result.ok() && memberRoleChangeHandler != null) {
+            Optional<Faction> faction = service.findFactionByMember(targetId.get());
+            if (faction.isPresent()) {
+                MemberRole role = faction.get().roleOf(targetId.get());
+                if (role != null) {
+                    memberRoleChangeHandler.handle(playerId, targetId.get(), role, true);
+                }
+            }
+        }
     }
 
     private void handleDemote(CommandSource source, String[] parts) {
@@ -492,6 +601,15 @@ public final class CommandDispatcher {
         }
         Result<Void> result = service.demote(playerId, targetId.get());
         send(source, result.message());
+        if (result.ok() && memberRoleChangeHandler != null) {
+            Optional<Faction> faction = service.findFactionByMember(targetId.get());
+            if (faction.isPresent()) {
+                MemberRole role = faction.get().roleOf(targetId.get());
+                if (role != null) {
+                    memberRoleChangeHandler.handle(playerId, targetId.get(), role, false);
+                }
+            }
+        }
     }
 
     private void handleLeader(CommandSource source, String[] parts) {
@@ -605,6 +723,10 @@ public final class CommandDispatcher {
         ClaimKey claim = ClaimKey.fromLocation(location.get(), settings.chunkSize);
         Result<Void> result = service.claim(playerId, claim);
         send(source, result.message());
+        if (result.ok() && claimEffectHandler != null) {
+            Optional<UUID> ownerId = service.getClaimOwnerId(claim);
+            claimEffectHandler.handle(playerId, location.get(), ClaimChangeType.CLAIM, ownerId);
+        }
     }
 
     private void handleUnclaim(CommandSource source) {
@@ -618,8 +740,12 @@ public final class CommandDispatcher {
             return;
         }
         ClaimKey claim = ClaimKey.fromLocation(location.get(), settings.chunkSize);
+        Optional<UUID> ownerBefore = service.getClaimOwnerId(claim);
         Result<Void> result = service.unclaim(playerId, claim);
         send(source, result.message());
+        if (result.ok() && claimEffectHandler != null) {
+            claimEffectHandler.handle(playerId, location.get(), ClaimChangeType.UNCLAIM, ownerBefore);
+        }
     }
 
     private void handleChatToggle(CommandSource source) {
@@ -635,6 +761,210 @@ public final class CommandDispatcher {
         send(source, "Chat mode set to: " + newMode);
     }
 
+    private void handleBorders(CommandSource source, String[] parts) {
+        UUID playerId = requirePlayer(source);
+        if (playerId == null) {
+            return;
+        }
+        if (borderToggleHandler == null) {
+            send(source, "Borders view not available.");
+            return;
+        }
+        Integer seconds = null;
+        if (parts.length >= 2) {
+            try {
+                seconds = Integer.parseInt(parts[1]);
+            } catch (NumberFormatException e) {
+                send(source, "Usage: /f borders [seconds]");
+                return;
+            }
+        }
+        String message = borderToggleHandler.apply(playerId, seconds);
+        if (message != null && !message.isBlank()) {
+            send(source, message);
+        }
+    }
+
+    // ==================== COMBAT & WAR COMMANDS ====================
+
+    private void handleStats(CommandSource source, String[] parts) {
+        if (combatService == null) {
+            send(source, "Combat system not available.");
+            return;
+        }
+
+        UUID targetId;
+        if (parts.length >= 2) {
+            Optional<UUID> resolved = server.resolvePlayerId(parts[1]);
+            if (resolved.isEmpty()) {
+                send(source, "Player not found.");
+                return;
+            }
+            targetId = resolved.get();
+        } else {
+            UUID playerId = requirePlayer(source);
+            if (playerId == null) {
+                return;
+            }
+            targetId = playerId;
+        }
+
+        String targetName = resolveName(targetId);
+        MemberCombatStats stats = combatService.getMemberStats(targetId);
+        Optional<Faction> faction = service.findFactionByMember(targetId);
+
+        send(source, "=== Stats: " + targetName + " ===");
+        send(source, "Faction: " + faction.map(Faction::name).orElse("None"));
+        send(source, "Kills: " + stats.kills() + " | Deaths: " + stats.deaths() + " | K/D: " + stats.kdr());
+        send(source, "Faction Kills: " + stats.factionKills() + " | Enemy Kills: " + stats.enemyKills());
+        send(source, "Current Streak: " + stats.currentStreak() + " | Best Streak: " + stats.bestStreak());
+
+        if (faction.isPresent()) {
+            FactionCombatStats factionStats = combatService.getFactionStats(faction.get().id());
+            send(source, "--- Faction Stats ---");
+            send(source, "Total Kills: " + factionStats.totalKills() + " | Deaths: " + factionStats.totalDeaths());
+            send(source, "Wars Won: " + factionStats.warsWon() + " | Lost: " + factionStats.warsLost() + " | Draw: " + factionStats.warsDraw());
+        }
+    }
+
+    private void handleTop(CommandSource source, String[] parts) {
+        if (combatService == null) {
+            send(source, "Combat system not available.");
+            return;
+        }
+
+        String category = parts.length >= 2 ? parts[1].toLowerCase(Locale.ROOT) : "kills";
+        int limit = 10;
+
+        switch (category) {
+            case "kills" -> {
+                send(source, "=== Top " + limit + " Killers ===");
+                List<MemberCombatStats> top = combatService.getTopKillers(limit);
+                int rank = 1;
+                for (MemberCombatStats stats : top) {
+                    String name = resolveName(stats.playerId());
+                    send(source, rank + ". " + name + " - " + stats.kills() + " kills (K/D: " + stats.kdr() + ")");
+                    rank++;
+                }
+            }
+            case "kdr" -> {
+                send(source, "=== Top " + limit + " by K/D Ratio ===");
+                List<MemberCombatStats> top = combatService.getTopByKdr(limit);
+                int rank = 1;
+                for (MemberCombatStats stats : top) {
+                    String name = resolveName(stats.playerId());
+                    send(source, rank + ". " + name + " - K/D: " + stats.kdr() + " (" + stats.kills() + "/" + stats.deaths() + ")");
+                    rank++;
+                }
+            }
+            case "factions" -> {
+                send(source, "=== Top " + limit + " Factions ===");
+                List<FactionCombatStats> top = combatService.getTopFactions(limit);
+                int rank = 1;
+                for (FactionCombatStats stats : top) {
+                    String name = service.getFactionById(stats.factionId()).map(Faction::name).orElse("Unknown");
+                    send(source, rank + ". " + name + " - " + stats.totalKills() + " kills, " + stats.warsWon() + " wars won");
+                    rank++;
+                }
+            }
+            default -> send(source, "Usage: /f top <kills|kdr|factions>");
+        }
+    }
+
+    private void handleWar(CommandSource source, String[] parts) {
+        if (combatService == null) {
+            send(source, "Combat system not available.");
+            return;
+        }
+
+        if (parts.length < 2) {
+            handleWarStatus(source);
+            return;
+        }
+
+        String sub = parts[1].toLowerCase(Locale.ROOT);
+        switch (sub) {
+            case "declare" -> handleWarDeclare(source, parts);
+            case "surrender" -> handleWarSurrender(source);
+            case "status" -> handleWarStatus(source);
+            default -> send(source, "Usage: /f war <declare|surrender|status>");
+        }
+    }
+
+    private void handleWarDeclare(CommandSource source, String[] parts) {
+        UUID playerId = requirePlayer(source);
+        if (playerId == null) {
+            return;
+        }
+        if (parts.length < 3) {
+            send(source, "Usage: /f war declare <faction>");
+            return;
+        }
+        Result<War> result = combatService.declareWar(playerId, parts[2]);
+        send(source, result.message());
+
+        if (result.ok() && warDeclareHandler != null) {
+            warDeclareHandler.handle(playerId, result.value());
+        }
+
+        // Notify defenders
+        if (result.ok()) {
+            War war = result.value();
+            Optional<Faction> defenderFaction = service.getFactionById(war.defenderFactionId());
+            Optional<Faction> attackerFaction = service.getFactionById(war.attackerFactionId());
+            if (defenderFaction.isPresent() && attackerFaction.isPresent()) {
+                String attackerName = attackerFaction.get().name();
+                for (UUID memberId : defenderFaction.get().members().keySet()) {
+                    server.sendMessage(memberId, PREFIX + "GUERRE! " + attackerName + " vous a déclaré la guerre!");
+                }
+            }
+        }
+    }
+
+    private void handleWarSurrender(CommandSource source) {
+        UUID playerId = requirePlayer(source);
+        if (playerId == null) {
+            return;
+        }
+        Result<Void> result = combatService.surrender(playerId);
+        send(source, result.message());
+    }
+
+    private void handleWarStatus(CommandSource source) {
+        UUID playerId = requirePlayer(source);
+        if (playerId == null) {
+            return;
+        }
+
+        Optional<Faction> factionOpt = service.findFactionByMember(playerId);
+        if (factionOpt.isEmpty()) {
+            send(source, "You are not in a faction.");
+            return;
+        }
+
+        Optional<War> warOpt = combatService.getActiveWar(factionOpt.get().id());
+        if (warOpt.isEmpty()) {
+            send(source, "Your faction is not at war.");
+            return;
+        }
+
+        War war = warOpt.get();
+        String attackerName = service.getFactionById(war.attackerFactionId()).map(Faction::name).orElse("Unknown");
+        String defenderName = service.getFactionById(war.defenderFactionId()).map(Faction::name).orElse("Unknown");
+
+        send(source, "=== War Status ===");
+        send(source, attackerName + " vs " + defenderName);
+        send(source, "State: " + war.state().name());
+        send(source, "Points: " + attackerName + " " + war.attackerPoints() + " - " + war.defenderPoints() + " " + defenderName);
+        send(source, "Kills: " + attackerName + " " + war.attackerKills() + " - " + war.defenderKills() + " " + defenderName);
+
+        if (war.state() == War.WarState.PENDING) {
+            long remainingMs = war.gracePeriodEnd() - server.nowEpochMs();
+            long remainingSeconds = Math.max(0, remainingMs / 1000);
+            send(source, "Grace period: " + remainingSeconds + "s remaining");
+        }
+    }
+
     private UUID requirePlayer(CommandSource source) {
         Optional<UUID> playerId = source.playerId();
         if (playerId.isEmpty()) {
@@ -645,7 +975,7 @@ public final class CommandDispatcher {
     }
 
     private void sendHelp(CommandSource source) {
-        send(source, "Commands: create, disband, list, info, who, map, invites, notify, desc, rename, invite, accept, deny, leave, kick, promote, demote, leader, ally, unally, sethome, home, claim, unclaim, reload, admin");
+        send(source, "Commands: create, disband, list, info, who, map, invites, notify, desc, rename, invite, accept, deny, leave, kick, promote, demote, leader, ally, unally, enemy, unenemy, sethome, home, claim, unclaim, chat, borders, stats, top, war, reload, admin");
     }
 
     private void send(CommandSource source, String message) {

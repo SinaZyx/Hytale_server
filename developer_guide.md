@@ -862,10 +862,16 @@ HudManager hudManager = player.getHudManager();
 ### 16.2 Utilisation
 
 ```java
+import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.util.NotificationUtil;
 
 // Envoyer une notification au joueur
-NotificationUtil.sendNotification(playerRef, "Titre", "Message", NotificationStyle.INFO);
+NotificationUtil.sendNotification(
+    playerRef.getPacketHandler(),
+    Message.raw("Titre"),
+    Message.raw("Message"),
+    NotificationStyle.Default
+);
 ```
 
 ---
@@ -933,6 +939,20 @@ world.execute(() -> {
 | `EqualizerEffect` | `server.core.asset.type.equalizereffect.config` | Effet égaliseur |
 | `AmbienceFXSoundEffect` | `server.core.asset.type.ambiencefx.config` | Effet ambiance |
 
+### 18.4 Utilisation Sons (SoundUtil)
+
+```java
+import com.hypixel.hytale.server.core.asset.type.soundevent.config.SoundEvent;
+import com.hypixel.hytale.server.core.universe.world.SoundUtil;
+import com.hypixel.hytale.protocol.SoundCategory;
+
+// Résoudre l'ID d'un son à partir de son asset ID
+int soundId = SoundEvent.getAssetMap().getIndexOrDefault("hytale:alarm_bell", SoundEvent.EMPTY_ID);
+if (soundId != SoundEvent.EMPTY_ID) {
+    SoundUtil.playSoundEvent2dToPlayer(playerRef, soundId, SoundCategory.SFX, 1.0f, 1.0f);
+}
+```
+
 ---
 
 ## 19. Système de Zones
@@ -984,7 +1004,7 @@ private void showClaimOverlay(PlayerRef player, String claimName) {
     );
 
     // Option B: Notification
-    // NotificationUtil.sendNotification(player, "Zone", claimName, NotificationStyle.INFO);
+    // NotificationUtil.sendNotification(player, "Zone", claimName, NotificationStyle.Default);
 
     // Option C: HUD persistant (via CustomUIHud)
     // Nécessite un fichier .ui et une page custom
@@ -1062,6 +1082,86 @@ Hytale inclut des systèmes de jeu pré-construits dans `com.hypixel.hytale.buil
 | Classe | Package | Description |
 |--------|---------|-------------|
 | `CameraShakeEffect` | `protocol.packets.camera` | Tremblement caméra |
+
+### 21.4 Packets World Map
+
+| Classe | Package | Description |
+|--------|---------|-------------|
+| `MapMarker` | `protocol.packets.worldmap` | Marqueur de carte |
+| `MapChunk` | `protocol.packets.worldmap` | Chunk de carte (coordonnées + image) |
+| `MapImage` | `protocol.packets.worldmap` | Image RGBA (width/height/data) |
+| `UpdateWorldMap` | `protocol.packets.worldmap` | Mise a jour de la carte (chunks + markers) |
+| `UpdateWorldMapVisible` | `protocol.packets.worldmap` | Affichage/masquage de la carte |
+| `ClearWorldMap` | `protocol.packets.worldmap` | Efface la carte |
+| `Transform` | `protocol` | Transform (Position + Direction) |
+| `Position` | `protocol` | Position (x, y, z) |
+| `Direction` | `protocol` | Orientation (yaw, pitch, roll) |
+
+### 21.5 World Map (serveur)
+
+| Classe | Package | Description |
+|--------|---------|-------------|
+| `WorldMapTracker` | `server.core.universe.world` | Tracker par joueur (markers, settings) |
+| `WorldMapManager` | `server.core.universe.world.worldmap` | Manager de world map + providers |
+| `WorldMapManager.MarkerProvider` | `server.core.universe.world.worldmap` | Provider de markers |
+| `IWorldMap` | `server.core.universe.world.worldmap` | Generateur de carte |
+| `PacketHandler` | `server.core.io` | Envoi de packets (write) |
+| `TriFunction` | `function.function` | Callback de creation de markers |
+| `Predicate` | `java.util.function` | Filtre de markers joueurs |
+
+### 21.6 Utilisation World Map
+
+```java
+import com.hypixel.hytale.protocol.Direction;
+import com.hypixel.hytale.protocol.Position;
+import com.hypixel.hytale.protocol.Transform;
+import com.hypixel.hytale.protocol.packets.worldmap.MapMarker;
+import com.hypixel.hytale.server.core.entity.entities.Player;
+import com.hypixel.hytale.server.core.universe.world.WorldMapTracker;
+
+// Obtenir le WorldMapTracker d'un joueur
+Player player = store.getComponent(ref, Player.getComponentType());
+WorldMapTracker tracker = player.getWorldMapTracker();
+
+// Creer un marker de carte (icone = asset id)
+String markerId = "faction:example";
+String markerName = "Faction Example";
+String markerImage = "hytale:map_marker";
+Transform markerTransform = new Transform(
+    new Position(x, y, z),
+    new Direction(yaw, pitch, 0f)
+);
+MapMarker marker = new MapMarker(markerId, markerName, markerImage, markerTransform, new com.hypixel.hytale.protocol.packets.worldmap.ContextMenuItem[0]);
+
+// Envoi du marker (premier param = -1 pour bypass visibilite)
+tracker.trySendMarker(-1, 0, 0, marker);
+
+// Filtrer les players visibles sur la world map (true = cacher)
+tracker.setPlayerMapFilter(playerRef -> !allowedPlayers.contains(playerRef.getUuid()));
+```
+
+**Chunks + overlay (UpdateWorldMap)** :
+```java
+import com.hypixel.hytale.protocol.packets.worldmap.MapChunk;
+import com.hypixel.hytale.protocol.packets.worldmap.MapImage;
+import com.hypixel.hytale.protocol.packets.worldmap.UpdateWorldMap;
+import com.hypixel.hytale.server.core.io.PacketHandler;
+import com.hypixel.hytale.server.core.universe.world.worldmap.WorldMapManager;
+
+WorldMapManager manager = world.getWorldMapManager();
+MapImage base = manager.getImageIfInMemory(chunkX, chunkZ);
+if (base != null) {
+    MapImage tinted = base.clone(); // clone = copie profonde du tableau data
+    // MapImage.data = RGBA (r<<24 | g<<16 | b<<8 | a)
+    int[] data = tinted.data;
+    for (int i = 0; i < data.length; i++) {
+        data[i] = blend(data[i], overlayR, overlayG, overlayB, overlayAlpha);
+    }
+    MapChunk chunk = new MapChunk(chunkX, chunkZ, tinted);
+    PacketHandler handler = playerRef.getPacketHandler();
+    handler.writeNoCache(new UpdateWorldMap(new MapChunk[] { chunk }, null, null));
+}
+```
 
 ---
 

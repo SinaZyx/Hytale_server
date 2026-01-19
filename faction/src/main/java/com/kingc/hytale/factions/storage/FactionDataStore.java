@@ -69,6 +69,7 @@ public final class FactionDataStore {
             record.createdAtEpochMs = faction.createdAtEpochMs();
             record.home = faction.home() == null ? null : faction.home().serialize();
             record.powerOverride = faction.powerOverride();
+            record.treasuryBalance = faction.treasuryBalance();
             record.members = new HashMap<>();
             for (Map.Entry<UUID, MemberRole> entry : faction.members().entrySet()) {
                 record.members.put(entry.getKey().toString(), entry.getValue().name());
@@ -137,6 +138,9 @@ public final class FactionDataStore {
                 faction.setDescription(record.description);
                 faction.setHome(Location.deserialize(record.home));
                 faction.setPowerOverride(record.powerOverride);
+                if (record.treasuryBalance != null) {
+                    faction.setTreasuryBalance(record.treasuryBalance);
+                }
                 factions.put(id, faction);
                 nameIndex.put(nameKey(record.name), id);
             }
@@ -188,6 +192,7 @@ public final class FactionDataStore {
         public String home;
         public Set<String> allies;
         public Integer powerOverride;
+        public Double treasuryBalance;
     }
 
     public static final class InviteRecord {

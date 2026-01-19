@@ -2,6 +2,7 @@ package com.kingc.hytale.factions.hytale;
 
 import com.hypixel.hytale.server.core.Message;
 import com.kingc.hytale.factions.api.PlayerRef;
+import com.kingc.hytale.factions.integration.FancyCoreBridge;
 
 import java.util.UUID;
 
@@ -23,6 +24,10 @@ public final class HytalePlayerRef implements PlayerRef {
 
     @Override
     public boolean hasPermission(String permission) {
+        var fancyCheck = FancyCoreBridge.checkPermission(ref.getUuid(), permission);
+        if (fancyCheck.isPresent()) {
+            return fancyCheck.get();
+        }
         return true;
     }
 

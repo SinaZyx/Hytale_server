@@ -4,6 +4,7 @@ import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.CommandSender;
 import com.kingc.hytale.factions.api.CommandSource;
+import com.kingc.hytale.factions.integration.FancyCoreBridge;
 
 import java.util.Optional;
 import java.util.UUID;
@@ -25,6 +26,10 @@ public final class HytaleCommandSource implements CommandSource {
         CommandSender sender = ctx.sender();
         if (sender == null) {
             return false;
+        }
+        var fancyCheck = FancyCoreBridge.checkPermission(sender.getUuid(), permission);
+        if (fancyCheck.isPresent()) {
+            return fancyCheck.get();
         }
         return sender.hasPermission(permission);
     }

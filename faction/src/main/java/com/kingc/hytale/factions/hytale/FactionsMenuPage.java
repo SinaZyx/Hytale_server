@@ -16,7 +16,10 @@ import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.kingc.hytale.factions.model.Faction;
+import com.kingc.hytale.factions.model.MemberCombatStats;
 import com.kingc.hytale.factions.model.MemberRole;
+import com.kingc.hytale.factions.model.NotificationEntry;
+import com.kingc.hytale.factions.model.War;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -46,6 +49,11 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
         buildMembersList(commands);
         buildAlliesList(commands);
         buildClaimInfo(commands);
+        buildCombatStats(commands);
+        buildWarStatus(commands);
+        buildLeaderboard(commands);
+        buildEventHistory(commands);
+        buildPerks(commands);
         applyTabState(commands);
         bindActions(events);
     }
@@ -92,6 +100,13 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
             case "home" -> "f home";
             case "claim" -> "f claim";
             case "unclaim" -> "f unclaim";
+            case "stats" -> buildOptionalCommand("stats", normalize(data.getPlayerName()));
+            case "top_kills" -> "f top kills";
+            case "top_kdr" -> "f top kdr";
+            case "top_factions" -> "f top factions";
+            case "war_declare" -> buildWarDeclareCommand(requireFactionName(data));
+            case "war_status" -> "f war status";
+            case "war_surrender" -> "f war surrender";
             case "list" -> "f list";
             default -> null;
         };
@@ -113,6 +128,11 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
         buildMembersList(commands);
         buildAlliesList(commands);
         buildClaimInfo(commands);
+        buildCombatStats(commands);
+        buildWarStatus(commands);
+        buildLeaderboard(commands);
+        buildEventHistory(commands);
+        buildPerks(commands);
         applyTabState(commands);
         bindActions(events);
         sendUpdate(commands, events, false);
@@ -220,6 +240,92 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
         commands.set("#ClaimStats.TextSpans", Message.raw("Claims: " + claims + "/" + claimLimit + " | Power: " + power));
     }
 
+    private void buildCombatStats(UICommandBuilder commands) {
+        commands.clear("#CombatStatsList");
+        UUID playerId = playerRef.getUuid();
+        if (playerId == null) {
+            appendListLabel(commands, "#CombatStatsList", "Aucun joueur.", "#9aa7b0");
+            return;
+        }
+        MemberCombatStats stats = plugin.core().combatService().getMemberStats(playerId);
+        appendListLabel(commands, "#CombatStatsList", "Vos stats", "#a9b7c4");
+        appendListLabel(commands, "#CombatStatsList", "Kills: " + stats.kills() + " | Deaths: " + stats.deaths() + " | K/D: " + stats.kdr(), "#c6d3dd");
+        appendListLabel(commands, "#CombatStatsList", "Streak: " + stats.currentStreak() + " (best " + stats.bestStreak() + ")", "#c6d3dd");
+        appendListLabel(commands, "#CombatStatsList", "Top killers", "#a9b7c4");
+        List<MemberCombatStats> topKillers = plugin.core().combatService().getTopKillers(5);
+        if (topKillers.isEmpty()) {
+            appendListLabel(commands, "#CombatStatsList", "Aucune donnee.", "#9aa7b0");
+        } else {
+            int rank = 1;
+            for (MemberCombatStats entry : topKillers) {
+                String name = resolveName(entry.playerId());
+                appendListLabel(commands, "#CombatStatsList",
+                        rank + ". " + name + " - " + entry.kills() + " kills (K/D " + entry.kdr() + ")",
+                        "#c6d3dd");
+                rank++;
+            }
+        }
+    }
+
+    private void buildWarStatus(UICommandBuilder commands) {
+        commands.clear("#WarStatusList");
+        Optional<Faction> faction = getCurrentFaction();
+        if (faction.isEmpty()) {
+            appendListLabel(commands, "#WarStatusList", "Aucune faction.", "#9aa7b0");
+            return;
+        }
+        Optional<War> warOpt = plugin.core().combatService().getActiveWar(faction.get().id());
+        if (warOpt.isEmpty()) {
+            appendListLabel(commands, "#WarStatusList", "Pas de guerre active.", "#9aa7b0");
+            return;
+        }
+        War war = warOpt.get();
+        String attacker = plugin.core().service().getFactionById(war.attackerFactionId()).map(Faction::name).orElse("Attaquant");
+        String defender = plugin.core().service().getFactionById(war.defenderFactionId()).map(Faction::name).orElse("Defenseur");
+        appendListLabel(commands, "#WarStatusList", attacker + " vs " + defender, "#c6d3dd");
+        appendListLabel(commands, "#WarStatusList", "Etat: " + war.state().name().toLowerCase(Locale.ROOT), "#c6d3dd");
+        appendListLabel(commands, "#WarStatusList", "Points: " + war.attackerPoints() + " - " + war.defenderPoints(), "#c6d3dd");
+        appendListLabel(commands, "#WarStatusList", "Kills: " + war.attackerKills() + " - " + war.defenderKills(), "#c6d3dd");
+    }
+
+    private void buildLeaderboard(UICommandBuilder commands) {
+        commands.clear("#LeaderboardList");
+        List<com.kingc.hytale.factions.model.FactionCombatStats> top = plugin.core().combatService().getTopFactions(8);
+        if (top.isEmpty()) {
+            appendListLabel(commands, "#LeaderboardList", "Aucun classement.", "#9aa7b0");
+            return;
+        }
+        int rank = 1;
+        for (com.kingc.hytale.factions.model.FactionCombatStats stats : top) {
+            String name = plugin.core().service().getFactionById(stats.factionId()).map(Faction::name).orElse("Unknown");
+            appendListLabel(commands, "#LeaderboardList", rank + ". " + name + " - " + stats.totalKills() + " kills", "#c6d3dd");
+            rank++;
+        }
+    }
+
+    private void buildEventHistory(UICommandBuilder commands) {
+        commands.clear("#EventsList");
+        UUID playerId = playerRef.getUuid();
+        if (playerId == null) {
+            appendListLabel(commands, "#EventsList", "Aucun joueur.", "#9aa7b0");
+            return;
+        }
+        List<NotificationEntry> history = plugin.core().service().getNotificationHistory(playerId, null, 12);
+        if (history.isEmpty()) {
+            appendListLabel(commands, "#EventsList", "Aucun evenement.", "#9aa7b0");
+            return;
+        }
+        for (NotificationEntry entry : history) {
+            String line = "[" + entry.type().name().toLowerCase(Locale.ROOT) + "] " + entry.title() + " - " + entry.message();
+            appendListLabel(commands, "#EventsList", line, "#c6d3dd");
+        }
+    }
+
+    private void buildPerks(UICommandBuilder commands) {
+        commands.clear("#PerksList");
+        appendListLabel(commands, "#PerksList", "Perks indisponibles pour le moment.", "#9aa7b0");
+    }
+
     private void bindActions(UIEventBuilder events) {
         bindNavigation(events);
         bindClose(events);
@@ -245,6 +351,13 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
         addAction(events, "#HomeButton", "home", false, false);
         addAction(events, "#MapButton", "map", false, false);
         addAction(events, "#WhoButton", "who", false, true);
+        addAction(events, "#StatsButton", "stats", false, true);
+        addAction(events, "#TopKillsButton", "top_kills", false, false);
+        addAction(events, "#TopKdrButton", "top_kdr", false, false);
+        addAction(events, "#TopFactionsButton", "top_factions", false, false);
+        addAction(events, "#WarDeclareButton", "war_declare", true, false);
+        addAction(events, "#WarStatusButton", "war_status", false, false);
+        addAction(events, "#WarSurrenderButton", "war_surrender", false, false);
     }
 
     private void bindClose(UIEventBuilder events) {
@@ -263,6 +376,16 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
                 EventData.of(FactionsMenuEventData.KEY_ACTION, "tab_claims"));
         events.addEventBinding(CustomUIEventBindingType.Activating, "#NavToolsButton",
                 EventData.of(FactionsMenuEventData.KEY_ACTION, "tab_tools"));
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#NavCombatButton",
+                EventData.of(FactionsMenuEventData.KEY_ACTION, "tab_combat"));
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#NavWarButton",
+                EventData.of(FactionsMenuEventData.KEY_ACTION, "tab_war"));
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#NavLeaderboardButton",
+                EventData.of(FactionsMenuEventData.KEY_ACTION, "tab_leaderboard"));
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#NavEventsButton",
+                EventData.of(FactionsMenuEventData.KEY_ACTION, "tab_events"));
+        events.addEventBinding(CustomUIEventBindingType.Activating, "#NavPerksButton",
+                EventData.of(FactionsMenuEventData.KEY_ACTION, "tab_perks"));
     }
 
     private void applyTabState(UICommandBuilder commands) {
@@ -271,21 +394,36 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
         boolean relations = "relations".equals(activeTab);
         boolean claims = "claims".equals(activeTab);
         boolean tools = "tools".equals(activeTab);
+        boolean combat = "combat".equals(activeTab);
+        boolean war = "war".equals(activeTab);
+        boolean leaderboard = "leaderboard".equals(activeTab);
+        boolean events = "events".equals(activeTab);
+        boolean perks = "perks".equals(activeTab);
 
         commands.set("#ManageView.Visible", manage);
         commands.set("#MembersView.Visible", members);
         commands.set("#RelationsView.Visible", relations);
         commands.set("#ClaimsView.Visible", claims);
         commands.set("#ToolsView.Visible", tools);
+        commands.set("#CombatView.Visible", combat);
+        commands.set("#WarView.Visible", war);
+        commands.set("#LeaderboardView.Visible", leaderboard);
+        commands.set("#EventsView.Visible", events);
+        commands.set("#PerksView.Visible", perks);
 
-        commands.set("#FactionInputPanel.Visible", manage || relations || tools);
-        commands.set("#PlayerInputPanel.Visible", members || tools);
+        commands.set("#FactionInputPanel.Visible", manage || relations || tools || war);
+        commands.set("#PlayerInputPanel.Visible", members || tools || combat);
 
         commands.set("#NavManageIndicator.Visible", manage);
         commands.set("#NavMembersIndicator.Visible", members);
         commands.set("#NavRelationsIndicator.Visible", relations);
         commands.set("#NavClaimsIndicator.Visible", claims);
         commands.set("#NavToolsIndicator.Visible", tools);
+        commands.set("#NavCombatIndicator.Visible", combat);
+        commands.set("#NavWarIndicator.Visible", war);
+        commands.set("#NavLeaderboardIndicator.Visible", leaderboard);
+        commands.set("#NavEventsIndicator.Visible", events);
+        commands.set("#NavPerksIndicator.Visible", perks);
     }
 
     private void selectTab(String tab) {
@@ -293,7 +431,7 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
             return;
         }
         switch (tab) {
-            case "manage", "members", "relations", "claims", "tools" -> activeTab = tab;
+            case "manage", "members", "relations", "claims", "tools", "combat", "war", "leaderboard", "events", "perks" -> activeTab = tab;
             default -> {
             }
         }
@@ -354,12 +492,26 @@ public final class FactionsMenuPage extends InteractiveCustomUIPage<FactionsMenu
         return "f " + action + " " + value;
     }
 
+    private String buildWarDeclareCommand(String factionName) {
+        if (factionName == null) {
+            return null;
+        }
+        return "f war declare " + factionName;
+    }
+
     private String buildDescriptionCommand(FactionsMenuEventData data) {
         String description = normalize(data.getDescription());
         if (description == null) {
             return "f desc";
         }
         return "f desc " + description;
+    }
+
+    private void appendListLabel(UICommandBuilder commands, String listId, String text, String color) {
+        String safeText = escapeUiText(text == null ? "" : text);
+        String safeColor = color == null || color.isBlank() ? "#c6d3dd" : color;
+        String entry = "Label { Text: \"" + safeText + "\"; Style: (FontSize: 12, TextColor: " + safeColor + "); Anchor: (Bottom: 6); }";
+        commands.appendInline(listId, entry);
     }
 
     private void sendNotice(String message) {

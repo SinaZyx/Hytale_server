@@ -1,7 +1,23 @@
 Hytale Factions (PvP)
 
-Ce plugin ajoute des factions avec claims, invites, alliances, UI et protections PvP.
+Ce plugin ajoute des factions avec claims, alliances, UI, statistiques de combat et guerres.
 Il est base sur le template officiel Hytale et cible Java 25.
+
+Fonctionnalites
+- Factions: creation, dissolution, roles, invitations, description/rename
+- Claims de territoire (par chunk) + protection des blocs (BreakBlockEvent/PlaceBlockEvent)
+- Alliances + ennemis
+- Home de faction et teleports
+- Modes de chat (PUBLIC, FACTION, ALLY)
+- Notifications d'entree/sortie de territoire + historique
+- Carte ASCII des claims (/f map)
+- World map in-game (/f map, 3 min) avec membres/alliés + claims colores (overlay de chunk)
+- Statistiques de combat (kills, deaths, KDR, streaks)
+- Guerres: declaration, reddition, grace period, points, cooldown, historique
+- UI: pages combat, guerre, classement, evenements, perks
+- Effets visuels: borders, claim/unclaim, conquete, victoire de guerre
+- Audio: invasion, entree/sortie de territoire, declaration/victoire de guerre, roles
+- FancyCore: placeholders, permissions, warps de home, economie (treasury)
 
 Commandes
 - /f (ouvre le menu UI)
@@ -24,30 +40,53 @@ Commandes
 - /f leader <player>
 - /f ally <faction>
 - /f unally <faction>
+- /f enemy <faction>
+- /f unenemy <faction>
 - /f sethome
 - /f home
 - /f claim
 - /f unclaim
+- /f chat
+- /f borders [seconds]
+- /f stats [player]
+- /f top <kills|kdr|factions>
+- /f war declare <faction>
+- /f war surrender
+- /f war status
+- /f notify history [type] [limit]
+- /f reload
+- /f admin ...
 
 Configuration (config.json)
-- minNameLength, maxNameLength
-- maxMembers
-- maxClaims (plafond dur)
-- baseClaimLimit, claimLimitPerMember
-- basePower, powerPerMember, maxPower
-- claimCooldownSeconds, unclaimCooldownSeconds
-- claimWorldAllowList, claimWorldDenyList
-- notifyOnEnter, notifyOnLeave
-- notifyUseTitle, notifyUseChat
-- notifyCooldownSeconds
-- claimEnterTitle, claimEnterSubtitle
-- claimLeaveTitle, claimLeaveSubtitle
-- wildernessLabel
-- placeholders: {faction}, {wilderness}, {world}
-- claimTitleFadeIn, claimTitleStay, claimTitleFadeOut
-- mapRadius
-- maxDescriptionLength
-- chunkSize, allowFriendlyFire, allowAllyBuild, inviteExpiryMinutes
+- Base: minNameLength, maxNameLength, maxMembers, maxClaims
+- Claims: chunkSize, baseClaimLimit, claimLimitPerMember, claimCooldownSeconds, unclaimCooldownSeconds
+- Worlds: claimWorldAllowList, claimWorldDenyList
+- Roles: roleForInvite, roleForKick, roleForClaim, roleForUnclaim, roleForSetHome, roleForWar, etc.
+- Chat/notify: notifyOnEnter, notifyOnLeave, notifyUseTitle, notifyUseChat, notifyCooldownSeconds, notificationHistoryLimit
+- Titles: claimEnterTitle, claimEnterSubtitle, claimLeaveTitle, claimLeaveSubtitle, claimTitleFadeIn, claimTitleStay, claimTitleFadeOut
+- World map: worldMapDurationSeconds, worldMapUpdateIntervalSeconds
+- Colors: colorOwn, colorAlly, colorEnemy, colorNeutral, colorWilderness
+- War: warPointsPerKill, warPointsToWin, warGracePeriodMinutes, warDurationMinutes, warCooldownMinutes, warNotifyOnKill, warKillMessage
+- Particules: borderParticle*, claimParticle*, factionCreateParticle*, conquestParticle*, warVictoryParticle*
+- Sons: soundTerritoryInvasion, soundWarVictory, soundWarDeclare, soundTerritoryEnter, soundTerritoryLeave,
+        soundRolePromote, soundRoleDemote, soundVolume, soundPitch, soundInvasionCooldownSeconds
+
+Donnees et fichiers
+- data/factions.json (inclut treasuryBalance par faction)
+- data/combat.json (stats combat + guerres)
+- data/logs/actions.log (actions)
+
+Integrations FancyCore
+- Placeholders: {faction_name}
+- Permissions: check via FancyCore PermissionService (fallback Hytale)
+- Home: creation d'un warp FancyCore pour le home de faction (prefix: faction_)
+- Economie: bridge via HytaleFactionsPlugin.depositTreasury / withdrawTreasury
+
+API publique + events
+- Acces via HytaleFactionsPlugin.api() (FactionsApi)
+- Events: FactionCreatedEvent, FactionRenamedEvent, FactionDisbandedEvent, FactionHomeSetEvent,
+          FactionClaimChangedEvent, MemberRoleChangedEvent, WarDeclaredEvent, WarStartedEvent,
+          WarEndedEvent, FactionTreasuryChangedEvent
 
 Installation
 1) Installer Java 25.
@@ -72,9 +111,3 @@ Option B (jar dans Mods)
 1) Build: .\gradlew.bat build
 2) Copie build\libs\HytaleFactions-0.2.0.jar vers %appdata%\Hytale\UserData\Mods
 3) Demarre le serveur puis le client, et teste /f.
-
-Notes
-- Les donnees sont sauvegardees dans le dossier du plugin (config.json et factions.json).
-- Le menu UI permet d'utiliser les commandes sans taper de texte.
-- Affichage du territoire a l'ecran quand tu entres/sors d'un claim (title ou chat selon config).
-- /f map affiche une mini carte ASCII des claims autour du joueur.

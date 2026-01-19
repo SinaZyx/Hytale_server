@@ -1,14 +1,31 @@
 package com.kingc.hytale.factions.service;
 
+import com.kingc.hytale.factions.api.ClaimChangeType;
 import com.kingc.hytale.factions.api.Location;
+import com.kingc.hytale.factions.api.event.FactionClaimChangedEvent;
+import com.kingc.hytale.factions.api.event.FactionCreatedEvent;
+import com.kingc.hytale.factions.api.event.FactionDisbandedEvent;
+import com.kingc.hytale.factions.api.event.FactionEvent;
+import com.kingc.hytale.factions.api.event.FactionEventBus;
+import com.kingc.hytale.factions.api.event.FactionHomeSetEvent;
+import com.kingc.hytale.factions.api.event.FactionRenamedEvent;
+import com.kingc.hytale.factions.api.event.FactionTreasuryChangedEvent;
+import com.kingc.hytale.factions.api.event.MemberRoleChangeType;
+import com.kingc.hytale.factions.api.event.MemberRoleChangedEvent;
 import com.kingc.hytale.factions.model.ClaimKey;
 import com.kingc.hytale.factions.model.Faction;
 import com.kingc.hytale.factions.model.FactionInvite;
 import com.kingc.hytale.factions.model.MemberRole;
+import com.kingc.hytale.factions.model.NotificationEntry;
+import com.kingc.hytale.factions.model.NotificationType;
 import com.kingc.hytale.factions.storage.FactionDataStore;
 
 import java.util.ArrayList;
+import java.util.ArrayDeque;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.Deque;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -24,14 +41,18 @@ public final class FactionService {
     private final FactionSettings settings;
     private final TimeProvider timeProvider;
     private final ActionLogger actionLogger;
+    private final FactionEventBus eventBus;
     private final Map<UUID, Long> lastClaimAt = new ConcurrentHashMap<>();
     private final Map<UUID, Long> lastUnclaimAt = new ConcurrentHashMap<>();
+    private final Map<UUID, Deque<NotificationEntry>> notificationHistory = new ConcurrentHashMap<>();
 
-    public FactionService(FactionDataStore store, FactionSettings settings, TimeProvider timeProvider, ActionLogger actionLogger) {
+    public FactionService(FactionDataStore store, FactionSettings settings, TimeProvider timeProvider, ActionLogger actionLogger,
+                          FactionEventBus eventBus) {
         this.store = store;
         this.settings = settings;
         this.timeProvider = timeProvider;
         this.actionLogger = actionLogger;
+        this.eventBus = eventBus;
     }
 
     public Result<Faction> createFaction(UUID ownerId, String name) {
@@ -51,6 +72,7 @@ public final class FactionService {
         store.factions().put(id, faction);
         store.nameIndex().put(FactionDataStore.nameKey(trimmed), id);
         logAction(ownerId, "create faction=" + trimmed);
+        postEvent(new FactionCreatedEvent(faction, ownerId));
         return Result.ok("Faction created: " + trimmed, faction);
     }
 
@@ -69,6 +91,7 @@ public final class FactionService {
         store.claims().entrySet().removeIf(entry -> entry.getValue().equals(factionId));
         store.invites().values().forEach(invites -> invites.removeIf(invite -> invite.factionId().equals(factionId)));
         logAction(actorId, "disband faction=" + faction.name());
+        postEvent(new FactionDisbandedEvent(faction, actorId));
         return Result.ok("Faction disbanded.", null);
     }
 
@@ -90,10 +113,12 @@ public final class FactionService {
         if (store.nameIndex().containsKey(newKey)) {
             return Result.error("That faction name is already taken.");
         }
-        store.nameIndex().remove(FactionDataStore.nameKey(faction.name()));
+        String oldName = faction.name();
+        store.nameIndex().remove(FactionDataStore.nameKey(oldName));
         faction.setName(trimmed);
         store.nameIndex().put(newKey, faction.id());
         logAction(actorId, "rename faction=" + trimmed);
+        postEvent(new FactionRenamedEvent(faction, oldName, actorId));
         return Result.ok("Faction renamed to " + trimmed + ".", null);
     }
 
@@ -234,9 +259,15 @@ public final class FactionService {
         if (!faction.isMember(targetId)) {
             return Result.error("That player is not in your faction.");
         }
+        MemberRole oldActorRole = faction.roleOf(actorId);
+        MemberRole oldTargetRole = faction.roleOf(targetId);
         faction.setMemberRole(actorId, MemberRole.OFFICER);
         faction.setMemberRole(targetId, MemberRole.LEADER);
         logAction(actorId, "transfer leader=" + targetId + " faction=" + faction.name());
+        postEvent(new MemberRoleChangedEvent(faction, actorId, actorId, oldActorRole, MemberRole.OFFICER,
+                MemberRoleChangeType.TRANSFER));
+        postEvent(new MemberRoleChangedEvent(faction, actorId, targetId, oldTargetRole, MemberRole.LEADER,
+                MemberRoleChangeType.TRANSFER));
         return Result.ok("Leadership transferred.", null);
     }
 
@@ -251,7 +282,55 @@ public final class FactionService {
         }
         faction.setHome(location);
         logAction(actorId, "sethome faction=" + faction.name());
+        postEvent(new FactionHomeSetEvent(faction, location, actorId));
         return Result.ok("Faction home set.", null);
+    }
+
+    public Optional<Double> getTreasuryBalance(UUID factionId) {
+        if (factionId == null) {
+            return Optional.empty();
+        }
+        Faction faction = store.factions().get(factionId);
+        if (faction == null) {
+            return Optional.empty();
+        }
+        return Optional.of(faction.treasuryBalance());
+    }
+
+    public Result<Double> depositTreasury(UUID actorId, double amount) {
+        if (amount <= 0) {
+            return Result.error("Amount must be positive.");
+        }
+        Optional<Faction> factionOpt = findFactionByMember(actorId);
+        if (factionOpt.isEmpty()) {
+            return Result.error("You are not in a faction.");
+        }
+        return adjustTreasury(factionOpt.get(), actorId, amount);
+    }
+
+    public Result<Double> withdrawTreasury(UUID actorId, double amount) {
+        if (amount <= 0) {
+            return Result.error("Amount must be positive.");
+        }
+        Optional<Faction> factionOpt = findFactionByMember(actorId);
+        if (factionOpt.isEmpty()) {
+            return Result.error("You are not in a faction.");
+        }
+        return adjustTreasury(factionOpt.get(), actorId, -amount);
+    }
+
+    public Result<Double> adjustTreasury(UUID factionId, UUID actorId, double amount) {
+        if (factionId == null) {
+            return Result.error("Faction not found.");
+        }
+        Faction faction = store.factions().get(factionId);
+        if (faction == null) {
+            return Result.error("Faction not found.");
+        }
+        if (amount == 0) {
+            return Result.error("Amount must be non-zero.");
+        }
+        return adjustTreasury(faction, actorId, amount);
     }
 
     public Result<Void> setDescription(UUID actorId, String description) {
@@ -316,6 +395,7 @@ public final class FactionService {
         store.claims().put(claim, faction.id());
         lastClaimAt.put(faction.id(), timeProvider.nowEpochMs());
         logAction(actorId, "claim " + claim.toKey() + " faction=" + faction.name());
+        postEvent(new FactionClaimChangedEvent(faction, claim, ClaimChangeType.CLAIM, actorId));
         return Result.ok("Chunk claimed.", null);
     }
 
@@ -339,6 +419,7 @@ public final class FactionService {
         store.claims().remove(claim);
         lastUnclaimAt.put(faction.id(), timeProvider.nowEpochMs());
         logAction(actorId, "unclaim " + claim.toKey() + " faction=" + faction.name());
+        postEvent(new FactionClaimChangedEvent(faction, claim, ClaimChangeType.UNCLAIM, actorId));
         return Result.ok("Chunk unclaimed.", null);
     }
 
@@ -479,6 +560,24 @@ public final class FactionService {
             return Optional.empty();
         }
         return Optional.ofNullable(store.claims().get(claim));
+    }
+
+    public Map<ClaimKey, UUID> getClaimsInRadius(String world, int centerX, int centerZ, int radius) {
+        if (world == null || radius < 0) {
+            return Map.of();
+        }
+        int clampedRadius = Math.max(0, radius);
+        Map<ClaimKey, UUID> result = new HashMap<>();
+        for (int dx = -clampedRadius; dx <= clampedRadius; dx++) {
+            for (int dz = -clampedRadius; dz <= clampedRadius; dz++) {
+                ClaimKey key = new ClaimKey(world, centerX + dx, centerZ + dz);
+                UUID owner = store.claims().get(key);
+                if (owner != null) {
+                    result.put(key, owner);
+                }
+            }
+        }
+        return result;
     }
 
     public Optional<Faction> getFactionById(UUID factionId) {
@@ -625,6 +724,41 @@ public final class FactionService {
         }
     }
 
+    public void recordNotification(UUID playerId, NotificationType type, String title, String message) {
+        if (playerId == null) {
+            return;
+        }
+        long timestamp = timeProvider.nowEpochMs();
+        NotificationEntry entry = new NotificationEntry(type, title, message, timestamp);
+        Deque<NotificationEntry> queue = notificationHistory.computeIfAbsent(playerId, ignored -> new ArrayDeque<>());
+        queue.addFirst(entry);
+        int limit = settings.notificationHistoryLimit;
+        while (queue.size() > limit) {
+            queue.removeLast();
+        }
+    }
+
+    public List<NotificationEntry> getNotificationHistory(UUID playerId, NotificationType type, int limit) {
+        if (playerId == null) {
+            return List.of();
+        }
+        Deque<NotificationEntry> queue = notificationHistory.get(playerId);
+        if (queue == null || queue.isEmpty()) {
+            return List.of();
+        }
+        int max = limit <= 0 ? settings.notificationHistoryLimit : limit;
+        List<NotificationEntry> result = new ArrayList<>(Math.min(max, queue.size()));
+        for (NotificationEntry entry : queue) {
+            if (type == null || entry.type() == type) {
+                result.add(entry);
+                if (result.size() >= max) {
+                    break;
+                }
+            }
+        }
+        return result;
+    }
+
     public Result<Void> adminUnclaim(ClaimKey claim) {
         if (claim == null) {
             return Result.error("Claim not found.");
@@ -671,11 +805,19 @@ public final class FactionService {
         if (!faction.isMember(newLeaderId)) {
             faction.setMemberRole(newLeaderId, MemberRole.OFFICER);
         }
+        MemberRole oldLeaderRole = currentLeader == null ? null : faction.roleOf(currentLeader);
+        MemberRole oldNewLeaderRole = faction.roleOf(newLeaderId);
         if (currentLeader != null && !currentLeader.equals(newLeaderId)) {
             faction.setMemberRole(currentLeader, MemberRole.OFFICER);
         }
         faction.setMemberRole(newLeaderId, MemberRole.LEADER);
         logAction(null, "admin transfer faction=" + faction.name() + " leader=" + newLeaderId);
+        if (currentLeader != null && oldLeaderRole != null) {
+            postEvent(new MemberRoleChangedEvent(faction, null, currentLeader, oldLeaderRole, MemberRole.OFFICER,
+                    MemberRoleChangeType.ADMIN));
+        }
+        postEvent(new MemberRoleChangedEvent(faction, null, newLeaderId, oldNewLeaderRole, MemberRole.LEADER,
+                MemberRoleChangeType.ADMIN));
         return Result.ok("Leadership updated.", null);
     }
 
@@ -699,6 +841,29 @@ public final class FactionService {
         return Optional.ofNullable(store.factions().get(id));
     }
 
+    public Optional<Faction> getFactionById(UUID factionId) {
+        if (factionId == null) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(store.factions().get(factionId));
+    }
+
+    public Map<UUID, Faction> factions() {
+        return Collections.unmodifiableMap(store.factions());
+    }
+
+    private Result<Double> adjustTreasury(Faction faction, UUID actorId, double amount) {
+        double oldBalance = faction.treasuryBalance();
+        double newBalance = oldBalance + amount;
+        if (newBalance < 0) {
+            return Result.error("Faction treasury does not have enough funds.");
+        }
+        faction.setTreasuryBalance(newBalance);
+        logAction(actorId, "treasury amount=" + amount + " faction=" + faction.name());
+        postEvent(new FactionTreasuryChangedEvent(faction, actorId, amount, oldBalance, newBalance));
+        return Result.ok("Treasury updated.", newBalance);
+    }
+
     private Result<Void> changeRank(UUID actorId, UUID targetId, boolean promote) {
         Optional<Faction> factionOpt = findFactionByMember(actorId);
         if (factionOpt.isEmpty()) {
@@ -720,6 +885,7 @@ public final class FactionService {
         if (actorRole == null || actorRole.rank() <= targetRole.rank()) {
             return Result.error("You cannot change a member with equal or higher rank.");
         }
+        MemberRole oldRole = targetRole;
         MemberRole newRole = promote ? targetRole.promote() : targetRole.demote();
         if (newRole == targetRole) {
             return Result.error("No rank change available.");
@@ -727,12 +893,21 @@ public final class FactionService {
         faction.setMemberRole(targetId, newRole);
         String action = promote ? "promote" : "demote";
         logAction(actorId, action + " target=" + targetId + " role=" + newRole.name());
+        postEvent(new MemberRoleChangedEvent(faction, actorId, targetId, oldRole, newRole,
+                promote ? MemberRoleChangeType.PROMOTE : MemberRoleChangeType.DEMOTE));
         return Result.ok("Member rank updated.", null);
     }
 
     private boolean hasAtLeastRole(Faction faction, UUID playerId, MemberRole role) {
         MemberRole current = faction.roleOf(playerId);
         return current != null && current.atLeast(role);
+    }
+
+    private void postEvent(FactionEvent event) {
+        if (eventBus == null || event == null) {
+            return;
+        }
+        eventBus.post(event);
     }
 
     private boolean isClaimWorldAllowed(String world) {
