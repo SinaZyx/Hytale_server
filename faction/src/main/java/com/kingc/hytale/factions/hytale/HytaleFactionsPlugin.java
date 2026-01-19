@@ -55,7 +55,6 @@ import com.kingc.hytale.factions.integration.FancyCoreBridge;
 import com.kingc.hytale.factions.service.Result;
 import com.hypixel.hytale.server.core.universe.world.worldmap.WorldMapManager;
 
-
 import javax.annotation.Nonnull;
 import java.io.IOException;
 import java.util.HashSet;
@@ -125,6 +124,7 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
             stopClaimScanner();
             stopWarTicker();
             flush();
+            serverAdapter.shutdown();
         });
         getEventRegistry().registerGlobal(PlayerConnectEvent.class, this::handlePlayerConnect);
         getEventRegistry().register(PlayerMouseButtonEvent.class, this::handleMouseEvent);
@@ -135,13 +135,58 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         getEventRegistry().registerGlobal(PlayerInteractEvent.class, this::handlePlayerInteract);
         getEventRegistry().registerGlobal(BreakBlockEvent.class, this::handleBreakBlock);
         getEventRegistry().registerGlobal(PlaceBlockEvent.class, this::handlePlaceBlock);
-
         // FancyCore Integration - delayed to ensure FancyCore is fully started
-        claimScanner.schedule(this::initFancyCoreIntegration, 3, TimeUnit.SECONDS);
+        claimScanner.schedule((Runnable) this::initFancyCoreIntegration, 5, TimeUnit.SECONDS);
 
         startClaimScanner();
         startWarTicker();
         LOGGER.atInfo().log("Loaded " + getName() + " v" + getManifest().getVersion());
+    }
+
+    private void initFancyCoreIntegration() {
+        initFancyCoreIntegration(0);
+    }
+
+    private void initFancyCoreIntegration(int attempt) {
+        final int maxAttempts = 10;
+        final int retryDelaySeconds = 2;
+
+        try {
+            if (!com.kingc.hytale.factions.integration.FancyCoreBridge.isAvailable()) {
+                if (attempt < maxAttempts) {
+                    LOGGER.atInfo().log("FancyCore not ready yet (attempt " + (attempt + 1) + "/" + maxAttempts
+                            + "). Retrying in " + retryDelaySeconds + "s...");
+                    claimScanner.schedule((Runnable) () -> initFancyCoreIntegration(attempt + 1), retryDelaySeconds,
+                            TimeUnit.SECONDS);
+                } else {
+                    LOGGER.atWarning().log(
+                            "FancyCore integration failed after " + maxAttempts + " attempts. Placeholders disabled.");
+                }
+                return;
+            }
+
+            var placeholderService = com.fancyinnovations.fancycore.api.placeholders.PlaceholderService.get();
+            if (placeholderService == null) {
+                if (attempt < maxAttempts) {
+                    LOGGER.atInfo().log("PlaceholderService not ready (attempt " + (attempt + 1) + "/" + maxAttempts
+                            + "). Retrying in " + retryDelaySeconds + "s...");
+                    claimScanner.schedule((Runnable) () -> initFancyCoreIntegration(attempt + 1), retryDelaySeconds,
+                            TimeUnit.SECONDS);
+                } else {
+                    LOGGER.atWarning()
+                            .log("FancyCore PlaceholderService unavailable after " + maxAttempts + " attempts.");
+                }
+                return;
+            }
+
+            placeholderService
+                    .registerProvider(new com.kingc.hytale.factions.integration.FactionNamePlaceholder(() -> plugin));
+            LOGGER.atInfo().log("Registered faction_name placeholder with FancyCore (attempt " + (attempt + 1) + ").");
+
+            registerFancyCoreEvents();
+        } catch (Throwable e) {
+            LOGGER.atWarning().log("Error linking with FancyCore: " + e.getMessage());
+        }
     }
 
     public FactionsApi api() {
@@ -270,10 +315,12 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         FactionSettings settings = plugin.settings();
         if (settings.warNotifyOnKill && result.warPoints() > 0) {
             // War kill notification
-            String killerName = Universe.get().getPlayer(killerId) != null ?
-                    Universe.get().getPlayer(killerId).getUsername() : killerId.toString().substring(0, 8);
-            String victimName = Universe.get().getPlayer(victimId) != null ?
-                    Universe.get().getPlayer(victimId).getUsername() : victimId.toString().substring(0, 8);
+            String killerName = Universe.get().getPlayer(killerId) != null
+                    ? Universe.get().getPlayer(killerId).getUsername()
+                    : killerId.toString().substring(0, 8);
+            String victimName = Universe.get().getPlayer(victimId) != null
+                    ? Universe.get().getPlayer(victimId).getUsername()
+                    : victimId.toString().substring(0, 8);
 
             // Get war status
             if (result.killerFaction() != null) {
@@ -365,10 +412,10 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         }
         UUID playerId = player.getUuid();
         Optional<Faction> factionOpt = plugin.service().findFactionByMember(playerId);
-        
+
         // Check chat mode
         ChatMode mode = playerChatModes.getOrDefault(playerId, ChatMode.PUBLIC);
-        
+
         if (mode == ChatMode.FACTION || mode == ChatMode.ALLY) {
             if (factionOpt.isEmpty()) {
                 player.sendMessage(Message.raw("[Factions] You are not in a faction."));
@@ -377,10 +424,10 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
             Faction faction = factionOpt.get();
             String content = event.getContent();
             String prefix = mode == ChatMode.FACTION ? "[Faction] " : "[Ally] ";
-            
+
             // Cancel public broadcast
             event.setCancelled(true);
-            
+
             // Send to faction members
             for (UUID memberId : faction.members().keySet()) {
                 PlayerRef member = Universe.get().getPlayer(memberId);
@@ -388,7 +435,7 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
                     member.sendMessage(Message.raw(prefix + player.getUsername() + ": " + content));
                 }
             }
-            
+
             // If ally mode, also send to allies
             if (mode == ChatMode.ALLY) {
                 for (UUID allyId : faction.allies()) {
@@ -397,7 +444,8 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
                         for (UUID memberId : allyFaction.get().members().keySet()) {
                             PlayerRef member = Universe.get().getPlayer(memberId);
                             if (member != null) {
-                                member.sendMessage(Message.raw(prefix + "[" + faction.name() + "] " + player.getUsername() + ": " + content));
+                                member.sendMessage(Message.raw(
+                                        prefix + "[" + faction.name() + "] " + player.getUsername() + ": " + content));
                             }
                         }
                     }
@@ -473,8 +521,10 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
 
         PlayerRef playerRef = Universe.get().getPlayer(actorId);
         if (playerRef != null) {
-            String titleText = renderTemplate(settings.factionCreateTitle, factionName, settings.wildernessLabel, location.world());
-            String subtitleText = renderTemplate(settings.factionCreateSubtitle, factionName, settings.wildernessLabel, location.world());
+            String titleText = renderTemplate(settings.factionCreateTitle, factionName, settings.wildernessLabel,
+                    location.world());
+            String subtitleText = renderTemplate(settings.factionCreateSubtitle, factionName, settings.wildernessLabel,
+                    location.world());
             EventTitleUtil.showEventTitleToPlayer(
                     playerRef,
                     Message.raw(titleText).color(settings.colorOwn),
@@ -483,8 +533,7 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
                     EventTitleUtil.DEFAULT_ZONE,
                     settings.factionCreateTitleFadeIn,
                     settings.factionCreateTitleStay,
-                    settings.factionCreateTitleFadeOut
-            );
+                    settings.factionCreateTitleFadeOut);
             plugin.service().recordNotification(actorId, NotificationType.MAJOR, titleText, subtitleText);
         }
     }
@@ -540,7 +589,8 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         }
         boolean isClaim = type == ClaimChangeType.CLAIM;
         Optional<Faction> actorFaction = isClaim ? plugin.service().findFactionByMember(actorId) : Optional.empty();
-        Optional<War> warOpt = actorFaction.isPresent() ? plugin.combatService().getActiveWar(actorFaction.get().id()) : Optional.empty();
+        Optional<War> warOpt = actorFaction.isPresent() ? plugin.combatService().getActiveWar(actorFaction.get().id())
+                : Optional.empty();
         boolean conquestActive = warOpt.isPresent() && warOpt.get().state() == War.WarState.ACTIVE;
 
         Vector3d position = new Vector3d(centerX, y, centerZ);
@@ -562,8 +612,10 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         if (isClaim && conquestActive && actorFaction.isPresent()) {
             PlayerRef playerRef = Universe.get().getPlayer(actorId);
             if (playerRef != null) {
-                String titleText = renderTemplate(settings.conquestTitle, actorFaction.get().name(), settings.wildernessLabel, location.world());
-                String subtitleText = renderTemplate(settings.conquestSubtitle, actorFaction.get().name(), settings.wildernessLabel, location.world());
+                String titleText = renderTemplate(settings.conquestTitle, actorFaction.get().name(),
+                        settings.wildernessLabel, location.world());
+                String subtitleText = renderTemplate(settings.conquestSubtitle, actorFaction.get().name(),
+                        settings.wildernessLabel, location.world());
                 EventTitleUtil.showEventTitleToPlayer(
                         playerRef,
                         Message.raw(titleText).color(settings.colorEnemy),
@@ -572,8 +624,7 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
                         EventTitleUtil.DEFAULT_ZONE,
                         settings.conquestTitleFadeIn,
                         settings.conquestTitleStay,
-                        settings.conquestTitleFadeOut
-                );
+                        settings.conquestTitleFadeOut);
                 plugin.service().recordNotification(actorId, NotificationType.WAR, titleText, subtitleText);
             }
         }
@@ -596,8 +647,10 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
             return;
         }
         FactionSettings settings = plugin.settings();
-        String titleText = renderTemplate(settings.warVictoryTitle, winnerFaction.get().name(), settings.wildernessLabel, "");
-        String subtitleText = renderTemplate(settings.warVictorySubtitle, winnerFaction.get().name(), settings.wildernessLabel, "");
+        String titleText = renderTemplate(settings.warVictoryTitle, winnerFaction.get().name(),
+                settings.wildernessLabel, "");
+        String subtitleText = renderTemplate(settings.warVictorySubtitle, winnerFaction.get().name(),
+                settings.wildernessLabel, "");
         String particleAsset = normalizeParticleAsset(settings.warVictoryParticleAsset);
         int count = Math.max(1, settings.warVictoryParticleCount);
         float heightOffset = settings.warVictoryParticleHeightOffset;
@@ -617,8 +670,7 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
                     EventTitleUtil.DEFAULT_ZONE,
                     settings.warVictoryTitleFadeIn,
                     settings.warVictoryTitleStay,
-                    settings.warVictoryTitleFadeOut
-            );
+                    settings.warVictoryTitleFadeOut);
             plugin.service().recordNotification(memberId, NotificationType.WAR, titleText, subtitleText);
         }
     }
@@ -630,8 +682,10 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         FactionSettings settings = plugin.settings();
         playSoundToFaction(war.attackerFactionId(), settings.soundWarDeclare, settings);
         playSoundToFaction(war.defenderFactionId(), settings.soundWarDeclare, settings);
-        String attackerName = plugin.service().getFactionById(war.attackerFactionId()).map(Faction::name).orElse("Attaquant");
-        String defenderName = plugin.service().getFactionById(war.defenderFactionId()).map(Faction::name).orElse("Defenseur");
+        String attackerName = plugin.service().getFactionById(war.attackerFactionId()).map(Faction::name)
+                .orElse("Attaquant");
+        String defenderName = plugin.service().getFactionById(war.defenderFactionId()).map(Faction::name)
+                .orElse("Defenseur");
         String title = "Guerre declaree";
         String message = attackerName + " vs " + defenderName;
         notifyFactionMembers(war.attackerFactionId(), NotificationType.WAR, title, message, true);
@@ -666,7 +720,8 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         }
         lastInvasionSoundAt.put(factionId, now);
         playSoundToFaction(factionId, settings.soundTerritoryInvasion, settings);
-        notifyFactionMembers(factionId, NotificationType.TERRITORY, "Invasion", "Ennemi detecte sur votre territoire", false);
+        notifyFactionMembers(factionId, NotificationType.TERRITORY, "Invasion", "Ennemi detecte sur votre territoire",
+                false);
     }
 
     private void playSoundToFaction(UUID factionId, String soundAsset, FactionSettings settings) {
@@ -688,7 +743,8 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         }
     }
 
-    private void notifyFactionMembers(UUID factionId, NotificationType type, String title, String message, boolean fullScreen) {
+    private void notifyFactionMembers(UUID factionId, NotificationType type, String title, String message,
+            boolean fullScreen) {
         if (plugin == null || factionId == null) {
             return;
         }
@@ -726,7 +782,8 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         return SoundEvent.getAssetMap().getIndexOrDefault(assetId, SoundEvent.EMPTY_ID);
     }
 
-    private void notifyPlayer(PlayerRef playerRef, NotificationType type, String title, String message, boolean fullScreen) {
+    private void notifyPlayer(PlayerRef playerRef, NotificationType type, String title, String message,
+            boolean fullScreen) {
         if (playerRef == null || plugin == null) {
             return;
         }
@@ -749,18 +806,16 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
                     EventTitleUtil.DEFAULT_ZONE,
                     0.3f,
                     2.5f,
-                    0.5f
-            );
+                    0.5f);
             return;
         }
         PacketHandler handler = playerRef.getPacketHandler();
         if (handler == null) {
             return;
         }
-        NotificationUtil.sendNotification(handler, Message.raw(safeTitle), Message.raw(safeMessage), NotificationStyle.Default);
+        NotificationUtil.sendNotification(handler, Message.raw(safeTitle), Message.raw(safeMessage),
+                NotificationStyle.Default);
     }
-
-
 
     boolean handleCommand(CommandContext ctx) {
         if (plugin == null) {
@@ -849,6 +904,9 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         if (lastKey == null || lastKey.equals(areaKey)) {
             return;
         }
+
+        LOGGER.atInfo().log("Claim change detected for " + playerId + ": " + lastKey + " -> " + areaKey);
+
         boolean nowWild = WILDERNESS_KEY.equals(areaKey);
         if (nowWild && !Boolean.TRUE.equals(settings.notifyOnLeave)) {
             return;
@@ -857,6 +915,7 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
             return;
         }
         if (!canNotify(playerId, settings)) {
+            LOGGER.atInfo().log("Notification filtered by cooldown for " + playerId);
             return;
         }
         showClaimNotice(playerRef, location, ownerId, nowWild, settings);
@@ -876,7 +935,8 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         return now - last >= cooldownSeconds * 1000L;
     }
 
-    private void showClaimNotice(PlayerRef playerRef, Location location, Optional<UUID> ownerId, boolean nowWild, FactionSettings settings) {
+    private void showClaimNotice(PlayerRef playerRef, Location location, Optional<UUID> ownerId, boolean nowWild,
+            FactionSettings settings) {
         boolean useTitle = Boolean.TRUE.equals(settings.notifyUseTitle);
         boolean useChat = Boolean.TRUE.equals(settings.notifyUseChat);
         if (!useTitle && !useChat) {
@@ -957,8 +1017,7 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
                     EventTitleUtil.DEFAULT_ZONE,
                     settings.claimTitleFadeIn,
                     settings.claimTitleStay,
-                    settings.claimTitleFadeOut
-            );
+                    settings.claimTitleFadeOut);
         }
 
         if (nowWild) {
@@ -1037,7 +1096,8 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         }
         World world = Universe.get().getWorld(playerRef.getWorldUuid());
         String worldName = world != null ? world.getName() : playerRef.getWorldUuid().toString();
-        return new Location(worldName, position.getX(), position.getY(), position.getZ(), rotation.getYaw(), rotation.getPitch());
+        return new Location(worldName, position.getX(), position.getY(), position.getZ(), rotation.getYaw(),
+                rotation.getPitch());
     }
 
     private void renderBorderParticles(PlayerRef playerRef, Location location, FactionSettings settings) {
@@ -1087,8 +1147,8 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
     }
 
     private void spawnBorderEdge(World world, Optional<UUID> currentOwner, ClaimKey neighbor,
-                                 int startX, int startZ, int endX, int endZ, double y,
-                                 int step, int count, Optional<Faction> playerFaction, FactionSettings settings) {
+            int startX, int startZ, int endX, int endZ, double y,
+            int step, int count, Optional<Faction> playerFaction, FactionSettings settings) {
         Optional<UUID> neighborOwner = plugin.service().getClaimOwnerId(neighbor);
         if (Objects.equals(currentOwner.orElse(null), neighborOwner.orElse(null))) {
             return;
@@ -1121,7 +1181,7 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
     }
 
     private void spawnBorderLine(World world, String asset, double y,
-                                 int startX, int startZ, int endX, int endZ, int step, int count) {
+            int startX, int startZ, int endX, int endZ, int step, int count) {
         String particleAsset = normalizeParticleAsset(asset);
         if (startX == endX) {
             int x = startX;
@@ -1147,7 +1207,8 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         return asset;
     }
 
-    // ==================== BLOCK PROTECTION (Interaction Events) ====================
+    // ==================== BLOCK PROTECTION (Interaction Events)
+    // ====================
 
     private void handlePlayerInteract(PlayerInteractEvent event) {
         if (plugin == null || event == null) {
@@ -1191,7 +1252,8 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         // Keep this handler as a placeholder until supported APIs are defined.
     }
 
-    // ==================== LEGACY MOUSE EVENT (for PvP protection) ====================
+    // ==================== LEGACY MOUSE EVENT (for PvP protection)
+    // ====================
 
     private void handleMouseEvent(PlayerMouseButtonEvent event) {
         if (plugin == null || event.isCancelled()) {
@@ -1205,19 +1267,20 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
         // Block protection is now handled by BreakBlockEvent and PlaceBlockEvent
         // This handler is kept for potential future PvP protection
 
-        // TODO: Friendly fire protection disabled due to Java 25 compiler bug with Entity.getUuid()
+        // TODO: Friendly fire protection disabled due to Java 25 compiler bug with
+        // Entity.getUuid()
         // Uncomment when Hytale provides an alternative API or Java fixes the bug
         // Entity targetEntity = event.getTargetEntity();
         // if (targetEntity instanceof Player targetPlayer) {
-        //     UUID targetId = targetPlayer.getUuid();
-        //     if (targetId == null) {
-        //         return;
-        //     }
-        //     UUID attackerId = attacker.getUuid();
-        //     if (!plugin.service().canDamage(attackerId, targetId)) {
-        //         event.setCancelled(true);
-        //         attacker.sendMessage(Message.raw("[Factions] Friendly fire is disabled."));
-        //     }
+        // UUID targetId = targetPlayer.getUuid();
+        // if (targetId == null) {
+        // return;
+        // }
+        // UUID attackerId = attacker.getUuid();
+        // if (!plugin.service().canDamage(attackerId, targetId)) {
+        // event.setCancelled(true);
+        // attacker.sendMessage(Message.raw("[Factions] Friendly fire is disabled."));
+        // }
         // }
     }
 

@@ -27,6 +27,7 @@ public class FancyPlayerDataImpl implements FancyPlayerData {
     private String chatColor;
     private List<UUID> ignoredPlayers;
     private boolean enabledPrivateMessages;
+    private String language;
     private Map<Currency, Double> balances;
     private long firstLoginTime; // timestamp
     private long playTime; // in milliseconds
@@ -44,6 +45,7 @@ public class FancyPlayerDataImpl implements FancyPlayerData {
         this.chatColor = "";
         this.ignoredPlayers = new ArrayList<>();
         this.enabledPrivateMessages = true;
+        this.language = "en";
         this.balances = new ConcurrentHashMap<>();
         this.firstLoginTime = System.currentTimeMillis();
         this.playTime = 0L;
@@ -62,12 +64,12 @@ public class FancyPlayerDataImpl implements FancyPlayerData {
             String chatColor,
             List<UUID> ignoredPlayers,
             boolean enabledPrivateMessages,
+            String language,
             Map<Currency, Double> balances,
             long firstLoginTime,
             long playTime,
             List<Home> homes,
-            Map<String, Object> customData
-    ) {
+            Map<String, Object> customData) {
         this.uuid = uuid;
         this.username = username;
         this.permissions = permissions;
@@ -76,6 +78,7 @@ public class FancyPlayerDataImpl implements FancyPlayerData {
         this.chatColor = chatColor;
         this.ignoredPlayers = ignoredPlayers;
         this.enabledPrivateMessages = enabledPrivateMessages;
+        this.language = language;
         this.balances = balances;
         this.firstLoginTime = firstLoginTime;
         this.playTime = playTime;
@@ -328,6 +331,17 @@ public class FancyPlayerDataImpl implements FancyPlayerData {
     @Override
     public void setDirty(boolean dirty) {
         isDirty = dirty;
+    }
+
+    @Override
+    public String getLanguage() {
+        return language;
+    }
+
+    @Override
+    public void setLanguage(String language) {
+        this.language = language;
+        this.isDirty = true;
     }
 
     @Override

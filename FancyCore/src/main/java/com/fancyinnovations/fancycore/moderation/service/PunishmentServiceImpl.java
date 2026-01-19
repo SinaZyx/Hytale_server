@@ -24,13 +24,16 @@ public class PunishmentServiceImpl implements PunishmentService {
         this.translator = FancyCorePlugin.get().getTranslationService();
 
         translator
-                .addMessage("punishments.warning.default_reason", "You have been warned for: {reason}.")
-                .addMessage("punishments.mute.perm.default_reason", "You have been muted for: {reason}.")
-                .addMessage("punishments.mute.temp.default_reason", "You have been temporarily muted for: {reason}. Duration: {duration}.")
-                .addMessage("punishments.kick.default_reason", "You have been kicked from the server for: {reason}.")
-                .addMessage("punishments.ban.perm.default_reason", "You have been banned from the server.\nReason: {reason}.")
-                .addMessage("punishments.ban.temp.default_reason", "You have been temporarily banned from the server for: {reason}. Duration: {duration}.")
-        ;
+                .addMessage("punishments.warning.default_reason", "en", "You have been warned for: {reason}.")
+                .addMessage("punishments.mute.perm.default_reason", "en", "You have been muted for: {reason}.")
+                .addMessage("punishments.mute.temp.default_reason", "en",
+                        "You have been temporarily muted for: {reason}. Duration: {duration}.")
+                .addMessage("punishments.kick.default_reason", "en",
+                        "You have been kicked from the server for: {reason}.")
+                .addMessage("punishments.ban.perm.default_reason", "en",
+                        "You have been banned from the server.\nReason: {reason}.")
+                .addMessage("punishments.ban.temp.default_reason", "en",
+                        "You have been temporarily banned from the server for: {reason}. Duration: {duration}.");
     }
 
     @Override
@@ -42,8 +45,7 @@ public class PunishmentServiceImpl implements PunishmentService {
                 reason,
                 System.currentTimeMillis(),
                 staff.getData().getUUID(),
-                -1
-        );
+                -1);
 
         if (!new PlayerPunishedEvent(player, punishment).fire()) {
             return null;
@@ -69,8 +71,7 @@ public class PunishmentServiceImpl implements PunishmentService {
                 reason,
                 System.currentTimeMillis(),
                 staff.getData().getUUID(),
-                expiresAt
-        );
+                expiresAt);
 
         if (!new PlayerPunishedEvent(player, punishment).fire()) {
             return null;
@@ -106,8 +107,7 @@ public class PunishmentServiceImpl implements PunishmentService {
                 reason,
                 System.currentTimeMillis(),
                 staff.getData().getUUID(),
-                -1
-        );
+                -1);
 
         if (!new PlayerPunishedEvent(player, punishment).fire()) {
             return null;
@@ -137,8 +137,7 @@ public class PunishmentServiceImpl implements PunishmentService {
                 reason,
                 System.currentTimeMillis(),
                 staff.getData().getUUID(),
-                expiresAt
-        );
+                expiresAt);
 
         if (!new PlayerPunishedEvent(player, punishment).fire()) {
             return null;
@@ -148,12 +147,12 @@ public class PunishmentServiceImpl implements PunishmentService {
 
         String kickMessage;
         if (durationMillis > 0) {
-            kickMessage = translator.getMessage("punishments.ban.temp.default_reason")
+            kickMessage = translator.getMessage("punishments.ban.temp.default_reason", player.getData().getLanguage())
                     .replace("reason", reason)
                     .replace("duration", TimeUtils.formatTime(durationMillis))
                     .getParsedMessage();
         } else {
-            kickMessage = translator.getMessage("punishments.ban.perm.default_reason")
+            kickMessage = translator.getMessage("punishments.ban.perm.default_reason", player.getData().getLanguage())
                     .replace("reason", reason)
                     .getParsedMessage();
         }
@@ -183,8 +182,7 @@ public class PunishmentServiceImpl implements PunishmentService {
                     punishment.reason(),
                     punishment.issuedAt(),
                     punishment.issuedBy(),
-                    System.currentTimeMillis() - 1000
-            );
+                    System.currentTimeMillis() - 1000);
             storage.createPunishment(updatedPunishment);
 
             return true;
@@ -208,8 +206,7 @@ public class PunishmentServiceImpl implements PunishmentService {
                     punishment.reason(),
                     punishment.issuedAt(),
                     punishment.issuedBy(),
-                    System.currentTimeMillis() - 1000
-            );
+                    System.currentTimeMillis() - 1000);
             storage.createPunishment(updatedPunishment);
 
             return true;
@@ -234,8 +231,7 @@ public class PunishmentServiceImpl implements PunishmentService {
                 IDGen.generate(8),
                 reported,
                 staff,
-                reason
-        );
+                reason);
 
         if (!new PlayerReportedEvent(reported, report).fire()) {
             return;

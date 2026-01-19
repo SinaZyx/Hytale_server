@@ -47,10 +47,8 @@ public class FactionNamePlaceholder implements PlaceholderProvider {
         }
         Optional<Faction> faction = plugin.service().findFactionByMember(playerId);
         if (faction.isPresent()) {
-            // Return formatted faction tag: [FactionName]
             return "[" + faction.get().name() + "] ";
         }
-        // Return empty string if not in a faction (no brackets)
         return "";
     }
 }

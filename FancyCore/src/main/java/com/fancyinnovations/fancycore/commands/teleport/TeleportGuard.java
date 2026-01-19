@@ -114,11 +114,21 @@ public final class TeleportGuard {
         }
         Instant lastCombat = damageData.getLastCombatAction();
         if (lastCombat != null) {
-            return lastCombat.toEpochMilli();
+            try {
+                return lastCombat.toEpochMilli();
+            } catch (ArithmeticException e) {
+                // Instant value is too large to convert to milliseconds, ignore it
+                return null;
+            }
         }
         Instant lastDamage = damageData.getLastDamageTime();
         if (lastDamage != null) {
-            return lastDamage.toEpochMilli();
+            try {
+                return lastDamage.toEpochMilli();
+            } catch (ArithmeticException e) {
+                // Instant value is too large to convert to milliseconds, ignore it
+                return null;
+            }
         }
         return null;
     }

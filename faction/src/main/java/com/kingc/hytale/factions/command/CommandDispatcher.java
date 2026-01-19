@@ -45,15 +45,19 @@ public final class CommandDispatcher {
     private WarDeclareHandler warDeclareHandler;
     private MemberRoleChangeHandler memberRoleChangeHandler;
 
-    public CommandDispatcher(FactionService service, ServerAdapter server, FactionSettings settings, Supplier<Result<Void>> reloadHandler) {
+    public CommandDispatcher(FactionService service, ServerAdapter server, FactionSettings settings,
+            Supplier<Result<Void>> reloadHandler) {
         this(service, null, server, settings, reloadHandler, null);
     }
 
-    public CommandDispatcher(FactionService service, CombatService combatService, ServerAdapter server, FactionSettings settings, Supplier<Result<Void>> reloadHandler) {
+    public CommandDispatcher(FactionService service, CombatService combatService, ServerAdapter server,
+            FactionSettings settings, Supplier<Result<Void>> reloadHandler) {
         this(service, combatService, server, settings, reloadHandler, null);
     }
 
-    public CommandDispatcher(FactionService service, CombatService combatService, ServerAdapter server, FactionSettings settings, Supplier<Result<Void>> reloadHandler, java.util.function.Function<UUID, String> chatToggleHandler) {
+    public CommandDispatcher(FactionService service, CombatService combatService, ServerAdapter server,
+            FactionSettings settings, Supplier<Result<Void>> reloadHandler,
+            java.util.function.Function<UUID, String> chatToggleHandler) {
         this.service = service;
         this.combatService = combatService;
         this.server = server;
@@ -249,7 +253,8 @@ public final class CommandDispatcher {
 
         send(source, "Faction: " + faction.name());
         send(source, "Leader: " + leaderName + " | Members: " + members + "/" + settings.maxMembers);
-        send(source, "Claims: " + claims + "/" + claimLimit + " | Power: " + power + " | Allies: " + faction.allies().size());
+        send(source, "Claims: " + claims + "/" + claimLimit + " | Power: " + power + " | Allies: "
+                + faction.allies().size());
         String description = faction.description();
         if (description == null || description.isBlank()) {
             send(source, "Description: none");
@@ -366,7 +371,8 @@ public final class CommandDispatcher {
             }
             send(source, "Notifications (" + history.size() + "):");
             for (NotificationEntry entry : history) {
-                send(source, "[" + entry.type().name().toLowerCase(Locale.ROOT) + "] " + entry.title() + " - " + entry.message());
+                send(source, "[" + entry.type().name().toLowerCase(Locale.ROOT) + "] " + entry.title() + " - "
+                        + entry.message());
             }
             return;
         }
@@ -707,7 +713,11 @@ public final class CommandDispatcher {
             return;
         }
         Location home = result.value();
-        send(source, "Home: " + formatLocation(home));
+        send(source, "Teleportation in 5 seconds... Do not move.");
+
+        server.teleportDelayed(playerId, home, 5,
+                () -> server.sendMessage(playerId, PREFIX + "Teleported to home."),
+                () -> server.sendMessage(playerId, PREFIX + "Teleportation cancelled: you moved."));
     }
 
     private void handleClaim(CommandSource source) {
@@ -823,7 +833,8 @@ public final class CommandDispatcher {
             FactionCombatStats factionStats = combatService.getFactionStats(faction.get().id());
             send(source, "--- Faction Stats ---");
             send(source, "Total Kills: " + factionStats.totalKills() + " | Deaths: " + factionStats.totalDeaths());
-            send(source, "Wars Won: " + factionStats.warsWon() + " | Lost: " + factionStats.warsLost() + " | Draw: " + factionStats.warsDraw());
+            send(source, "Wars Won: " + factionStats.warsWon() + " | Lost: " + factionStats.warsLost() + " | Draw: "
+                    + factionStats.warsDraw());
         }
     }
 
@@ -853,7 +864,8 @@ public final class CommandDispatcher {
                 int rank = 1;
                 for (MemberCombatStats stats : top) {
                     String name = resolveName(stats.playerId());
-                    send(source, rank + ". " + name + " - K/D: " + stats.kdr() + " (" + stats.kills() + "/" + stats.deaths() + ")");
+                    send(source, rank + ". " + name + " - K/D: " + stats.kdr() + " (" + stats.kills() + "/"
+                            + stats.deaths() + ")");
                     rank++;
                 }
             }
@@ -863,7 +875,8 @@ public final class CommandDispatcher {
                 int rank = 1;
                 for (FactionCombatStats stats : top) {
                     String name = service.getFactionById(stats.factionId()).map(Faction::name).orElse("Unknown");
-                    send(source, rank + ". " + name + " - " + stats.totalKills() + " kills, " + stats.warsWon() + " wars won");
+                    send(source, rank + ". " + name + " - " + stats.totalKills() + " kills, " + stats.warsWon()
+                            + " wars won");
                     rank++;
                 }
             }
@@ -955,8 +968,10 @@ public final class CommandDispatcher {
         send(source, "=== War Status ===");
         send(source, attackerName + " vs " + defenderName);
         send(source, "State: " + war.state().name());
-        send(source, "Points: " + attackerName + " " + war.attackerPoints() + " - " + war.defenderPoints() + " " + defenderName);
-        send(source, "Kills: " + attackerName + " " + war.attackerKills() + " - " + war.defenderKills() + " " + defenderName);
+        send(source, "Points: " + attackerName + " " + war.attackerPoints() + " - " + war.defenderPoints() + " "
+                + defenderName);
+        send(source, "Kills: " + attackerName + " " + war.attackerKills() + " - " + war.defenderKills() + " "
+                + defenderName);
 
         if (war.state() == War.WarState.PENDING) {
             long remainingMs = war.gracePeriodEnd() - server.nowEpochMs();
@@ -975,7 +990,8 @@ public final class CommandDispatcher {
     }
 
     private void sendHelp(CommandSource source) {
-        send(source, "Commands: create, disband, list, info, who, map, invites, notify, desc, rename, invite, accept, deny, leave, kick, promote, demote, leader, ally, unally, enemy, unenemy, sethome, home, claim, unclaim, chat, borders, stats, top, war, reload, admin");
+        send(source,
+                "Commands: create, disband, list, info, who, map, invites, notify, desc, rename, invite, accept, deny, leave, kick, promote, demote, leader, ally, unally, enemy, unenemy, sethome, home, claim, unclaim, chat, borders, stats, top, war, reload, admin");
     }
 
     private void send(CommandSource source, String message) {

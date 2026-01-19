@@ -98,4 +98,8 @@ public interface FancyPlayerData {
     @ApiStatus.Internal
     String toJson();
 
+    String getLanguage();
+
+    void setLanguage(String language);
+
 }

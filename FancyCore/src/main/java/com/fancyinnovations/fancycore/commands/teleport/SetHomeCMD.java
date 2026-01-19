@@ -27,8 +27,10 @@ import javax.annotation.Nonnull;
 public class SetHomeCMD extends AbstractWorldCommand {
 
     protected final RequiredArg<String> nameArg = this.withRequiredArg("home", "name of the new home", ArgTypes.STRING);
-    private final OptionalArg<RelativeDoublePosition> positionArg = this.withOptionalArg("position", "position to set", ArgTypes.RELATIVE_POSITION);
-    private final DefaultArg<Vector3f> rotationArg = this.withDefaultArg("rotation", "rotation to set", ArgTypes.ROTATION, Vector3f.FORWARD, "forward looking direction");
+    private final OptionalArg<RelativeDoublePosition> positionArg = this.withOptionalArg("position", "position to set",
+            ArgTypes.RELATIVE_POSITION);
+    private final DefaultArg<Vector3f> rotationArg = this.withDefaultArg("rotation", "rotation to set",
+            ArgTypes.ROTATION, Vector3f.FORWARD, "forward looking direction");
 
     public SetHomeCMD() {
         super("sethome", "Sets your home point to your current location");
@@ -45,7 +47,7 @@ public class SetHomeCMD extends AbstractWorldCommand {
 
         FancyPlayer fp = FancyPlayerService.get().getByUUID(ctx.sender().getUuid());
         if (fp == null) {
-            fp.sendMessage("FancyPlayer not found.");
+            ctx.sendMessage(Message.raw("FancyPlayer not found."));
             return;
         }
         Ref<EntityStore> playerRef = ctx.senderAsPlayerRef();
@@ -55,14 +57,15 @@ public class SetHomeCMD extends AbstractWorldCommand {
             RelativeDoublePosition relativePosition = this.positionArg.get(ctx);
             position = relativePosition.getRelativePosition(ctx, world, store);
         } else {
-            TransformComponent transformComponent = store.getComponent(playerRef, TransformComponent.getComponentType());
+            TransformComponent transformComponent = store.getComponent(playerRef,
+                    TransformComponent.getComponentType());
             position = transformComponent.getPosition().clone();
         }
 
         Vector3f rotation;
         if (this.rotationArg.provided(ctx)) {
             rotation = this.rotationArg.get(ctx);
-        } else  {
+        } else {
             HeadRotation headRotationComponent = store.getComponent(playerRef, HeadRotation.getComponentType());
             rotation = headRotationComponent.getRotation();
         }
@@ -79,10 +82,11 @@ public class SetHomeCMD extends AbstractWorldCommand {
                 position.getY(),
                 position.getZ(),
                 rotation.getYaw(),
-                rotation.getPitch()
-        );
+                rotation.getPitch());
         fp.getData().addHome(new Home(name, homeLocation));
 
-        fp.sendMessage("Home point " + name + " set to " + NumberUtils.formatNumber(homeLocation.x()) + ", " + NumberUtils.formatNumber(homeLocation.y()) + ", " + NumberUtils.formatNumber(homeLocation.z()) + " in world '" + homeLocation.worldName() + "'.");
+        fp.sendMessage("✓ Home '" + name + "' set at " + NumberUtils.formatNumber(homeLocation.x()) + ", "
+                + NumberUtils.formatNumber(homeLocation.y()) + ", " + NumberUtils.formatNumber(homeLocation.z())
+                + " in world '" + homeLocation.worldName() + "'.");
     }
 }

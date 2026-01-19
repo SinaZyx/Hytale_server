@@ -24,7 +24,8 @@ public interface FancyPlayer {
      *
      * @return the player object, or null if the player is offline.
      */
-    @Nullable PlayerRef getPlayer();
+    @Nullable
+    PlayerRef getPlayer();
 
     /**
      * Sets the actual player object from the Hytale API.
@@ -35,7 +36,8 @@ public interface FancyPlayer {
     void setPlayer(PlayerRef player);
 
     /**
-     * Checks if the player has the specified permission (checks player permissions and group permissions).
+     * Checks if the player has the specified permission (checks player permissions
+     * and group permissions).
      *
      * @param permission the permission to check.
      * @return true if the player has the permission, false otherwise.
@@ -105,4 +107,18 @@ public interface FancyPlayer {
      * @param player the player to whom this player last replied.
      */
     void setReplyTo(FancyPlayer player);
+
+    /**
+     * Gets the player's language.
+     *
+     * @return the player's language.
+     */
+    String getLanguage();
+
+    /**
+     * Sets the player's language.
+     *
+     * @param language the player's language.
+     */
+    void setLanguage(String language);
 }

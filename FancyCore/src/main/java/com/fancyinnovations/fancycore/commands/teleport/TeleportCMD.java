@@ -1,16 +1,14 @@
 package com.fancyinnovations.fancycore.commands.teleport;
 
+import com.fancyinnovations.fancycore.main.FancyCorePlugin;
 import com.fancyinnovations.fancycore.api.player.FancyPlayer;
-import com.fancyinnovations.fancycore.api.player.FancyPlayerService;
-import com.fancyinnovations.fancycore.commands.teleport.TeleportGuard;
+import com.fancyinnovations.fancycore.commands.FancyLeafCommandBase;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
-import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.arguments.system.OptionalArg;
 import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
 import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
-import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
 import com.hypixel.hytale.server.core.modules.entity.component.HeadRotation;
 import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
 import com.hypixel.hytale.server.core.modules.entity.teleport.Teleport;
@@ -19,182 +17,133 @@ import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import org.jetbrains.annotations.NotNull;
 
-import java.util.UUID;
+public class TeleportCMD extends FancyLeafCommandBase {
 
-public class TeleportCMD extends CommandBase {
-
-    protected final RequiredArg<PlayerRef> targetArg = this.withRequiredArg("target", "The player to teleport", ArgTypes.PLAYER_REF);
-    protected final OptionalArg<PlayerRef> destinationArg = this.withOptionalArg("", "The destination player", ArgTypes.PLAYER_REF);
+    private final RequiredArg<PlayerRef> targetArg;
+    private final OptionalArg<PlayerRef> destArg;
 
     public TeleportCMD() {
-        super("teleport", "Teleports you or the specified player to another player's location");
+        super("teleport", "Teleport players");
         addAliases("tp");
-        requirePermission("fancycore.commands.teleport");
+
+        this.targetArg = this.withRequiredArg("target", "Target player", ArgTypes.PLAYER_REF);
+        this.destArg = this.withOptionalArg("destination", "Destination player", ArgTypes.PLAYER_REF);
     }
 
     @Override
-    protected void executeSync(@NotNull CommandContext ctx) {
-        final PlayerRef targetPlayerRef;
-        final Ref<EntityStore> targetRef;
-        final PlayerRef destinationPlayerRef;
-        final boolean isTwoArg;
-        final UUID senderId = ctx.isPlayer() ? ctx.sender().getUuid() : null;
+    public void executeSync(@NotNull CommandContext ctx) {
+        PlayerRef targetPlayerRef = targetArg.get(ctx);
+        PlayerRef destPlayerRef = destArg.get(ctx);
 
-        if (destinationArg.provided(ctx)) {
-            // Two arguments: teleport target to destination
-            isTwoArg = true;
-            targetPlayerRef = targetArg.get(ctx);
-            targetRef = targetPlayerRef.getReference();
-            if (targetRef == null || !targetRef.isValid()) {
-                ctx.sendMessage(Message.raw("Target player is not in a world."));
-                return;
-            }
-            destinationPlayerRef = destinationArg.get(ctx);
-        } else {
-            // One argument: teleport sender to target (requires player sender)
-            isTwoArg = false;
+        boolean twoArgs = (destPlayerRef != null);
+
+        if (!twoArgs) {
+            // Case 1: tp <target> (Self to Target)
             if (!ctx.isPlayer()) {
-                ctx.sendMessage(Message.raw("This command requires a destination player when executed from console. Usage: /tp <target> <destination>"));
+                sendMsg(ctx, "error.command.player_only");
                 return;
             }
 
-            if (!ctx.isPlayer()) {
-                ctx.sendMessage(Message.raw("This command can only be executed by a player."));
+            if (targetPlayerRef == null) {
+                sendMsg(ctx, "error.player.not_found");
                 return;
             }
 
-            FancyPlayer fp = FancyPlayerService.get().getByUUID(ctx.sender().getUuid());
-            if (fp == null) {
-                ctx.sendMessage(Message.raw("FancyPlayer not found."));
-                return;
-            }
-
-            PlayerRef senderPlayerRef = fp.getPlayer();
-            if (senderPlayerRef == null) {
-                fp.sendMessage("You are not online.");
-                return;
-            }
-
-            // For single arg, we teleport sender to target
-            targetPlayerRef = senderPlayerRef;
-            targetRef = targetPlayerRef.getReference();
+            Ref<EntityStore> targetRef = targetPlayerRef.getReference();
             if (targetRef == null || !targetRef.isValid()) {
-                fp.sendMessage("You are not in a world.");
+                sendMsg(ctx, "teleport.error.target_not_in_world");
                 return;
             }
-            destinationPlayerRef = targetArg.get(ctx);
-        }
 
-        if (senderId != null) {
-            String blockReason = TeleportGuard.checkSender(senderId);
-            if (blockReason != null) {
-                ctx.sendMessage(Message.raw(blockReason));
+            // Sender (Self)
+            Ref<EntityStore> senderRef = ctx.senderAsPlayerRef();
+            if (senderRef == null || !senderRef.isValid()) {
+                sendMsg(ctx, "teleport.error.sender_not_in_world");
                 return;
             }
-        }
-        if (isTwoArg) {
-            String targetBlock = TeleportGuard.checkTarget(targetPlayerRef.getUuid());
-            if (targetBlock != null) {
-                ctx.sendMessage(Message.raw("Target: " + targetBlock));
-                return;
-            }
-        }
 
-        Ref<EntityStore> destinationRef = destinationPlayerRef.getReference();
-        if (destinationRef == null || !destinationRef.isValid()) {
-            ctx.sendMessage(Message.raw("Destination player is not in a world."));
-            return;
-        }
+            Store<EntityStore> targetStore = targetRef.getStore();
+            World targetWorld = ((EntityStore) targetStore.getExternalData()).getWorld();
 
-        Store<EntityStore> targetStore = targetRef.getStore();
-        World targetWorld = ((EntityStore) targetStore.getExternalData()).getWorld();
-        Store<EntityStore> destinationStore = destinationRef.getStore();
-        World destinationWorld = ((EntityStore) destinationStore.getExternalData()).getWorld();
-
-        // If target and destination are in the same world, we can do everything in one execute block
-        if (targetWorld.equals(destinationWorld)) {
-            // Execute teleportation on the world thread
             targetWorld.execute(() -> {
-                // Save previous location for /back command (only if target is a player teleporting themselves)
-                if (!isTwoArg) {
-                    FancyPlayer targetFp = FancyPlayerService.get().getByUUID(targetPlayerRef.getUuid());
-                    if (targetFp != null) {
-                        TeleportLocationHelper.savePreviousLocation(targetFp, targetRef, targetStore, targetWorld);
-                    }
-                }
+                TransformComponent targetTransform = (TransformComponent) targetStore.getComponent(targetRef,
+                        TransformComponent.getComponentType());
+                HeadRotation targetRotation = (HeadRotation) targetStore.getComponent(targetRef,
+                        HeadRotation.getComponentType());
 
-                // Get destination position and rotation
-                TransformComponent destinationTransformComponent = (TransformComponent) destinationStore.getComponent(destinationRef, TransformComponent.getComponentType());
-                if (destinationTransformComponent == null) {
-                    ctx.sendMessage(Message.raw("Failed to get destination transform."));
+                if (targetTransform == null)
                     return;
-                }
 
-                HeadRotation destinationHeadRotationComponent = (HeadRotation) destinationStore.getComponent(destinationRef, HeadRotation.getComponentType());
-                if (destinationHeadRotationComponent == null) {
-                    ctx.sendMessage(Message.raw("Failed to get destination head rotation."));
-                    return;
-                }
+                Store<EntityStore> senderStore = senderRef.getStore();
+                World senderWorld = ((EntityStore) senderStore.getExternalData()).getWorld();
 
-                // Create teleport component
-                Teleport teleport = new Teleport(destinationWorld, destinationTransformComponent.getPosition().clone(), destinationHeadRotationComponent.getRotation().clone());
+                senderWorld.execute(() -> {
+                    Teleport tp = new Teleport(targetWorld, targetTransform.getPosition().clone(),
+                            (targetRotation != null) ? targetRotation.getRotation().clone() : null);
+                    senderStore.addComponent(senderRef, Teleport.getComponentType(), tp);
 
-                // Add teleport component to target player
-                targetStore.addComponent(targetRef, Teleport.getComponentType(), teleport);
-                if (senderId != null) {
-                    TeleportGuard.markTeleport(senderId);
-                }
-
-                // Send success message
-                if (isTwoArg) {
-                    ctx.sendMessage(Message.raw("Teleported " + targetPlayerRef.getUsername() + " to " + destinationPlayerRef.getUsername() + "."));
-                } else {
-                    ctx.sendMessage(Message.raw("Teleported to " + destinationPlayerRef.getUsername() + "."));
-                }
+                    sendMsg(ctx, "teleport.success.self");
+                });
             });
+
         } else {
-            // Different worlds: get destination data first, then teleport
-            destinationWorld.execute(() -> {
-                // Get destination position and rotation
-                TransformComponent destinationTransformComponent = (TransformComponent) destinationStore.getComponent(destinationRef, TransformComponent.getComponentType());
-                if (destinationTransformComponent == null) {
-                    ctx.sendMessage(Message.raw("Failed to get destination transform."));
-                    return;
-                }
+            // Case 2: tp <target> <destination> (Target to Destination)
+            // Check permission? Assuming base perm covers it or added perm.
+            // TeleportCMD usually requires "fancycore.commands.teleport".
 
-                HeadRotation destinationHeadRotationComponent = (HeadRotation) destinationStore.getComponent(destinationRef, HeadRotation.getComponentType());
-                if (destinationHeadRotationComponent == null) {
-                    ctx.sendMessage(Message.raw("Failed to get destination head rotation."));
-                    return;
-                }
+            if (targetPlayerRef == null) {
+                sendMsg(ctx, "error.player.not_found");
+                return;
+            }
 
-                // Now execute teleportation on the target world thread
+            Ref<EntityStore> targetRef = targetPlayerRef.getReference();
+            Ref<EntityStore> destRef = destPlayerRef.getReference();
+
+            if (targetRef == null || !targetRef.isValid()) {
+                sendMsg(ctx, "teleport.error.target_not_in_world");
+                return;
+            }
+            if (destRef == null || !destRef.isValid()) {
+                sendMsg(ctx, "teleport.error.destination_not_in_world");
+                return;
+            }
+
+            Store<EntityStore> destStore = destRef.getStore();
+            World destWorld = ((EntityStore) destStore.getExternalData()).getWorld();
+
+            destWorld.execute(() -> {
+                TransformComponent destTransform = (TransformComponent) destStore.getComponent(destRef,
+                        TransformComponent.getComponentType());
+                HeadRotation destRotation = (HeadRotation) destStore.getComponent(destRef,
+                        HeadRotation.getComponentType());
+
+                if (destTransform == null)
+                    return;
+
+                Store<EntityStore> targetStore = targetRef.getStore();
+                World targetWorld = ((EntityStore) targetStore.getExternalData()).getWorld();
+
                 targetWorld.execute(() -> {
-                    // Save previous location for /back command (only if target is a player teleporting themselves)
-                    if (!isTwoArg) {
-                        FancyPlayer targetFp = FancyPlayerService.get().getByUUID(targetPlayerRef.getUuid());
-                        if (targetFp != null) {
-                            TeleportLocationHelper.savePreviousLocation(targetFp, targetRef, targetStore, targetWorld);
-                        }
-                    }
+                    Teleport tp = new Teleport(destWorld, destTransform.getPosition().clone(),
+                            (destRotation != null) ? destRotation.getRotation().clone() : null);
+                    targetStore.addComponent(targetRef, Teleport.getComponentType(), tp);
 
-                    // Create teleport component
-                    Teleport teleport = new Teleport(destinationWorld, destinationTransformComponent.getPosition().clone(), destinationHeadRotationComponent.getRotation().clone());
-
-                    // Add teleport component to target player
-                    targetStore.addComponent(targetRef, Teleport.getComponentType(), teleport);
-                    if (senderId != null) {
-                        TeleportGuard.markTeleport(senderId);
-                    }
-
-                    // Send success message
-                    if (isTwoArg) {
-                        ctx.sendMessage(Message.raw("Teleported " + targetPlayerRef.getUsername() + " to " + destinationPlayerRef.getUsername() + "."));
-                    } else {
-                        ctx.sendMessage(Message.raw("Teleported to " + destinationPlayerRef.getUsername() + "."));
-                    }
+                    sendMsg(ctx, "teleport.success.others");
                 });
             });
         }
+    }
+
+    private void sendMsg(CommandContext ctx, String key) {
+        String lang = "en";
+        try {
+            if (ctx.isPlayer()) {
+                FancyPlayer p = FancyCorePlugin.get().getPlayerService().getByUUID(ctx.sender().getUuid());
+                if (p != null)
+                    lang = p.getLanguage();
+            }
+        } catch (Exception ignored) {
+        }
+        FancyCorePlugin.get().getTranslationService().getMessage(key, lang).sendTo(ctx.sender());
     }
 }

@@ -17,13 +17,12 @@ import java.util.UUID;
 
 public final class FancyCoreBridge {
     private static final String FACTION_WARP_PREFIX = "faction_";
-    private static final boolean CLASS_AVAILABLE = isFancyCorePresent();
 
     private FancyCoreBridge() {
     }
 
     public static boolean isAvailable() {
-        if (!CLASS_AVAILABLE) {
+        if (!isFancyCorePresent()) {
             return false;
         }
         return FancyCore.get() != null;
@@ -95,8 +94,7 @@ public final class FancyCoreBridge {
                 location.y(),
                 location.z(),
                 location.yaw(),
-                location.pitch()
-        );
+                location.pitch());
     }
 
     private static String warpNameForFaction(String factionName) {

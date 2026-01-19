@@ -30,6 +30,10 @@ public class Message {
         player.sendMessage(this.parsed);
     }
 
+    public void sendTo(com.hypixel.hytale.server.core.command.system.CommandSender sender) {
+        sender.sendMessage(com.hypixel.hytale.server.core.Message.raw(this.parsed));
+    }
+
     public String getKey() {
         return key;
     }

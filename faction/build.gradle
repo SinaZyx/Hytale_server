@@ -73,12 +73,12 @@ dependencies {
     compileOnly(files(hytaleServerJar))
     implementation 'com.google.code.gson:gson:2.11.0'
     if (file("$projectDir/../FancyCore/fc-api/build/libs").exists()) {
-        implementation fileTree("$projectDir/../FancyCore/fc-api/build/libs") {
+        compileOnly fileTree("$projectDir/../FancyCore/fc-api/build/libs") {
             include "fc-api-*.jar"
             exclude "*-sources.jar", "*-javadoc.jar", "*-all.jar"
         }
     } else {
-        implementation 'com.fancyinnovations:fc-api:0.4.1'
+        compileOnly 'com.fancyinnovations:fc-api:0.4.1'
     }
 }
 

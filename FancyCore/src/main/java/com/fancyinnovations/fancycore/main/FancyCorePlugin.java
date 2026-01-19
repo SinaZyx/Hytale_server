@@ -36,6 +36,7 @@ import com.fancyinnovations.fancycore.commands.moderation.reports.ReportCMD;
 import com.fancyinnovations.fancycore.commands.moderation.reports.ReportsCMD;
 import com.fancyinnovations.fancycore.commands.permissions.groups.GroupCMD;
 import com.fancyinnovations.fancycore.commands.permissions.player.PermissionsCMD;
+import com.fancyinnovations.fancycore.commands.player.LanguageCMD;
 import com.fancyinnovations.fancycore.commands.player.PlayerListCMD;
 import com.fancyinnovations.fancycore.commands.teleport.*;
 import com.fancyinnovations.fancycore.config.FancyCoreConfigImpl;
@@ -167,8 +168,7 @@ public class FancyCorePlugin extends JavaPlugin implements FancyCore {
                 "FancyCore",
                 LogLevel.INFO,
                 List.of(consoleAppender, jsonAppender),
-                List.of()
-        );
+                List.of());
 
         threadPool = Executors.newScheduledThreadPool(4, r -> {
             Thread thread = new Thread(r);
@@ -238,7 +238,6 @@ public class FancyCorePlugin extends JavaPlugin implements FancyCore {
     public void start() {
         fancyLogger.info("FancyCore is starting...");
 
-
         // set log level from config
         LogLevel logLevel;
         try {
@@ -253,7 +252,6 @@ public class FancyCorePlugin extends JavaPlugin implements FancyCore {
 
         // TODO enable this once FA integration is configured
         // versionChecker.checkPluginVersionChanged(apiClient, "fc");
-
 
         // start player schedulers
         savePlayersRunnable.schedule();
@@ -323,23 +321,18 @@ public class FancyCorePlugin extends JavaPlugin implements FancyCore {
         CommandManager.get().register(new DeleteHomeCMD());
         CommandManager.get().register(new HomeCMD());
         CommandManager.get().register(new ListHomesCMD());
-        CommandManager.get().register(new SetWarpCMD());
-        CommandManager.get().register(new DeleteWarpCMD());
-        CommandManager.get().register(new WarpCMD());
-        CommandManager.get().register(new ListWarpsCMD());
-
-        // player
-        CommandManager.get().register(new PlayerListCMD());
+        CommandManager.get().register(new CreateKitCMD());
+        CommandManager.get().register(new DeleteKitCMD());
+        CommandManager.get().register(new KitCMD());
+        CommandManager.get().register(new ListKitsCMD());
 
         // permission
         CommandManager.get().register(new PermissionsCMD());
         CommandManager.get().register(new GroupCMD());
 
-        // kits
-        CommandManager.get().register(new CreateKitCMD());
-        CommandManager.get().register(new DeleteKitCMD());
-        CommandManager.get().register(new KitCMD());
-        CommandManager.get().register(new ListKitsCMD());
+        // player
+        CommandManager.get().register(new PlayerListCMD());
+        CommandManager.get().register(new LanguageCMD());
 
         // utilities
         CommandManager.get().register(new ClearInventoryCMD());
@@ -381,8 +374,8 @@ public class FancyCorePlugin extends JavaPlugin implements FancyCore {
         eventRegistry.registerGlobal(PlayerDisconnectEvent.class, PlayerLeaveListener::onPlayerLeave);
         eventRegistry.register(KillFeedEvent.KillerMessage.class, CombatTagListener::onKillFeed);
 
-        Function<CompletableFuture<PlayerChatEvent>, CompletableFuture<PlayerChatEvent>> handler = future ->
-                future.thenApply(event -> {
+        Function<CompletableFuture<PlayerChatEvent>, CompletableFuture<PlayerChatEvent>> handler = future -> future
+                .thenApply(event -> {
                     try {
                         PlayerChatListener.onPlayerChat(event);
                     } catch (Exception e) {

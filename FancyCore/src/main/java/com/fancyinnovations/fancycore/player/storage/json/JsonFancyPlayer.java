@@ -17,14 +17,14 @@ public record JsonFancyPlayer(
         @SerializedName("groups") List<String> groups,
         String nickname,
         @SerializedName("chat_color") String chatColor,
+        String language,
         @SerializedName("ignored_players") List<String> ignoredPlayers,
         @SerializedName("private_messages_enabled") boolean privateMessagesEnabled,
         Map<String, Double> balances,
         @SerializedName("first_login_time") long firstLoginTime,
         @SerializedName("play_time") long playTime,
         List<Home> homes,
-        @SerializedName("custom_data") Map<String, Object> customData
-) {
+        @SerializedName("custom_data") Map<String, Object> customData) {
 
     /**
      * Converts a FancyPlayerImpl to a JsonFancyPlayer
@@ -40,7 +40,7 @@ public record JsonFancyPlayer(
                 .toList();
 
         Map<String, Double> balances = new HashMap<>();
-        //hytale.system.command.help
+        // hytale.system.command.help
         for (var entry : player.getBalances().entrySet()) {
             balances.put(entry.getKey().name(), entry.getValue());
         }
@@ -52,14 +52,14 @@ public record JsonFancyPlayer(
                 player.getGroups(),
                 player.getNickname(),
                 player.getChatColor(),
+                player.getLanguage(),
                 ignoredPlayers,
                 player.isPrivateMessagesEnabled(),
                 balances,
                 player.getFirstLoginTime(),
                 player.getPlayTime(),
                 player.getHomes(),
-                player.getCustomData()
-        );
+                player.getCustomData());
     }
 
     /**
@@ -79,7 +79,8 @@ public record JsonFancyPlayer(
                 try {
                     ignoredPlayerUUIDs.add(UUID.fromString(ignoredPlayer));
                 } catch (IllegalArgumentException e) {
-                    FancyCore.get().getFancyLogger().warn("Invalid UUID '" + ignoredPlayer + "' in ignored players for player " + username);
+                    FancyCore.get().getFancyLogger()
+                            .warn("Invalid UUID '" + ignoredPlayer + "' in ignored players for player " + username);
                 }
             }
         }
@@ -89,7 +90,8 @@ public record JsonFancyPlayer(
             for (var entry : this.balances.entrySet()) {
                 Currency currency = FancyCore.get().getCurrencyService().getCurrency(entry.getKey());
                 if (currency == null) {
-                    FancyCore.get().getFancyLogger().warn("Currency with name '" + entry.getKey() + "' not found for player " + username);
+                    FancyCore.get().getFancyLogger()
+                            .warn("Currency with name '" + entry.getKey() + "' not found for player " + username);
                     continue;
                 }
 
@@ -106,12 +108,12 @@ public record JsonFancyPlayer(
                 chatColor,
                 ignoredPlayerUUIDs,
                 privateMessagesEnabled,
+                language != null ? language : "en",
                 balances,
                 firstLoginTime,
                 playTime,
                 homes,
-                customData
-        );
+                customData);
     }
 
 }

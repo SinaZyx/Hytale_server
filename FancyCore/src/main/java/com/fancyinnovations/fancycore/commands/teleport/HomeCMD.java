@@ -25,13 +25,15 @@ public class HomeCMD extends AbstractPlayerCommand {
     protected final OptionalArg<String> nameArg = this.withOptionalArg("home", "specific home name", ArgTypes.STRING);
 
     public HomeCMD() {
-        super("home", "Teleports you to your home point with the specified name or the first home if no name is provided");
+        super("home",
+                "Teleports you to your home point with the specified name or the first home if no name is provided");
         addAliases("home", "h");
         requirePermission("fancycore.commands.home");
     }
 
     @Override
-    protected void execute(@Nonnull CommandContext ctx, @Nonnull Store<EntityStore> store, @Nonnull Ref<EntityStore> ref, @Nonnull PlayerRef playerRef, @Nonnull World world) {
+    protected void execute(@Nonnull CommandContext ctx, @Nonnull Store<EntityStore> store,
+            @Nonnull Ref<EntityStore> ref, @Nonnull PlayerRef playerRef, @Nonnull World world) {
         if (!ctx.isPlayer()) {
             ctx.sendMessage(Message.raw("This command can only be executed by a player."));
             return;
@@ -65,12 +67,25 @@ public class HomeCMD extends AbstractPlayerCommand {
         }
 
         Location location = home.location();
-        World targetWorld = Universe.get().getWorld(location.worldName());
 
-        Teleport teleport = new Teleport(targetWorld, location.positionVec(), location.rotationVec());
-        store.addComponent(ref, Teleport.getComponentType(), teleport);
-        TeleportGuard.markTeleport(fp.getData().getUUID());
+        fp.sendMessage("Teleportation in 5 seconds...");
 
-        fp.sendMessage("Teleported to home '" + home.name() + "'.");
+        com.fancyinnovations.fancycore.main.FancyCorePlugin.get().getThreadPool().schedule(() -> {
+            PlayerRef currentPRef = fp.getPlayer();
+            if (currentPRef == null || !currentPRef.isValid())
+                return;
+            Ref<EntityStore> currentRef = currentPRef.getReference();
+            if (currentRef == null || !currentRef.isValid())
+                return;
+            Store<EntityStore> currentStore = currentRef.getStore();
+            World targetWorld = Universe.get().getWorld(location.worldName());
+            if (targetWorld == null)
+                return;
+
+            Teleport teleport = new Teleport(targetWorld, location.positionVec(), location.rotationVec());
+            currentStore.addComponent(currentRef, Teleport.getComponentType(), teleport);
+            TeleportGuard.markTeleport(fp.getData().getUUID());
+            fp.sendMessage("Teleported to home.");
+        }, 5, java.util.concurrent.TimeUnit.SECONDS);
     }
 }

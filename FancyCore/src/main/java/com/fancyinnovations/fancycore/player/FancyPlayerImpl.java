@@ -72,24 +72,24 @@ public class FancyPlayerImpl implements FancyPlayer {
     public boolean checkPermission(String permission) {
         return PermissionsModule.get().hasPermission(data.getUUID(), permission);
 
-//        for (Permission p : data.getPermissions()) {
-//            if (p.getPermission().equalsIgnoreCase(permission)) {
-//                return p.isEnabled();
-//            }
-//        }
-//
-//        for (String groupName : data.getGroups()) {
-//            Group group = FancyCore.get().getPermissionService().getGroup(groupName);
-//            if (group == null) {
-//                continue;
-//            }
-//
-//            if (group.checkPermission(permission)) {
-//                return true;
-//            }
-//        }
-//
-//        return false; // permission not found
+        // for (Permission p : data.getPermissions()) {
+        // if (p.getPermission().equalsIgnoreCase(permission)) {
+        // return p.isEnabled();
+        // }
+        // }
+        //
+        // for (String groupName : data.getGroups()) {
+        // Group group = FancyCore.get().getPermissionService().getGroup(groupName);
+        // if (group == null) {
+        // continue;
+        // }
+        //
+        // if (group.checkPermission(permission)) {
+        // return true;
+        // }
+        // }
+        //
+        // return false; // permission not found
     }
 
     @Override
@@ -123,7 +123,6 @@ public class FancyPlayerImpl implements FancyPlayer {
 
         return null;
     }
-
 
     @Override
     public boolean isOnline() {
@@ -175,5 +174,15 @@ public class FancyPlayerImpl implements FancyPlayer {
     @Override
     public void setReplyTo(FancyPlayer player) {
         this.replyTo = player;
+    }
+
+    @Override
+    public String getLanguage() {
+        return this.getData().getLanguage();
+    }
+
+    @Override
+    public void setLanguage(String language) {
+        this.getData().setLanguage(language);
     }
 }

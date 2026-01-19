@@ -17,4 +17,10 @@ public interface ServerAdapter {
     void sendMessage(UUID id, String message);
 
     long nowEpochMs();
+
+    void schedule(Runnable runnable, long delay, java.util.concurrent.TimeUnit unit);
+
+    void teleportPlayer(UUID playerId, Location location);
+
+    void teleportDelayed(UUID playerId, Location target, long delaySeconds, Runnable onSuccess, Runnable onCancel);
 }
