@@ -3,7 +3,8 @@ package com.fancyinnovations.fancycore.commands.teleport;
 import com.fancyinnovations.fancycore.api.player.FancyPlayer;
 import com.fancyinnovations.fancycore.api.player.FancyPlayerService;
 import com.fancyinnovations.fancycore.api.teleport.TeleportRequestService;
-import com.hypixel.hytale.server.core.Message;
+import com.fancyinnovations.fancycore.main.FancyCorePlugin;
+import com.fancyinnovations.fancycore.translations.TranslationService;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
 import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
@@ -13,6 +14,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class TeleportRequestCMD extends CommandBase {
 
+    private final TranslationService translator = FancyCorePlugin.get().getTranslationService();
     protected final RequiredArg<PlayerRef> targetArg = this.withRequiredArg("target", "The player to request teleportation to", ArgTypes.PLAYER_REF);
 
     public TeleportRequestCMD() {
@@ -24,27 +26,27 @@ public class TeleportRequestCMD extends CommandBase {
     @Override
     protected void executeSync(@NotNull CommandContext ctx) {
         if (!ctx.isPlayer()) {
-            ctx.sendMessage(Message.raw("This command can only be executed by a player."));
+            translator.getMessage("error.command.player_only").sendTo(ctx.sender());
             return;
         }
 
         FancyPlayer sender = FancyPlayerService.get().getByUUID(ctx.sender().getUuid());
         if (sender == null) {
-            ctx.sendMessage(Message.raw("FancyPlayer not found."));
+            translator.getMessage("error.player.not_found").sendTo(ctx.sender());
             return;
         }
 
         PlayerRef targetPlayerRef = targetArg.get(ctx);
-        
+
         // Check if target player is online by checking their reference
         if (targetPlayerRef.getReference() == null || !targetPlayerRef.getReference().isValid()) {
-            ctx.sendMessage(Message.raw("Target player is not online."));
+            translator.getMessage("teleport.error.player_offline", sender.getLanguage()).sendTo(sender);
             return;
         }
 
         FancyPlayer target = FancyPlayerService.get().getByUUID(targetPlayerRef.getUuid());
         if (target == null) {
-            ctx.sendMessage(Message.raw("Target player not found."));
+            translator.getMessage("teleport.error.player_not_found", sender.getLanguage()).sendTo(sender);
             return;
         }
 
@@ -54,16 +56,22 @@ public class TeleportRequestCMD extends CommandBase {
         }
 
         if (sender.getData().getUUID().equals(target.getData().getUUID())) {
-            ctx.sendMessage(Message.raw("You cannot send a teleport request to yourself."));
+            translator.getMessage("teleport.request.no_self", sender.getLanguage()).sendTo(sender);
             return;
         }
 
         TeleportRequestService requestService = TeleportRequestService.get();
         if (requestService.sendRequest(sender, target)) {
-            ctx.sendMessage(Message.raw("Teleport request sent to " + target.getData().getUsername() + "."));
-            target.sendMessage(sender.getData().getUsername() + " has sent you a teleport request. Use /tpaccept to accept or /tpdeny to deny.");
+            translator.getMessage("teleport.request.sent", sender.getLanguage())
+                .replace("target", target.getData().getUsername())
+                .sendTo(sender);
+            translator.getMessage("teleport.request.received", target.getLanguage())
+                .replace("player", sender.getData().getUsername())
+                .sendTo(target);
         } else {
-            ctx.sendMessage(Message.raw("You already have a pending teleport request to " + target.getData().getUsername() + "."));
+            translator.getMessage("teleport.request.already_pending", sender.getLanguage())
+                .replace("player", target.getData().getUsername())
+                .sendTo(sender);
         }
     }
 }

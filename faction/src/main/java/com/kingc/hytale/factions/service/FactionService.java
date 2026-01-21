@@ -46,8 +46,9 @@ public final class FactionService {
     private final Map<UUID, Long> lastUnclaimAt = new ConcurrentHashMap<>();
     private final Map<UUID, Deque<NotificationEntry>> notificationHistory = new ConcurrentHashMap<>();
 
-    public FactionService(FactionDataStore store, FactionSettings settings, TimeProvider timeProvider, ActionLogger actionLogger,
-                          FactionEventBus eventBus) {
+    public FactionService(FactionDataStore store, FactionSettings settings, TimeProvider timeProvider,
+            ActionLogger actionLogger,
+            FactionEventBus eventBus) {
         this.store = store;
         this.settings = settings;
         this.timeProvider = timeProvider;
@@ -57,15 +58,15 @@ public final class FactionService {
 
     public Result<Faction> createFaction(UUID ownerId, String name) {
         String trimmed = normalizeName(name);
-        String validationError = validateName(trimmed);
-        if (validationError != null) {
-            return Result.error(validationError);
+        Result<Void> validation = validateName(trimmed);
+        if (!validation.ok()) {
+            return Result.error(validation.message(), validation.args());
         }
         if (findFactionByMember(ownerId).isPresent()) {
-            return Result.error("You are already in a faction.");
+            return Result.error("error.already_in_faction");
         }
         if (store.nameIndex().containsKey(FactionDataStore.nameKey(trimmed))) {
-            return Result.error("That faction name is already taken.");
+            return Result.error("faction.create.name_taken");
         }
         UUID id = UUID.randomUUID();
         Faction faction = new Faction(id, trimmed, timeProvider.nowEpochMs(), Map.of(ownerId, MemberRole.LEADER));
@@ -73,17 +74,17 @@ public final class FactionService {
         store.nameIndex().put(FactionDataStore.nameKey(trimmed), id);
         logAction(ownerId, "create faction=" + trimmed);
         postEvent(new FactionCreatedEvent(faction, ownerId));
-        return Result.ok("Faction created: " + trimmed, faction);
+        return Result.ok("faction.create.success", faction, Map.of("name", trimmed));
     }
 
     public Result<Void> disband(UUID actorId) {
         Optional<Faction> factionOpt = findFactionByMember(actorId);
         if (factionOpt.isEmpty()) {
-            return Result.error("You are not in a faction.");
+            return Result.error("error.not_in_faction");
         }
         Faction faction = factionOpt.get();
         if (!hasAtLeastRole(faction, actorId, settings.roleForDisband())) {
-            return Result.error("You do not have permission to disband the faction.");
+            return Result.error("error.disband.permission");
         }
         UUID factionId = faction.id();
         store.factions().remove(factionId);
@@ -92,26 +93,26 @@ public final class FactionService {
         store.invites().values().forEach(invites -> invites.removeIf(invite -> invite.factionId().equals(factionId)));
         logAction(actorId, "disband faction=" + faction.name());
         postEvent(new FactionDisbandedEvent(faction, actorId));
-        return Result.ok("Faction disbanded.", null);
+        return Result.ok("faction.disband.success", null, Map.of("name", faction.name()));
     }
 
     public Result<Void> rename(UUID actorId, String newName) {
         Optional<Faction> factionOpt = findFactionByMember(actorId);
         if (factionOpt.isEmpty()) {
-            return Result.error("You are not in a faction.");
+            return Result.error("error.not_in_faction");
         }
         Faction faction = factionOpt.get();
         if (!hasAtLeastRole(faction, actorId, settings.roleForRename())) {
-            return Result.error("You do not have permission to rename the faction.");
+            return Result.error("error.rename.permission");
         }
         String trimmed = normalizeName(newName);
-        String validationError = validateName(trimmed);
-        if (validationError != null) {
-            return Result.error(validationError);
+        Result<Void> validation = validateName(trimmed);
+        if (!validation.ok()) {
+            return validation;
         }
         String newKey = FactionDataStore.nameKey(trimmed);
         if (store.nameIndex().containsKey(newKey)) {
-            return Result.error("That faction name is already taken.");
+            return Result.error("faction.create.name_taken");
         }
         String oldName = faction.name();
         store.nameIndex().remove(FactionDataStore.nameKey(oldName));
@@ -119,50 +120,50 @@ public final class FactionService {
         store.nameIndex().put(newKey, faction.id());
         logAction(actorId, "rename faction=" + trimmed);
         postEvent(new FactionRenamedEvent(faction, oldName, actorId));
-        return Result.ok("Faction renamed to " + trimmed + ".", null);
+        return Result.ok("faction.rename.success", null, Map.of("name", trimmed));
     }
 
     public Result<Void> invite(UUID actorId, UUID targetId) {
         Optional<Faction> factionOpt = findFactionByMember(actorId);
         if (factionOpt.isEmpty()) {
-            return Result.error("You are not in a faction.");
+            return Result.error("error.not_in_faction");
         }
         Faction faction = factionOpt.get();
         if (!hasAtLeastRole(faction, actorId, settings.roleForInvite())) {
-            return Result.error("You do not have permission to invite.");
+            return Result.error("error.invite.permission");
         }
         if (faction.isMember(targetId)) {
-            return Result.error("That player is already in your faction.");
+            return Result.error("error.invite.already_member");
         }
         if (findFactionByMember(targetId).isPresent()) {
-            return Result.error("That player is already in a faction.");
+            return Result.error("error.invite.target_already_in_faction");
         }
         if (faction.members().size() >= settings.maxMembers) {
-            return Result.error("Your faction is full.");
+            return Result.error("error.invite.faction_full");
         }
         long expiresAt = timeProvider.nowEpochMs() + settings.inviteExpiryMinutes * 60_000L;
         List<FactionInvite> invites = store.invites().computeIfAbsent(targetId, ignored -> new ArrayList<>());
         invites.removeIf(invite -> invite.factionId().equals(faction.id()));
         invites.add(new FactionInvite(faction.id(), actorId, expiresAt));
         logAction(actorId, "invite target=" + targetId + " faction=" + faction.name());
-        return Result.ok("Invite sent to player.", null);
+        return Result.ok("faction.invite.sent_success", null);
     }
 
     public Result<Void> acceptInvite(UUID playerId, String factionName) {
         if (findFactionByMember(playerId).isPresent()) {
-            return Result.error("You are already in a faction.");
+            return Result.error("error.already_in_faction");
         }
         Optional<Faction> factionOpt = findFactionByName(factionName);
         if (factionOpt.isEmpty()) {
-            return Result.error("Faction not found.");
+            return Result.error("error.faction_not_found");
         }
         Faction faction = factionOpt.get();
         if (faction.members().size() >= settings.maxMembers) {
-            return Result.error("That faction is full.");
+            return Result.error("error.invite.faction_full");
         }
         List<FactionInvite> invites = store.invites().get(playerId);
         if (invites == null || invites.isEmpty()) {
-            return Result.error("You do not have any invites.");
+            return Result.error("error.invite.no_invites");
         }
         long now = timeProvider.nowEpochMs();
         invites.removeIf(invite -> invite.isExpired(now));
@@ -170,70 +171,67 @@ public final class FactionService {
                 .filter(invite -> invite.factionId().equals(faction.id()))
                 .findFirst();
         if (inviteOpt.isEmpty()) {
-            return Result.error("No invite found for that faction.");
+            return Result.error("error.invite.not_found");
         }
         faction.setMemberRole(playerId, MemberRole.RECRUIT);
         invites.remove(inviteOpt.get());
         logAction(playerId, "accept faction=" + faction.name());
-        return Result.ok("You joined " + faction.name() + ".", null);
+        return Result.ok("faction.invite.accept.success", null, Map.of("name", faction.name()));
     }
 
     public Result<Void> denyInvite(UUID playerId, String factionName) {
         List<FactionInvite> invites = store.invites().get(playerId);
         if (invites == null || invites.isEmpty()) {
-            return Result.error("You do not have any invites.");
+            return Result.error("error.invite.no_invites");
         }
         Optional<Faction> factionOpt = findFactionByName(factionName);
         if (factionOpt.isEmpty()) {
-            return Result.error("Faction not found.");
+            return Result.error("error.faction_not_found");
         }
         UUID factionId = factionOpt.get().id();
         boolean removed = invites.removeIf(invite -> invite.factionId().equals(factionId));
         if (!removed) {
-            return Result.error("No invite found for that faction.");
+            return Result.error("error.invite.not_found");
         }
         logAction(playerId, "deny faction=" + factionOpt.get().name());
-        return Result.ok("Invite removed.", null);
+        return Result.ok("faction.invite.deny.success", null);
     }
 
     public Result<Void> leave(UUID playerId) {
         Optional<Faction> factionOpt = findFactionByMember(playerId);
         if (factionOpt.isEmpty()) {
-            return Result.error("You are not in a faction.");
+            return Result.error("error.not_in_faction");
         }
         Faction faction = factionOpt.get();
         MemberRole role = faction.roleOf(playerId);
-        if (role == MemberRole.LEADER && faction.members().size() > 1) {
-            return Result.error("Transfer leadership or disband before leaving.");
-        }
         if (role == MemberRole.LEADER) {
-            return disband(playerId);
+            return Result.error("error.leave.must_transfer");
         }
         faction.removeMember(playerId);
         logAction(playerId, "leave faction=" + faction.name());
-        return Result.ok("You left the faction.", null);
+        return Result.ok("faction.leave.success", null);
     }
 
     public Result<Void> kick(UUID actorId, UUID targetId) {
         Optional<Faction> factionOpt = findFactionByMember(actorId);
         if (factionOpt.isEmpty()) {
-            return Result.error("You are not in a faction.");
+            return Result.error("error.not_in_faction");
         }
         Faction faction = factionOpt.get();
         if (!hasAtLeastRole(faction, actorId, settings.roleForKick())) {
-            return Result.error("You do not have permission to kick.");
+            return Result.error("error.kick.permission");
         }
         MemberRole targetRole = faction.roleOf(targetId);
         if (targetRole == null) {
-            return Result.error("That player is not in your faction.");
+            return Result.error("error.kick.not_member");
         }
         MemberRole actorRole = faction.roleOf(actorId);
-        if (actorRole.rank() <= targetRole.rank()) {
-            return Result.error("You cannot kick a member with equal or higher rank.");
+        if (actorRole == null || actorRole.rank() <= targetRole.rank()) {
+            return Result.error("error.kick.cannot_kick_higher_rank");
         }
         faction.removeMember(targetId);
         logAction(actorId, "kick target=" + targetId + " faction=" + faction.name());
-        return Result.ok("Member kicked.", null);
+        return Result.ok("faction.kick.success", null);
     }
 
     public Result<Void> promote(UUID actorId, UUID targetId) {
@@ -247,17 +245,17 @@ public final class FactionService {
     public Result<Void> transferLeadership(UUID actorId, UUID targetId) {
         Optional<Faction> factionOpt = findFactionByMember(actorId);
         if (factionOpt.isEmpty()) {
-            return Result.error("You are not in a faction.");
+            return Result.error("error.not_in_faction");
         }
         Faction faction = factionOpt.get();
         if (!hasAtLeastRole(faction, actorId, settings.roleForLeader())) {
-            return Result.error("You do not have permission to transfer leadership.");
+            return Result.error("error.transfer.permission");
         }
         if (faction.roleOf(actorId) != MemberRole.LEADER) {
-            return Result.error("Only the leader can transfer leadership.");
+            return Result.error("error.transfer.only_leader");
         }
         if (!faction.isMember(targetId)) {
-            return Result.error("That player is not in your faction.");
+            return Result.error("error.transfer.not_member");
         }
         MemberRole oldActorRole = faction.roleOf(actorId);
         MemberRole oldTargetRole = faction.roleOf(targetId);
@@ -268,22 +266,22 @@ public final class FactionService {
                 MemberRoleChangeType.TRANSFER));
         postEvent(new MemberRoleChangedEvent(faction, actorId, targetId, oldTargetRole, MemberRole.LEADER,
                 MemberRoleChangeType.TRANSFER));
-        return Result.ok("Leadership transferred.", null);
+        return Result.ok("faction.transfer.success", null);
     }
 
     public Result<Void> setHome(UUID actorId, Location location) {
         Optional<Faction> factionOpt = findFactionByMember(actorId);
         if (factionOpt.isEmpty()) {
-            return Result.error("You are not in a faction.");
+            return Result.error("error.not_in_faction");
         }
         Faction faction = factionOpt.get();
         if (!hasAtLeastRole(faction, actorId, settings.roleForSetHome())) {
-            return Result.error("You do not have permission to set home.");
+            return Result.error("error.home.permission");
         }
         faction.setHome(location);
         logAction(actorId, "sethome faction=" + faction.name());
         postEvent(new FactionHomeSetEvent(faction, location, actorId));
-        return Result.ok("Faction home set.", null);
+        return Result.ok("faction.home.set.success", null);
     }
 
     public Optional<Double> getTreasuryBalance(UUID factionId) {
@@ -299,36 +297,36 @@ public final class FactionService {
 
     public Result<Double> depositTreasury(UUID actorId, double amount) {
         if (amount <= 0) {
-            return Result.error("Amount must be positive.");
+            return Result.error("error.treasury.invalid_amount");
         }
         Optional<Faction> factionOpt = findFactionByMember(actorId);
         if (factionOpt.isEmpty()) {
-            return Result.error("You are not in a faction.");
+            return Result.error("error.not_in_faction");
         }
         return adjustTreasury(factionOpt.get(), actorId, amount);
     }
 
     public Result<Double> withdrawTreasury(UUID actorId, double amount) {
         if (amount <= 0) {
-            return Result.error("Amount must be positive.");
+            return Result.error("error.treasury.invalid_amount");
         }
         Optional<Faction> factionOpt = findFactionByMember(actorId);
         if (factionOpt.isEmpty()) {
-            return Result.error("You are not in a faction.");
+            return Result.error("error.not_in_faction");
         }
         return adjustTreasury(factionOpt.get(), actorId, -amount);
     }
 
     public Result<Double> adjustTreasury(UUID factionId, UUID actorId, double amount) {
         if (factionId == null) {
-            return Result.error("Faction not found.");
+            return Result.error("error.faction_not_found");
         }
         Faction faction = store.factions().get(factionId);
         if (faction == null) {
-            return Result.error("Faction not found.");
+            return Result.error("error.faction_not_found");
         }
         if (amount == 0) {
-            return Result.error("Amount must be non-zero.");
+            return Result.error("error.treasury.invalid_zero");
         }
         return adjustTreasury(faction, actorId, amount);
     }
@@ -336,152 +334,153 @@ public final class FactionService {
     public Result<Void> setDescription(UUID actorId, String description) {
         Optional<Faction> factionOpt = findFactionByMember(actorId);
         if (factionOpt.isEmpty()) {
-            return Result.error("You are not in a faction.");
+            return Result.error("error.not_in_faction");
         }
         Faction faction = factionOpt.get();
         if (!hasAtLeastRole(faction, actorId, settings.roleForDescription())) {
-            return Result.error("You do not have permission to edit the description.");
+            return Result.error("error.description.permission");
         }
         String normalized = normalizeDescription(description);
         if (normalized.isEmpty()) {
             faction.setDescription(null);
             logAction(actorId, "desc clear faction=" + faction.name());
-            return Result.ok("Faction description cleared.", null);
+            return Result.ok("faction.description.cleared", null);
         }
         if (normalized.length() > settings.maxDescriptionLength) {
-            return Result.error("Description too long (max " + settings.maxDescriptionLength + " characters).");
+            return Result.error("error.description.too_long",
+                    Map.of("max", String.valueOf(settings.maxDescriptionLength)));
         }
         faction.setDescription(normalized);
         logAction(actorId, "desc set faction=" + faction.name());
-        return Result.ok("Faction description updated.", null);
+        return Result.ok("faction.description.updated", null);
     }
 
     public Result<Location> getHome(UUID playerId) {
         Optional<Faction> factionOpt = findFactionByMember(playerId);
         if (factionOpt.isEmpty()) {
-            return Result.error("You are not in a faction.");
+            return Result.error("error.not_in_faction");
         }
         Location home = factionOpt.get().home();
         if (home == null) {
-            return Result.error("Your faction does not have a home yet.");
+            return Result.error("error.home.not_set");
         }
-        return Result.ok("Home ready.", home);
+        return Result.ok("faction.home.ready", home);
     }
 
     public Result<Void> claim(UUID actorId, ClaimKey claim) {
         Optional<Faction> factionOpt = findFactionByMember(actorId);
         if (factionOpt.isEmpty()) {
-            return Result.error("You are not in a faction.");
+            return Result.error("error.not_in_faction");
         }
         Faction faction = factionOpt.get();
         if (!hasAtLeastRole(faction, actorId, settings.roleForClaim())) {
-            return Result.error("You do not have permission to claim.");
+            return Result.error("error.claim.permission");
         }
         if (!isClaimWorldAllowed(claim.world())) {
-            return Result.error("Claims are disabled in this world.");
+            return Result.error("error.claim.disabled_world");
         }
-        String cooldownError = checkCooldown(lastClaimAt, settings.claimCooldownSeconds, faction.id(), "claim");
-        if (cooldownError != null) {
-            return Result.error(cooldownError);
+        Result<Void> cooldown = checkCooldown(lastClaimAt, settings.claimCooldownSeconds, faction.id(), "claim");
+        if (!cooldown.ok()) {
+            return cooldown;
         }
         if (store.claims().containsKey(claim)) {
-            return Result.error("That chunk is already claimed.");
+            return Result.error("error.claim.already_claimed");
         }
         long claimCount = store.claims().values().stream().filter(id -> id.equals(faction.id())).count();
         int claimLimit = getClaimLimit(faction.id());
         if (claimCount >= claimLimit) {
-            return Result.error("Your faction has reached the claim limit (" + claimCount + "/" + claimLimit + ").");
+            return Result.error("error.claim.limit_reached", Map.of("limit", String.valueOf(claimLimit)));
         }
         store.claims().put(claim, faction.id());
         lastClaimAt.put(faction.id(), timeProvider.nowEpochMs());
         logAction(actorId, "claim " + claim.toKey() + " faction=" + faction.name());
         postEvent(new FactionClaimChangedEvent(faction, claim, ClaimChangeType.CLAIM, actorId));
-        return Result.ok("Chunk claimed.", null);
+        return Result.ok("faction.claim.success", null);
     }
 
     public Result<Void> unclaim(UUID actorId, ClaimKey claim) {
         Optional<Faction> factionOpt = findFactionByMember(actorId);
         if (factionOpt.isEmpty()) {
-            return Result.error("You are not in a faction.");
+            return Result.error("error.not_in_faction");
         }
         Faction faction = factionOpt.get();
         if (!hasAtLeastRole(faction, actorId, settings.roleForUnclaim())) {
-            return Result.error("You do not have permission to unclaim.");
+            return Result.error("error.unclaim.permission");
         }
-        String cooldownError = checkCooldown(lastUnclaimAt, settings.unclaimCooldownSeconds, faction.id(), "unclaim");
-        if (cooldownError != null) {
-            return Result.error(cooldownError);
+        Result<Void> cooldown = checkCooldown(lastUnclaimAt, settings.unclaimCooldownSeconds, faction.id(), "unclaim");
+        if (!cooldown.ok()) {
+            return cooldown;
         }
         UUID ownerId = store.claims().get(claim);
         if (ownerId == null || !ownerId.equals(faction.id())) {
-            return Result.error("Your faction does not own this claim.");
+            return Result.error("error.unclaim.not_owner");
         }
         store.claims().remove(claim);
         lastUnclaimAt.put(faction.id(), timeProvider.nowEpochMs());
         logAction(actorId, "unclaim " + claim.toKey() + " faction=" + faction.name());
         postEvent(new FactionClaimChangedEvent(faction, claim, ClaimChangeType.UNCLAIM, actorId));
-        return Result.ok("Chunk unclaimed.", null);
+        return Result.ok("faction.unclaim.success", null);
     }
 
     public Result<Void> ally(UUID actorId, String targetFactionName) {
         Optional<Faction> factionOpt = findFactionByMember(actorId);
         if (factionOpt.isEmpty()) {
-            return Result.error("You are not in a faction.");
+            return Result.error("error.not_in_faction");
         }
         Faction faction = factionOpt.get();
         if (!hasAtLeastRole(faction, actorId, settings.roleForAlly())) {
-            return Result.error("You do not have permission to manage allies.");
+            return Result.error("error.ally.permission");
         }
         Optional<Faction> targetOpt = findFactionByName(targetFactionName);
         if (targetOpt.isEmpty()) {
-            return Result.error("Faction not found.");
+            return Result.error("error.faction_not_found");
         }
         Faction target = targetOpt.get();
         if (target.id().equals(faction.id())) {
-            return Result.error("You cannot ally with yourself.");
+            return Result.error("error.ally.self");
         }
         faction.addAlly(target.id());
         target.addAlly(faction.id());
         logAction(actorId, "ally with=" + target.name() + " faction=" + faction.name());
-        return Result.ok("Alliance formed with " + target.name() + ".", null);
+        return Result.ok("faction.ally.success", null, Map.of("name", target.name()));
     }
 
     public Result<Void> unally(UUID actorId, String targetFactionName) {
         Optional<Faction> factionOpt = findFactionByMember(actorId);
         if (factionOpt.isEmpty()) {
-            return Result.error("You are not in a faction.");
+            return Result.error("error.not_in_faction");
         }
         Faction faction = factionOpt.get();
         if (!hasAtLeastRole(faction, actorId, settings.roleForAlly())) {
-            return Result.error("You do not have permission to manage allies.");
+            return Result.error("error.ally.permission");
         }
         Optional<Faction> targetOpt = findFactionByName(targetFactionName);
         if (targetOpt.isEmpty()) {
-            return Result.error("Faction not found.");
+            return Result.error("error.faction_not_found");
         }
         Faction target = targetOpt.get();
         faction.removeAlly(target.id());
         target.removeAlly(faction.id());
         logAction(actorId, "unally with=" + target.name() + " faction=" + faction.name());
-        return Result.ok("Alliance removed.", null);
+        return Result.ok("faction.unally.success", null, Map.of("name", target.name()));
     }
 
     public Result<Void> enemy(UUID actorId, String targetFactionName) {
         Optional<Faction> factionOpt = findFactionByMember(actorId);
         if (factionOpt.isEmpty()) {
-            return Result.error("You are not in a faction.");
+            return Result.error("error.not_in_faction");
         }
         Faction faction = factionOpt.get();
         if (!hasAtLeastRole(faction, actorId, settings.roleForAlly())) {
-            return Result.error("You do not have permission to manage enemies.");
+            return Result.error("error.enemy.permission");
         }
         Optional<Faction> targetOpt = findFactionByName(targetFactionName);
         if (targetOpt.isEmpty()) {
-            return Result.error("Faction not found.");
+            return Result.error("error.faction_not_found");
         }
         Faction target = targetOpt.get();
         if (target.id().equals(faction.id())) {
-            return Result.error("You cannot declare yourself as an enemy.");
+            return Result.error("error.enemy.self");
         }
         // Remove from allies if present
         faction.removeAlly(target.id());
@@ -490,27 +489,27 @@ public final class FactionService {
         faction.addEnemy(target.id());
         target.addEnemy(faction.id());
         logAction(actorId, "enemy with=" + target.name() + " faction=" + faction.name());
-        return Result.ok("You are now enemies with " + target.name() + ".", null);
+        return Result.ok("faction.enemy.success", null, Map.of("name", target.name()));
     }
 
     public Result<Void> unenemy(UUID actorId, String targetFactionName) {
         Optional<Faction> factionOpt = findFactionByMember(actorId);
         if (factionOpt.isEmpty()) {
-            return Result.error("You are not in a faction.");
+            return Result.error("error.not_in_faction");
         }
         Faction faction = factionOpt.get();
         if (!hasAtLeastRole(faction, actorId, settings.roleForAlly())) {
-            return Result.error("You do not have permission to manage enemies.");
+            return Result.error("error.enemy.permission");
         }
         Optional<Faction> targetOpt = findFactionByName(targetFactionName);
         if (targetOpt.isEmpty()) {
-            return Result.error("Faction not found.");
+            return Result.error("error.faction_not_found");
         }
         Faction target = targetOpt.get();
         faction.removeEnemy(target.id());
         target.removeEnemy(faction.id());
         logAction(actorId, "unenemy with=" + target.name() + " faction=" + faction.name());
-        return Result.ok("You are no longer enemies with " + target.name() + ".", null);
+        return Result.ok("faction.unenemy.success", null, Map.of("name", target.name()));
     }
 
     public boolean canBuild(UUID actorId, Location location) {
@@ -860,35 +859,35 @@ public final class FactionService {
     private Result<Void> changeRank(UUID actorId, UUID targetId, boolean promote) {
         Optional<Faction> factionOpt = findFactionByMember(actorId);
         if (factionOpt.isEmpty()) {
-            return Result.error("You are not in a faction.");
+            return Result.error("error.not_in_faction");
         }
         Faction faction = factionOpt.get();
         MemberRole requiredRole = promote ? settings.roleForPromote() : settings.roleForDemote();
         if (!hasAtLeastRole(faction, actorId, requiredRole)) {
-            return Result.error("You do not have permission to change ranks.");
+            return Result.error("error.rank.permission");
         }
         MemberRole targetRole = faction.roleOf(targetId);
         if (targetRole == null) {
-            return Result.error("That player is not in your faction.");
+            return Result.error("error.rank.not_member");
         }
         if (targetRole == MemberRole.LEADER) {
-            return Result.error("You cannot change the leader rank.");
+            return Result.error("error.rank.cannot_change_leader");
         }
         MemberRole actorRole = faction.roleOf(actorId);
         if (actorRole == null || actorRole.rank() <= targetRole.rank()) {
-            return Result.error("You cannot change a member with equal or higher rank.");
+            return Result.error("error.rank.cannot_change_higher");
         }
         MemberRole oldRole = targetRole;
         MemberRole newRole = promote ? targetRole.promote() : targetRole.demote();
         if (newRole == targetRole) {
-            return Result.error("No rank change available.");
+            return Result.error("error.rank.no_change_available");
         }
         faction.setMemberRole(targetId, newRole);
         String action = promote ? "promote" : "demote";
         logAction(actorId, action + " target=" + targetId + " role=" + newRole.name());
         postEvent(new MemberRoleChangedEvent(faction, actorId, targetId, oldRole, newRole,
                 promote ? MemberRoleChangeType.PROMOTE : MemberRoleChangeType.DEMOTE));
-        return Result.ok("Member rank updated.", null);
+        return Result.ok("faction.rank.updated", null);
     }
 
     private boolean hasAtLeastRole(Faction faction, UUID playerId, MemberRole role) {
@@ -903,60 +902,20 @@ public final class FactionService {
         eventBus.post(event);
     }
 
-    private boolean isClaimWorldAllowed(String world) {
-        if (world == null) {
-            return false;
-        }
-        if (!settings.claimWorldAllowList.isEmpty()) {
-            boolean allowed = settings.claimWorldAllowList.stream()
-                    .anyMatch(name -> name.equalsIgnoreCase(world));
-            if (!allowed) {
-                return false;
-            }
-        }
-        return settings.claimWorldDenyList.stream()
-                .noneMatch(name -> name.equalsIgnoreCase(world));
-    }
-
-    private String checkCooldown(Map<UUID, Long> cooldowns, int cooldownSeconds, UUID factionId, String action) {
-        if (cooldownSeconds <= 0) {
-            return null;
-        }
-        long now = timeProvider.nowEpochMs();
-        Long last = cooldowns.get(factionId);
-        if (last == null) {
-            return null;
-        }
-        long remainingMs = (cooldownSeconds * 1000L) - (now - last);
-        if (remainingMs <= 0) {
-            return null;
-        }
-        long remainingSeconds = (remainingMs + 999) / 1000;
-        return "You must wait " + remainingSeconds + "s before using " + action + " again.";
-    }
-
-    private void logAction(UUID actorId, String action) {
-        if (!Boolean.TRUE.equals(settings.actionLogEnabled)) {
-            return;
-        }
-        if (actionLogger == null || action == null || action.isBlank()) {
-            return;
-        }
-        String actor = actorId == null ? "system" : actorId.toString();
-        actionLogger.log("actor=" + actor + " " + action);
-    }
-
-    private String validateName(String name) {
+    private Result<Void> validateName(String name) {
         if (name == null || name.isBlank()) {
-            return "Faction name is required.";
+            return Result.error("error.name.required");
         }
-        if (name.length() < settings.minNameLength || name.length() > settings.maxNameLength) {
-            return "Faction name must be between " + settings.minNameLength + " and " + settings.maxNameLength + " characters.";
+        if (name.length() < settings.minNameLength) {
+            return Result.error("error.name_too_short", Map.of("min", String.valueOf(settings.minNameLength)));
+        }
+        if (name.length() > settings.maxNameLength) {
+            return Result.error("error.name_too_long", Map.of("max", String.valueOf(settings.maxNameLength)));
         }
         if (!NAME_PATTERN.matcher(name).matches()) {
-            return "Faction name must be alphanumeric or underscore only.";
+            return Result.error("error.invalid_name");
         }
-        return null;
+        return Result.ok(null, null);
     }
 
     private String normalizeName(String name) {
@@ -975,6 +934,49 @@ public final class FactionService {
             return "";
         }
         return trimmed;
+    }
+
+    private boolean isClaimWorldAllowed(String world) {
+        if (world == null) {
+            return false;
+        }
+        if (!settings.claimWorldAllowList.isEmpty()) {
+            boolean allowed = settings.claimWorldAllowList.stream()
+                    .anyMatch(name -> name.equalsIgnoreCase(world));
+            if (!allowed) {
+                return false;
+            }
+        }
+        return settings.claimWorldDenyList.stream()
+                .noneMatch(name -> name.equalsIgnoreCase(world));
+    }
+
+    private Result<Void> checkCooldown(Map<UUID, Long> cooldowns, int cooldownSeconds, UUID factionId, String action) {
+        if (cooldownSeconds <= 0) {
+            return Result.ok(null, null);
+        }
+        long now = timeProvider.nowEpochMs();
+        Long last = cooldowns.get(factionId);
+        if (last == null) {
+            return Result.ok(null, null);
+        }
+        long remainingMs = (cooldownSeconds * 1000L) - (now - last);
+        if (remainingMs <= 0) {
+            return Result.ok(null, null);
+        }
+        long remainingSeconds = (remainingMs + 999) / 1000;
+        return Result.error("error.cooldown", Map.of("seconds", String.valueOf(remainingSeconds), "action", action));
+    }
+
+    private void logAction(UUID actorId, String action) {
+        if (!Boolean.TRUE.equals(settings.actionLogEnabled)) {
+            return;
+        }
+        if (actionLogger == null || action == null || action.isBlank()) {
+            return;
+        }
+        String actor = actorId == null ? "system" : actorId.toString();
+        actionLogger.log("actor=" + actor + " " + action);
     }
 
     public static final class ClaimMap {

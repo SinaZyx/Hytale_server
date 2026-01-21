@@ -20,10 +20,13 @@ import com.kingc.hytale.factions.service.CombatService;
 import com.kingc.hytale.factions.service.FactionService;
 import com.kingc.hytale.factions.service.FactionSettings;
 import com.kingc.hytale.factions.service.Result;
+import com.kingc.hytale.factions.translations.FactionMessage;
+import com.kingc.hytale.factions.translations.FactionTranslationService;
 
 import java.util.Arrays;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.function.BiFunction;
@@ -36,6 +39,7 @@ public final class CommandDispatcher {
     private final CombatService combatService;
     private final ServerAdapter server;
     private final FactionSettings settings;
+    private final FactionTranslationService translator;
     private final Supplier<Result<Void>> reloadHandler;
     private java.util.function.Function<UUID, String> chatToggleHandler;
     private BiFunction<UUID, Integer, String> borderToggleHandler;
@@ -62,6 +66,7 @@ public final class CommandDispatcher {
         this.combatService = combatService;
         this.server = server;
         this.settings = settings;
+        this.translator = FactionTranslationService.get();
         this.reloadHandler = reloadHandler;
         this.chatToggleHandler = chatToggleHandler;
     }
@@ -150,7 +155,7 @@ public final class CommandDispatcher {
             case "top" -> handleTop(source, parts);
             case "war" -> handleWar(source, parts);
             default -> {
-                send(source, "Unknown subcommand. Use /f help.");
+                send(source, translator.getMessage("command.unknown").getRawMessage());
                 return false;
             }
         }
@@ -163,7 +168,7 @@ public final class CommandDispatcher {
             return;
         }
         if (parts.length < 2) {
-            send(source, "Usage: /f create <name>");
+            send(source, translator.getMessage("command.usage.create").getRawMessage());
             return;
         }
         Result<Faction> result = service.createFaction(playerId, parts[1]);
@@ -183,7 +188,7 @@ public final class CommandDispatcher {
             return;
         }
         if (parts.length < 2) {
-            send(source, "Usage: /f rename <name>");
+            send(source, translator.getMessage("command.usage.rename").getRawMessage());
             return;
         }
         Result<Void> result = service.rename(playerId, parts[1]);
@@ -198,7 +203,7 @@ public final class CommandDispatcher {
         if (parts.length < 2) {
             Optional<Faction> faction = service.findFactionByMember(playerId);
             if (faction.isEmpty()) {
-                send(source, "You are not in a faction.");
+                send(source, translator.getMessage("error.not_in_faction").getRawMessage());
                 return;
             }
             String description = faction.get().description();
@@ -217,7 +222,7 @@ public final class CommandDispatcher {
     private void handleList(CommandSource source) {
         var factions = service.getAllFactions();
         if (factions.isEmpty()) {
-            send(source, "No factions created yet.");
+            send(source, translator.getMessage("faction.list.empty").getRawMessage());
             return;
         }
         send(source, "Factions (" + factions.size() + "):");
@@ -240,7 +245,7 @@ public final class CommandDispatcher {
             factionOpt = service.findFactionByMember(playerId);
         }
         if (factionOpt.isEmpty()) {
-            send(source, "Faction not found.");
+            send(source, translator.getMessage("error.faction_not_found").getRawMessage());
             return;
         }
         Faction faction = factionOpt.get();
@@ -265,12 +270,12 @@ public final class CommandDispatcher {
 
     private void handleWho(CommandSource source, String[] parts) {
         if (parts.length < 2) {
-            send(source, "Usage: /f who <player>");
+            send(source, translator.getMessage("command.usage.who").getRawMessage());
             return;
         }
         Optional<UUID> targetId = server.resolvePlayerId(parts[1]);
         if (targetId.isEmpty()) {
-            send(source, "Player not found.");
+            send(source, translator.getMessage("error.player_not_found").getRawMessage());
             return;
         }
         UUID id = targetId.get();
@@ -292,7 +297,7 @@ public final class CommandDispatcher {
         }
         Optional<Location> location = server.getPlayerLocation(playerId);
         if (location.isEmpty()) {
-            send(source, "Location unavailable.");
+            send(source, translator.getMessage("location.unavailable").getRawMessage());
             return;
         }
         int radius = Math.min(Math.max(settings.mapRadius, 1), 10);
@@ -318,7 +323,7 @@ public final class CommandDispatcher {
         }
         var invites = service.getInvites(playerId);
         if (invites.isEmpty()) {
-            send(source, "No invites pending.");
+            send(source, translator.getMessage("faction.invites.empty").getRawMessage());
             return;
         }
         long now = server.nowEpochMs();
@@ -366,7 +371,7 @@ public final class CommandDispatcher {
             int max = limit != null ? limit : settings.notificationHistoryLimit;
             List<NotificationEntry> history = service.getNotificationHistory(playerId, type, max);
             if (history.isEmpty()) {
-                send(source, "No notifications.");
+                send(source, translator.getMessage("faction.notify.history_empty").getRawMessage());
                 return;
             }
             send(source, "Notifications (" + history.size() + "):");
@@ -378,15 +383,15 @@ public final class CommandDispatcher {
         }
         if (mode.equals("on")) {
             service.setNotificationsEnabled(playerId, true);
-            send(source, "Notifications enabled.");
+            send(source, translator.getMessage("faction.notify.enabled").getRawMessage());
             return;
         }
         if (mode.equals("off")) {
             service.setNotificationsEnabled(playerId, false);
-            send(source, "Notifications disabled.");
+            send(source, translator.getMessage("faction.notify.disabled").getRawMessage());
             return;
         }
-        send(source, "Usage: /f notify <on|off|history>");
+        send(source, translator.getMessage("command.usage.notify").getRawMessage());
     }
 
     private void handleAdmin(CommandSource source, String[] parts) {
@@ -394,7 +399,7 @@ public final class CommandDispatcher {
             return;
         }
         if (parts.length < 2) {
-            send(source, "Usage: /f admin <unclaim|setpower|transfer>");
+            send(source, translator.getMessage("command.usage.admin").getRawMessage());
             return;
         }
         String sub = parts[1].toLowerCase(Locale.ROOT);
@@ -413,7 +418,7 @@ public final class CommandDispatcher {
             Integer x = parseInt(parts[3]);
             Integer z = parseInt(parts[4]);
             if (x == null || z == null) {
-                send(source, "Usage: /f admin unclaim <world> <x> <z>");
+                send(source, translator.getMessage("command.usage.admin_unclaim").getRawMessage());
                 return;
             }
             claim = new ClaimKey(world, x, z);
@@ -424,7 +429,7 @@ public final class CommandDispatcher {
             }
             Optional<Location> location = server.getPlayerLocation(playerId);
             if (location.isEmpty()) {
-                send(source, "Location unavailable.");
+                send(source, translator.getMessage("location.unavailable").getRawMessage());
                 return;
             }
             claim = ClaimKey.fromLocation(location.get(), settings.chunkSize);
@@ -435,7 +440,7 @@ public final class CommandDispatcher {
 
     private void handleAdminSetPower(CommandSource source, String[] parts) {
         if (parts.length < 4) {
-            send(source, "Usage: /f admin setpower <faction> <value|clear>");
+            send(source, translator.getMessage("command.usage.admin_setpower").getRawMessage());
             return;
         }
         String factionName = parts[2];
@@ -443,7 +448,7 @@ public final class CommandDispatcher {
         if (!parts[3].equalsIgnoreCase("clear")) {
             value = parseInt(parts[3]);
             if (value == null) {
-                send(source, "Power must be a number or 'clear'.");
+                send(source, translator.getMessage("admin.power_number").getRawMessage());
                 return;
             }
         }
@@ -453,13 +458,13 @@ public final class CommandDispatcher {
 
     private void handleAdminTransfer(CommandSource source, String[] parts) {
         if (parts.length < 4) {
-            send(source, "Usage: /f admin transfer <faction> <player>");
+            send(source, translator.getMessage("command.usage.admin_transfer").getRawMessage());
             return;
         }
         String factionName = parts[2];
         Optional<UUID> targetId = server.resolvePlayerId(parts[3]);
         if (targetId.isEmpty()) {
-            send(source, "Player not found.");
+            send(source, translator.getMessage("error.player_not_found").getRawMessage());
             return;
         }
         Result<Void> result = service.adminTransferLeadership(factionName, targetId.get());
@@ -471,7 +476,7 @@ public final class CommandDispatcher {
             return;
         }
         if (reloadHandler == null) {
-            send(source, "Reload is not available.");
+            send(source, translator.getMessage("faction.reload.unavailable").getRawMessage());
             return;
         }
         Result<Void> result = reloadHandler.get();
@@ -502,7 +507,7 @@ public final class CommandDispatcher {
             return;
         }
         if (parts.length < 2) {
-            send(source, "Usage: /f invite <player>");
+            send(source, translator.getMessage("command.usage.invite").getRawMessage());
             return;
         }
         Optional<UUID> targetId = server.resolvePlayerId(parts[1]);
@@ -523,7 +528,7 @@ public final class CommandDispatcher {
             return;
         }
         if (parts.length < 2) {
-            send(source, "Usage: /f accept <faction>");
+            send(source, translator.getMessage("command.usage.accept").getRawMessage());
             return;
         }
         Result<Void> result = service.acceptInvite(playerId, parts[1]);
@@ -536,7 +541,7 @@ public final class CommandDispatcher {
             return;
         }
         if (parts.length < 2) {
-            send(source, "Usage: /f deny <faction>");
+            send(source, translator.getMessage("command.usage.deny").getRawMessage());
             return;
         }
         Result<Void> result = service.denyInvite(playerId, parts[1]);
@@ -549,7 +554,7 @@ public final class CommandDispatcher {
             return;
         }
         if (parts.length < 2) {
-            send(source, "Usage: /f kick <player>");
+            send(source, translator.getMessage("command.usage.kick").getRawMessage());
             return;
         }
         Optional<UUID> targetId = server.resolvePlayerId(parts[1]);
@@ -570,7 +575,7 @@ public final class CommandDispatcher {
             return;
         }
         if (parts.length < 2) {
-            send(source, "Usage: /f promote <player>");
+            send(source, translator.getMessage("command.usage.promote").getRawMessage());
             return;
         }
         Optional<UUID> targetId = server.resolvePlayerId(parts[1]);
@@ -597,7 +602,7 @@ public final class CommandDispatcher {
             return;
         }
         if (parts.length < 2) {
-            send(source, "Usage: /f demote <player>");
+            send(source, translator.getMessage("command.usage.demote").getRawMessage());
             return;
         }
         Optional<UUID> targetId = server.resolvePlayerId(parts[1]);
@@ -624,7 +629,7 @@ public final class CommandDispatcher {
             return;
         }
         if (parts.length < 2) {
-            send(source, "Usage: /f leader <player>");
+            send(source, translator.getMessage("command.usage.leader").getRawMessage());
             return;
         }
         Optional<UUID> targetId = server.resolvePlayerId(parts[1]);
@@ -642,7 +647,7 @@ public final class CommandDispatcher {
             return;
         }
         if (parts.length < 2) {
-            send(source, "Usage: /f ally <faction>");
+            send(source, translator.getMessage("command.usage.ally").getRawMessage());
             return;
         }
         Result<Void> result = service.ally(playerId, parts[1]);
@@ -655,7 +660,7 @@ public final class CommandDispatcher {
             return;
         }
         if (parts.length < 2) {
-            send(source, "Usage: /f unally <faction>");
+            send(source, translator.getMessage("command.usage.unally").getRawMessage());
             return;
         }
         Result<Void> result = service.unally(playerId, parts[1]);
@@ -668,7 +673,7 @@ public final class CommandDispatcher {
             return;
         }
         if (parts.length < 2) {
-            send(source, "Usage: /f enemy <faction>");
+            send(source, translator.getMessage("command.usage.enemy").getRawMessage());
             return;
         }
         Result<Void> result = service.enemy(playerId, parts[1]);
@@ -681,7 +686,7 @@ public final class CommandDispatcher {
             return;
         }
         if (parts.length < 2) {
-            send(source, "Usage: /f unenemy <faction>");
+            send(source, translator.getMessage("command.usage.unenemy").getRawMessage());
             return;
         }
         Result<Void> result = service.unenemy(playerId, parts[1]);
@@ -695,7 +700,7 @@ public final class CommandDispatcher {
         }
         Optional<Location> location = server.getPlayerLocation(playerId);
         if (location.isEmpty()) {
-            send(source, "Location unavailable.");
+            send(source, translator.getMessage("location.unavailable").getRawMessage());
             return;
         }
         Result<Void> result = service.setHome(playerId, location.get());
@@ -713,11 +718,13 @@ public final class CommandDispatcher {
             return;
         }
         Location home = result.value();
-        send(source, "Teleportation in 5 seconds... Do not move.");
+        send(source, translator.getMessage("faction.home.teleport_start").getRawMessage());
 
         server.teleportDelayed(playerId, home, 5,
-                () -> server.sendMessage(playerId, PREFIX + "Teleported to home."),
-                () -> server.sendMessage(playerId, PREFIX + "Teleportation cancelled: you moved."));
+                () -> server.sendMessage(playerId,
+                        PREFIX + translator.getMessage("faction.home.success").getRawMessage()),
+                () -> server.sendMessage(playerId,
+                        PREFIX + translator.getMessage("faction.home.cancelled").getRawMessage()));
     }
 
     private void handleClaim(CommandSource source) {
@@ -764,11 +771,11 @@ public final class CommandDispatcher {
             return;
         }
         if (chatToggleHandler == null) {
-            send(source, "Chat toggle not available.");
+            send(source, translator.getMessage("faction.chat.toggle_unavailable").getRawMessage());
             return;
         }
         String newMode = chatToggleHandler.apply(playerId);
-        send(source, "Chat mode set to: " + newMode);
+        send(source, translator.getMessage("faction.chat.mode_set").getRawMessage().replace("{mode}", newMode));
     }
 
     private void handleBorders(CommandSource source, String[] parts) {
@@ -777,7 +784,7 @@ public final class CommandDispatcher {
             return;
         }
         if (borderToggleHandler == null) {
-            send(source, "Borders view not available.");
+            send(source, translator.getMessage("faction.borders.unavailable").getRawMessage());
             return;
         }
         Integer seconds = null;
@@ -785,7 +792,7 @@ public final class CommandDispatcher {
             try {
                 seconds = Integer.parseInt(parts[1]);
             } catch (NumberFormatException e) {
-                send(source, "Usage: /f borders [seconds]");
+                send(source, translator.getMessage("command.usage.borders").getRawMessage());
                 return;
             }
         }
@@ -807,7 +814,7 @@ public final class CommandDispatcher {
         if (parts.length >= 2) {
             Optional<UUID> resolved = server.resolvePlayerId(parts[1]);
             if (resolved.isEmpty()) {
-                send(source, "Player not found.");
+                send(source, translator.getMessage("error.player_not_found").getRawMessage());
                 return;
             }
             targetId = resolved.get();
@@ -823,18 +830,30 @@ public final class CommandDispatcher {
         MemberCombatStats stats = combatService.getMemberStats(targetId);
         Optional<Faction> faction = service.findFactionByMember(targetId);
 
-        send(source, "=== Stats: " + targetName + " ===");
-        send(source, "Faction: " + faction.map(Faction::name).orElse("None"));
-        send(source, "Kills: " + stats.kills() + " | Deaths: " + stats.deaths() + " | K/D: " + stats.kdr());
-        send(source, "Faction Kills: " + stats.factionKills() + " | Enemy Kills: " + stats.enemyKills());
-        send(source, "Current Streak: " + stats.currentStreak() + " | Best Streak: " + stats.bestStreak());
+        send(source, translator.getMessage("faction.stats.header").getRawMessage().replace("{name}", targetName));
+        send(source, translator.getMessage("faction.stats.faction").getRawMessage().replace("{faction}",
+                faction.map(Faction::name).orElse("None")));
+        send(source, translator.getMessage("faction.stats.kills_deaths").getRawMessage()
+                .replace("{kills}", String.valueOf(stats.kills()))
+                .replace("{deaths}", String.valueOf(stats.deaths()))
+                .replace("{kdr}", String.format("%.2f", stats.kdr())));
+        send(source, translator.getMessage("faction.stats.kills_type").getRawMessage()
+                .replace("{faction_kills}", String.valueOf(stats.factionKills()))
+                .replace("{enemy_kills}", String.valueOf(stats.enemyKills())));
+        send(source, translator.getMessage("faction.stats.streak").getRawMessage()
+                .replace("{current}", String.valueOf(stats.currentStreak()))
+                .replace("{best}", String.valueOf(stats.bestStreak())));
 
         if (faction.isPresent()) {
             FactionCombatStats factionStats = combatService.getFactionStats(faction.get().id());
-            send(source, "--- Faction Stats ---");
-            send(source, "Total Kills: " + factionStats.totalKills() + " | Deaths: " + factionStats.totalDeaths());
-            send(source, "Wars Won: " + factionStats.warsWon() + " | Lost: " + factionStats.warsLost() + " | Draw: "
-                    + factionStats.warsDraw());
+            send(source, translator.getMessage("faction.stats.faction_header").getRawMessage());
+            send(source, translator.getMessage("faction.stats.faction_kills").getRawMessage()
+                    .replace("{kills}", String.valueOf(factionStats.totalKills()))
+                    .replace("{deaths}", String.valueOf(factionStats.totalDeaths())));
+            send(source, translator.getMessage("faction.stats.faction_wars").getRawMessage()
+                    .replace("{won}", String.valueOf(factionStats.warsWon()))
+                    .replace("{lost}", String.valueOf(factionStats.warsLost()))
+                    .replace("{draw}", String.valueOf(factionStats.warsDraw())));
         }
     }
 
@@ -849,7 +868,8 @@ public final class CommandDispatcher {
 
         switch (category) {
             case "kills" -> {
-                send(source, "=== Top " + limit + " Killers ===");
+                send(source, translator.getMessage("faction.top.killers").getRawMessage().replace("{limit}",
+                        String.valueOf(limit)));
                 List<MemberCombatStats> top = combatService.getTopKillers(limit);
                 int rank = 1;
                 for (MemberCombatStats stats : top) {
@@ -859,7 +879,8 @@ public final class CommandDispatcher {
                 }
             }
             case "kdr" -> {
-                send(source, "=== Top " + limit + " by K/D Ratio ===");
+                send(source, translator.getMessage("faction.top.kdr").getRawMessage().replace("{limit}",
+                        String.valueOf(limit)));
                 List<MemberCombatStats> top = combatService.getTopByKdr(limit);
                 int rank = 1;
                 for (MemberCombatStats stats : top) {
@@ -870,7 +891,8 @@ public final class CommandDispatcher {
                 }
             }
             case "factions" -> {
-                send(source, "=== Top " + limit + " Factions ===");
+                send(source, translator.getMessage("faction.top.factions").getRawMessage().replace("{limit}",
+                        String.valueOf(limit)));
                 List<FactionCombatStats> top = combatService.getTopFactions(limit);
                 int rank = 1;
                 for (FactionCombatStats stats : top) {
@@ -880,7 +902,7 @@ public final class CommandDispatcher {
                     rank++;
                 }
             }
-            default -> send(source, "Usage: /f top <kills|kdr|factions>");
+            default -> send(source, translator.getMessage("command.usage.top").getRawMessage());
         }
     }
 
@@ -900,7 +922,7 @@ public final class CommandDispatcher {
             case "declare" -> handleWarDeclare(source, parts);
             case "surrender" -> handleWarSurrender(source);
             case "status" -> handleWarStatus(source);
-            default -> send(source, "Usage: /f war <declare|surrender|status>");
+            default -> send(source, translator.getMessage("command.usage.war").getRawMessage());
         }
     }
 
@@ -910,7 +932,7 @@ public final class CommandDispatcher {
             return;
         }
         if (parts.length < 3) {
-            send(source, "Usage: /f war declare <faction>");
+            send(source, translator.getMessage("command.usage.war_declare").getRawMessage());
             return;
         }
         Result<War> result = combatService.declareWar(playerId, parts[2]);
@@ -928,7 +950,8 @@ public final class CommandDispatcher {
             if (defenderFaction.isPresent() && attackerFaction.isPresent()) {
                 String attackerName = attackerFaction.get().name();
                 for (UUID memberId : defenderFaction.get().members().keySet()) {
-                    server.sendMessage(memberId, PREFIX + "GUERRE! " + attackerName + " vous a déclaré la guerre!");
+                    server.sendMessage(memberId, PREFIX + translator.getMessage("faction.war.declared_against")
+                            .getRawMessage().replace("{attacker}", attackerName));
                 }
             }
         }
@@ -951,13 +974,13 @@ public final class CommandDispatcher {
 
         Optional<Faction> factionOpt = service.findFactionByMember(playerId);
         if (factionOpt.isEmpty()) {
-            send(source, "You are not in a faction.");
+            send(source, translator.getMessage("error.not_in_faction").getRawMessage());
             return;
         }
 
         Optional<War> warOpt = combatService.getActiveWar(factionOpt.get().id());
         if (warOpt.isEmpty()) {
-            send(source, "Your faction is not at war.");
+            send(source, translator.getMessage("faction.war.not_at_war").getRawMessage());
             return;
         }
 
@@ -965,33 +988,36 @@ public final class CommandDispatcher {
         String attackerName = service.getFactionById(war.attackerFactionId()).map(Faction::name).orElse("Unknown");
         String defenderName = service.getFactionById(war.defenderFactionId()).map(Faction::name).orElse("Unknown");
 
-        send(source, "=== War Status ===");
+        send(source, translator.getMessage("faction.war.status_header").getRawMessage());
         send(source, attackerName + " vs " + defenderName);
-        send(source, "State: " + war.state().name());
-        send(source, "Points: " + attackerName + " " + war.attackerPoints() + " - " + war.defenderPoints() + " "
-                + defenderName);
-        send(source, "Kills: " + attackerName + " " + war.attackerKills() + " - " + war.defenderKills() + " "
-                + defenderName);
+        send(source, translator.getMessage("faction.war.status_state").getRawMessage().replace("{state}",
+                war.state().name()));
+        send(source, translator.getMessage("faction.war.status_points").getRawMessage()
+                .replace("{attacker}", attackerName).replace("{points_atk}", String.valueOf(war.attackerPoints()))
+                .replace("{points_def}", String.valueOf(war.defenderPoints())).replace("{defender}", defenderName));
+        send(source, translator.getMessage("faction.war.status_kills").getRawMessage()
+                .replace("{attacker}", attackerName).replace("{kills_atk}", String.valueOf(war.attackerKills()))
+                .replace("{kills_def}", String.valueOf(war.defenderKills())).replace("{defender}", defenderName));
 
         if (war.state() == War.WarState.PENDING) {
             long remainingMs = war.gracePeriodEnd() - server.nowEpochMs();
             long remainingSeconds = Math.max(0, remainingMs / 1000);
-            send(source, "Grace period: " + remainingSeconds + "s remaining");
+            send(source, translator.getMessage("faction.war.grace_period").getRawMessage().replace("{seconds}",
+                    String.valueOf(remainingSeconds)));
         }
     }
 
     private UUID requirePlayer(CommandSource source) {
         Optional<UUID> playerId = source.playerId();
         if (playerId.isEmpty()) {
-            send(source, "This command is player-only.");
+            send(source, translator.getMessage("error.player_only").getRawMessage());
             return null;
         }
         return playerId.get();
     }
 
     private void sendHelp(CommandSource source) {
-        send(source,
-                "Commands: create, disband, list, info, who, map, invites, notify, desc, rename, invite, accept, deny, leave, kick, promote, demote, leader, ally, unally, enemy, unenemy, sethome, home, claim, unclaim, chat, borders, stats, top, war, reload, admin");
+        send(source, translator.getMessage("command.help").getRawMessage());
     }
 
     private void send(CommandSource source, String message) {
@@ -1033,7 +1059,7 @@ public final class CommandDispatcher {
         if (source.hasPermission("factions.admin")) {
             return true;
         }
-        send(source, "You do not have permission for this command.");
+        send(source, translator.getMessage("error.no_permission").getRawMessage());
         return false;
     }
 
@@ -1047,5 +1073,13 @@ public final class CommandDispatcher {
 
     private String formatLocation(Location location) {
         return location.world() + " (" + location.x() + ", " + location.y() + ", " + location.z() + ")";
+    }
+
+    private String translateResult(Result<?> result, String language) {
+        FactionMessage msg = translator.getMessage(result.message(), language);
+        for (Map.Entry<String, String> entry : result.args().entrySet()) {
+            msg = msg.replace(entry.getKey(), entry.getValue());
+        }
+        return msg.getRawMessage();
     }
 }

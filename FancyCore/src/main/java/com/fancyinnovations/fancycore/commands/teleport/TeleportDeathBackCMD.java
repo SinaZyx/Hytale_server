@@ -2,17 +2,16 @@ package com.fancyinnovations.fancycore.commands.teleport;
 
 import com.fancyinnovations.fancycore.api.player.FancyPlayer;
 import com.fancyinnovations.fancycore.api.player.FancyPlayerService;
-import com.fancyinnovations.fancycore.commands.teleport.TeleportGuard;
+import com.fancyinnovations.fancycore.main.FancyCorePlugin;
+import com.fancyinnovations.fancycore.translations.TranslationService;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.math.vector.Transform;
-import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.hypixel.hytale.server.core.entity.entities.player.data.PlayerDeathPositionData;
 import com.hypixel.hytale.server.core.entity.entities.player.data.PlayerWorldData;
-import com.hypixel.hytale.server.core.modules.entity.teleport.Teleport;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
@@ -21,6 +20,8 @@ import org.jetbrains.annotations.NotNull;
 import java.util.List;
 
 public class TeleportDeathBackCMD extends CommandBase {
+
+    private final TranslationService translator = FancyCorePlugin.get().getTranslationService();
 
     public TeleportDeathBackCMD() {
         super("teleportdeathback", "Teleports you to the location where you last died");
@@ -31,13 +32,13 @@ public class TeleportDeathBackCMD extends CommandBase {
     @Override
     protected void executeSync(@NotNull CommandContext ctx) {
         if (!ctx.isPlayer()) {
-            ctx.sendMessage(Message.raw("This command can only be executed by a player."));
+            translator.getMessage("error.command.player_only").sendTo(ctx.sender());
             return;
         }
 
         FancyPlayer fp = FancyPlayerService.get().getByUUID(ctx.sender().getUuid());
         if (fp == null) {
-            ctx.sendMessage(Message.raw("FancyPlayer not found."));
+            translator.getMessage("error.player.not_found").sendTo(ctx.sender());
             return;
         }
 
@@ -49,13 +50,13 @@ public class TeleportDeathBackCMD extends CommandBase {
 
         PlayerRef senderPlayerRef = fp.getPlayer();
         if (senderPlayerRef == null) {
-            ctx.sendMessage(Message.raw("You are not online."));
+            translator.getMessage("teleport.error.not_online", fp.getLanguage()).sendTo(fp);
             return;
         }
 
         Ref<EntityStore> senderRef = senderPlayerRef.getReference();
         if (senderRef == null || !senderRef.isValid()) {
-            ctx.sendMessage(Message.raw("You are not in a world."));
+            translator.getMessage("teleport.error.sender_not_in_world", fp.getLanguage()).sendTo(fp);
             return;
         }
 
@@ -66,7 +67,7 @@ public class TeleportDeathBackCMD extends CommandBase {
         currentWorld.execute(() -> {
             Player playerComponent = (Player) senderStore.getComponent(senderRef, Player.getComponentType());
             if (playerComponent == null) {
-                ctx.sendMessage(Message.raw("Failed to get player component."));
+                translator.getMessage("teleport.death.failed", fp.getLanguage()).sendTo(fp);
                 return;
             }
 
@@ -74,7 +75,7 @@ public class TeleportDeathBackCMD extends CommandBase {
             List<PlayerDeathPositionData> deathPositions = perWorldData.getDeathPositions();
 
             if (deathPositions == null || deathPositions.isEmpty()) {
-                ctx.sendMessage(Message.raw("You have not died in this world."));
+                translator.getMessage("teleport.death.no_location", fp.getLanguage()).sendTo(fp);
                 return;
             }
 
@@ -82,21 +83,27 @@ public class TeleportDeathBackCMD extends CommandBase {
             PlayerDeathPositionData lastDeath = deathPositions.get(deathPositions.size() - 1);
             Transform deathTransform = lastDeath.getTransform();
 
-            // The death position is in the current world (perWorldData is world-specific)
-            World targetWorld = currentWorld;
+            // Create Location from death position
+            com.fancyinnovations.fancycore.api.teleport.Location deathLocation =
+                new com.fancyinnovations.fancycore.api.teleport.Location(
+                    currentWorld.getName(),
+                    deathTransform.getPosition().getX(),
+                    deathTransform.getPosition().getY(),
+                    deathTransform.getPosition().getZ(),
+                    deathTransform.getRotation().getYaw(),
+                    deathTransform.getRotation().getPitch()
+                );
 
-            // Execute teleportation on the target world thread
-            targetWorld.execute(() -> {
-                // Create teleport component from death position
-                Teleport teleport = new Teleport(targetWorld, deathTransform.getPosition(), deathTransform.getRotation());
+            translator.getMessage("teleport.delayed.start", fp.getLanguage())
+                .replace("seconds", "5")
+                .sendTo(fp);
 
-                // Add teleport component to sender
-                senderStore.addComponent(senderRef, Teleport.getComponentType(), teleport);
-                TeleportGuard.markTeleport(fp.getData().getUUID());
-
-                // Send success message
-                ctx.sendMessage(Message.raw("Teleported to your last death location."));
-            });
+            TeleportLocationHelper.teleportDelayed(fp, deathLocation, 5,
+                    () -> {
+                        TeleportGuard.markTeleport(fp.getData().getUUID());
+                        translator.getMessage("teleport.death.success", fp.getLanguage()).sendTo(fp);
+                    },
+                    () -> translator.getMessage("teleport.delayed.cancelled", fp.getLanguage()).sendTo(fp));
         });
     }
 }

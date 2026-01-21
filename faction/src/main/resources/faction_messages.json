@@ -1,0 +1,890 @@
+{
+  "error.permission": {
+    "en": "You do not have permission to use this command.",
+    "fr": "Vous n'avez pas la permission d'utiliser cette commande."
+  },
+  "error.not_in_faction": {
+    "en": "You are not in a faction.",
+    "fr": "Vous n'êtes pas dans une faction."
+  },
+  "error.already_in_faction": {
+    "en": "You are already in a faction.",
+    "fr": "Vous êtes déjà dans une faction."
+  },
+  "error.player_not_found": {
+    "en": "Player not found.",
+    "fr": "Joueur introuvable."
+  },
+  "error.faction_not_found": {
+    "en": "Faction not found.",
+    "fr": "Faction introuvable."
+  },
+  "error.invalid_name": {
+    "en": "Invalid name. Use only letters, numbers, and underscores.",
+    "fr": "Nom invalide. Utilisez uniquement des lettres, chiffres et underscores."
+  },
+  "error.name_too_short": {
+    "en": "Name too short. Minimum {min} characters.",
+    "fr": "Nom trop court. Minimum {min} caractères."
+  },
+  "error.name_too_long": {
+    "en": "Name too long. Maximum {max} characters.",
+    "fr": "Nom trop long. Maximum {max} caractères."
+  },
+  "faction.create.success": {
+    "en": "Faction created: {name}",
+    "fr": "Faction créée : {name}"
+  },
+  "faction.create.name_taken": {
+    "en": "That faction name is already taken.",
+    "fr": "Ce nom de faction est déjà pris."
+  },
+  "faction.disband.success": {
+    "en": "Faction {name} disbanded.",
+    "fr": "Faction {name} dissoute."
+  },
+  "faction.disband.not_leader": {
+    "en": "Only the faction leader can disband the faction.",
+    "fr": "Seul le chef de faction peut dissoudre la faction."
+  },
+  "faction.invite.sent": {
+    "en": "Invitation sent to {player}.",
+    "fr": "Invitation envoyée à {player}."
+  },
+  "faction.invite.received": {
+    "en": "{faction} has invited you to join. Use /f join {faction} to accept.",
+    "fr": "{faction} vous a invité à rejoindre. Utilisez /f join {faction} pour accepter."
+  },
+  "faction.invite.already_invited": {
+    "en": "{player} has already been invited.",
+    "fr": "{player} a déjà été invité."
+  },
+  "faction.join.success": {
+    "en": "You joined {faction}!",
+    "fr": "Vous avez rejoint {faction} !"
+  },
+  "faction.join.no_invite": {
+    "en": "You have not been invited to this faction.",
+    "fr": "Vous n'avez pas été invité dans cette faction."
+  },
+  "faction.leave.success": {
+    "en": "You left {faction}.",
+    "fr": "Vous avez quitté {faction}."
+  },
+  "faction.leave.leader_must_disband": {
+    "en": "Leaders must disband the faction or transfer leadership before leaving.",
+    "fr": "Les chefs doivent dissoudre la faction ou transférer le leadership avant de partir."
+  },
+  "faction.kick.success": {
+    "en": "{player} has been kicked from the faction.",
+    "fr": "{player} a été expulsé de la faction."
+  },
+  "faction.kick.not_member": {
+    "en": "{player} is not in your faction.",
+    "fr": "{player} n'est pas dans votre faction."
+  },
+  "faction.kick.cannot_kick_leader": {
+    "en": "You cannot kick the faction leader.",
+    "fr": "Vous ne pouvez pas expulser le chef de faction."
+  },
+  "faction.promote.success": {
+    "en": "{player} promoted to {role}.",
+    "fr": "{player} promu au rang {role}."
+  },
+  "faction.demote.success": {
+    "en": "{player} demoted to {role}.",
+    "fr": "{player} rétrogradé au rang {role}."
+  },
+  "faction.leader.transferred": {
+    "en": "Leadership transferred to {player}.",
+    "fr": "Leadership transféré à {player}."
+  },
+  "faction.claim.success": {
+    "en": "Chunk claimed for {faction}.",
+    "fr": "Chunk revendiqué pour {faction}."
+  },
+  "faction.claim.already_claimed": {
+    "en": "This chunk is already claimed by {faction}.",
+    "fr": "Ce chunk est déjà revendiqué par {faction}."
+  },
+  "faction.claim.limit_reached": {
+    "en": "Your faction has reached the claim limit ({current}/{max}).",
+    "fr": "Votre faction a atteint la limite de revendications ({current}/{max})."
+  },
+  "faction.claim.not_enough_power": {
+    "en": "Your faction doesn't have enough power to claim more land.",
+    "fr": "Votre faction n'a pas assez de puissance pour revendiquer plus de territoire."
+  },
+  "faction.unclaim.success": {
+    "en": "Chunk unclaimed.",
+    "fr": "Chunk abandonné."
+  },
+  "faction.unclaim.not_your_claim": {
+    "en": "This chunk is not claimed by your faction.",
+    "fr": "Ce chunk n'est pas revendiqué par votre faction."
+  },
+  "faction.home.set": {
+    "en": "Faction home set at current location.",
+    "fr": "Base de faction définie à l'emplacement actuel."
+  },
+  "faction.home.not_set": {
+    "en": "Faction home is not set.",
+    "fr": "La base de faction n'est pas définie."
+  },
+  "faction.home.teleport_start": {
+    "en": "Teleportation in {seconds} seconds... Do not move.",
+    "fr": "Téléportation dans {seconds} secondes... Ne bougez pas."
+  },
+  "faction.home.teleport_cancelled": {
+    "en": "Teleportation cancelled: you moved.",
+    "fr": "Téléportation annulée : vous avez bougé."
+  },
+  "faction.home.teleport_success": {
+    "en": "Teleported to faction home.",
+    "fr": "Téléporté à la base de faction."
+  },
+  "faction.home.in_combat": {
+    "en": "You cannot teleport while in combat.",
+    "fr": "Vous ne pouvez pas vous téléporter en combat."
+  },
+  "faction.ally.request_sent": {
+    "en": "Alliance request sent to {faction}.",
+    "fr": "Demande d'alliance envoyée à {faction}."
+  },
+  "faction.ally.request_received": {
+    "en": "{faction} wants to ally with you. Use /f ally {faction} to accept.",
+    "fr": "{faction} veut s'allier avec vous. Utilisez /f ally {faction} pour accepter."
+  },
+  "faction.ally.accepted": {
+    "en": "You are now allied with {faction}!",
+    "fr": "Vous êtes maintenant allié avec {faction} !"
+  },
+  "faction.ally.removed": {
+    "en": "Alliance with {faction} removed.",
+    "fr": "Alliance avec {faction} rompue."
+  },
+  "faction.enemy.declared": {
+    "en": "You declared {faction} as enemy.",
+    "fr": "Vous avez déclaré {faction} comme ennemi."
+  },
+  "faction.enemy.removed": {
+    "en": "{faction} is no longer your enemy.",
+    "fr": "{faction} n'est plus votre ennemi."
+  },
+  "faction.war.declared": {
+    "en": "War declared against {defender}! Grace period: {minutes} minutes.",
+    "fr": "Guerre déclarée contre {defender} ! Période de grâce : {minutes} minutes."
+  },
+  "faction.war.notification": {
+    "en": "WAR! {attacker} has declared war on you!",
+    "fr": "GUERRE ! {attacker} vous a déclaré la guerre !"
+  },
+  "faction.war.ended": {
+    "en": "War with {faction} has ended.",
+    "fr": "La guerre avec {faction} est terminée."
+  },
+  "faction.war.grace_period_over": {
+    "en": "Grace period over! War with {faction} is now active.",
+    "fr": "Période de grâce terminée ! La guerre avec {faction} est maintenant active."
+  },
+  "faction.description.set": {
+    "en": "Faction description updated.",
+    "fr": "Description de faction mise à jour."
+  },
+  "faction.motd.set": {
+    "en": "Faction MOTD updated.",
+    "fr": "Message du jour de faction mis à jour."
+  },
+  "faction.open.enabled": {
+    "en": "Faction is now open. Anyone can join without invitation.",
+    "fr": "La faction est maintenant ouverte. Tout le monde peut rejoindre sans invitation."
+  },
+  "faction.open.disabled": {
+    "en": "Faction is now closed. Invitations required to join.",
+    "fr": "La faction est maintenant fermée. Invitations requises pour rejoindre."
+  },
+  "faction.power.current": {
+    "en": "Faction power: {current}/{max}",
+    "fr": "Puissance de faction : {current}/{max}"
+  },
+  "faction.balance.current": {
+    "en": "Faction balance: {amount}",
+    "fr": "Solde de faction : {amount}"
+  },
+  "faction.deposit.success": {
+    "en": "Deposited {amount} to faction bank.",
+    "fr": "{amount} déposé dans la banque de faction."
+  },
+  "faction.withdraw.success": {
+    "en": "Withdrew {amount} from faction bank.",
+    "fr": "{amount} retiré de la banque de faction."
+  },
+  "faction.withdraw.insufficient": {
+    "en": "Faction bank has insufficient funds.",
+    "fr": "La banque de faction a des fonds insuffisants."
+  },
+  "faction.withdraw.no_permission": {
+    "en": "You don't have permission to withdraw from the bank.",
+    "fr": "Vous n'avez pas la permission de retirer de la banque."
+  },
+  "faction.list.header": {
+    "en": "--- Faction List ({count}) ---",
+    "fr": "--- Liste des Factions ({count}) ---"
+  },
+  "faction.list.entry": {
+    "en": "{name} - {members} members, {power} power",
+    "fr": "{name} - {members} membres, {power} puissance"
+  },
+  "faction.info.name": {
+    "en": "Faction: {name}",
+    "fr": "Faction : {name}"
+  },
+  "faction.info.description": {
+    "en": "Description: {description}",
+    "fr": "Description : {description}"
+  },
+  "faction.info.leader": {
+    "en": "Leader: {leader}",
+    "fr": "Chef : {leader}"
+  },
+  "faction.info.members": {
+    "en": "Members ({count}): {list}",
+    "fr": "Membres ({count}) : {list}"
+  },
+  "faction.info.power": {
+    "en": "Power: {current}/{max}",
+    "fr": "Puissance : {current}/{max}"
+  },
+  "faction.info.land": {
+    "en": "Land: {claims} claims",
+    "fr": "Territoire : {claims} revendications"
+  },
+  "faction.info.allies": {
+    "en": "Allies: {list}",
+    "fr": "Alliés : {list}"
+  },
+  "faction.info.enemies": {
+    "en": "Enemies: {list}",
+    "fr": "Ennemis : {list}"
+  },
+  "combat.tagged": {
+    "en": "You are now in combat! Do not log out.",
+    "fr": "Vous êtes maintenant en combat ! Ne vous déconnectez pas."
+  },
+  "combat.untagged": {
+    "en": "You are no longer in combat.",
+    "fr": "Vous n'êtes plus en combat."
+  },
+  "combat.logout_penalty": {
+    "en": "You logged out during combat! Penalty applied.",
+    "fr": "Vous vous êtes déconnecté pendant le combat ! Pénalité appliquée."
+  },
+  "combat.friendly_fire_disabled": {
+    "en": "You cannot attack faction members or allies.",
+    "fr": "Vous ne pouvez pas attaquer les membres de faction ou les alliés."
+  },
+  "territory.enter": {
+    "en": "Entering {faction} territory.",
+    "fr": "Entrée en territoire {faction}."
+  },
+  "territory.enter_wilderness": {
+    "en": "Entering wilderness.",
+    "fr": "Entrée en territoire sauvage."
+  },
+  "territory.cannot_build": {
+    "en": "You cannot build in {faction} territory.",
+    "fr": "Vous ne pouvez pas construire en territoire {faction}."
+  },
+  "territory.cannot_interact": {
+    "en": "You cannot interact with blocks in {faction} territory.",
+    "fr": "Vous ne pouvez pas interagir avec les blocs en territoire {faction}."
+  },
+  "ui.title": {
+    "en": "Factions Menu",
+    "fr": "Menu Factions"
+  },
+  "ui.no_faction": {
+    "en": "No faction",
+    "fr": "Aucune faction"
+  },
+  "ui.your_faction": {
+    "en": "Your Faction",
+    "fr": "Votre Faction"
+  },
+  "ui.create_faction": {
+    "en": "Create Faction",
+    "fr": "Créer une Faction"
+  },
+  "ui.manage_faction": {
+    "en": "Manage Faction",
+    "fr": "Gérer la Faction"
+  },
+  "ui.members": {
+    "en": "Members",
+    "fr": "Membres"
+  },
+  "ui.relations": {
+    "en": "Relations",
+    "fr": "Relations"
+  },
+  "ui.claims": {
+    "en": "Claims",
+    "fr": "Revendications"
+  },
+  "ui.bank": {
+    "en": "Bank",
+    "fr": "Banque"
+  },
+  "ui.settings": {
+    "en": "Settings",
+    "fr": "Paramètres"
+  },
+  "ui.status.unknown": {
+    "en": "Unknown status",
+    "fr": "Statut inconnu"
+  },
+  "ui.button.close": {
+    "en": "Close",
+    "fr": "Fermer"
+  },
+  "ui.button.back": {
+    "en": "Back",
+    "fr": "Retour"
+  },
+  "ui.button.confirm": {
+    "en": "Confirm",
+    "fr": "Confirmer"
+  },
+  "ui.button.cancel": {
+    "en": "Cancel",
+    "fr": "Annuler"
+  },
+  "help.header": {
+    "en": "--- Faction Commands ---",
+    "fr": "--- Commandes de Faction ---"
+  },
+  "help.create": {
+    "en": "/f create <name> - Create a faction",
+    "fr": "/f create <nom> - Créer une faction"
+  },
+  "help.disband": {
+    "en": "/f disband - Disband your faction",
+    "fr": "/f disband - Dissoudre votre faction"
+  },
+  "help.invite": {
+    "en": "/f invite <player> - Invite a player",
+    "fr": "/f invite <joueur> - Inviter un joueur"
+  },
+  "help.join": {
+    "en": "/f join <faction> - Join a faction",
+    "fr": "/f join <faction> - Rejoindre une faction"
+  },
+  "help.leave": {
+    "en": "/f leave - Leave your faction",
+    "fr": "/f leave - Quitter votre faction"
+  },
+  "help.kick": {
+    "en": "/f kick <player> - Kick a member",
+    "fr": "/f kick <joueur> - Expulser un membre"
+  },
+  "help.claim": {
+    "en": "/f claim - Claim current chunk",
+    "fr": "/f claim - Revendiquer le chunk actuel"
+  },
+  "help.unclaim": {
+    "en": "/f unclaim - Unclaim current chunk",
+    "fr": "/f unclaim - Abandonner le chunk actuel"
+  },
+  "help.home": {
+    "en": "/f home - Teleport to faction home",
+    "fr": "/f home - Se téléporter à la base"
+  },
+  "help.sethome": {
+    "en": "/f sethome - Set faction home",
+    "fr": "/f sethome - Définir la base de faction"
+  },
+  "help.list": {
+    "en": "/f list - List all factions",
+    "fr": "/f list - Lister toutes les factions"
+  },
+  "help.info": {
+    "en": "/f info [faction] - View faction info",
+    "fr": "/f info [faction] - Voir les infos de faction"
+  },
+  "command.unknown": {
+    "en": "Unknown subcommand. Use /f help.",
+    "fr": "Sous-commande inconnue. Utilisez /f help."
+  },
+  "command.usage.create": {
+    "en": "Usage: /f create <name>",
+    "fr": "Utilisation : /f create <nom>"
+  },
+  "command.usage.rename": {
+    "en": "Usage: /f rename <name>",
+    "fr": "Utilisation : /f rename <nom>"
+  },
+  "command.usage.invite": {
+    "en": "Usage: /f invite <player>",
+    "fr": "Utilisation : /f invite <joueur>"
+  },
+  "command.usage.accept": {
+    "en": "Usage: /f accept <faction>",
+    "fr": "Utilisation : /f accept <faction>"
+  },
+  "command.usage.deny": {
+    "en": "Usage: /f deny <faction>",
+    "fr": "Utilisation : /f deny <faction>"
+  },
+  "command.usage.kick": {
+    "en": "Usage: /f kick <player>",
+    "fr": "Utilisation : /f kick <joueur>"
+  },
+  "command.usage.promote": {
+    "en": "Usage: /f promote <player>",
+    "fr": "Utilisation : /f promote <joueur>"
+  },
+  "command.usage.demote": {
+    "en": "Usage: /f demote <player>",
+    "fr": "Utilisation : /f demote <joueur>"
+  },
+  "command.usage.leader": {
+    "en": "Usage: /f leader <player>",
+    "fr": "Utilisation : /f leader <joueur>"
+  },
+  "command.usage.ally": {
+    "en": "Usage: /f ally <faction>",
+    "fr": "Utilisation : /f ally <faction>"
+  },
+  "command.usage.unally": {
+    "en": "Usage: /f unally <faction>",
+    "fr": "Utilisation : /f unally <faction>"
+  },
+  "command.usage.enemy": {
+    "en": "Usage: /f enemy <faction>",
+    "fr": "Utilisation : /f enemy <faction>"
+  },
+  "command.usage.unenemy": {
+    "en": "Usage: /f unenemy <faction>",
+    "fr": "Utilisation : /f unenemy <faction>"
+  },
+  "command.usage.who": {
+    "en": "Usage: /f who <player>",
+    "fr": "Utilisation : /f who <joueur>"
+  },
+  "command.usage.notify": {
+    "en": "Usage: /f notify <on|off|history>",
+    "fr": "Utilisation : /f notify <on|off|history>"
+  },
+  "command.usage.admin": {
+    "en": "Usage: /f admin <unclaim|setpower|transfer>",
+    "fr": "Utilisation : /f admin <unclaim|setpower|transfer>"
+  },
+  "command.usage.admin_unclaim": {
+    "en": "Usage: /f admin unclaim <world> <x> <z>",
+    "fr": "Utilisation : /f admin unclaim <monde> <x> <z>"
+  },
+  "command.usage.admin_setpower": {
+    "en": "Usage: /f admin setpower <faction> <value|clear>",
+    "fr": "Utilisation : /f admin setpower <faction> <valeur|clear>"
+  },
+  "command.usage.admin_transfer": {
+    "en": "Usage: /f admin transfer <faction> <player>",
+    "fr": "Utilisation : /f admin transfer <faction> <joueur>"
+  },
+  "command.usage.borders": {
+    "en": "Usage: /f borders [seconds]",
+    "fr": "Utilisation : /f borders [secondes]"
+  },
+  "command.player_only": {
+    "en": "This command can only be used by players.",
+    "fr": "Cette commande ne peut être utilisée que par les joueurs."
+  },
+  "command.admin_only": {
+    "en": "You must be an admin to use this command.",
+    "fr": "Vous devez être administrateur pour utiliser cette commande."
+  },
+  "location.unavailable": {
+    "en": "Location unavailable.",
+    "fr": "Position indisponible."
+  },
+  "faction.list.empty": {
+    "en": "No factions created yet.",
+    "fr": "Aucune faction créée pour le moment."
+  },
+  "faction.info.claims": {
+    "en": "Claims: {current}/{limit} | Power: {power} | Allies: {allies}",
+    "fr": "Territoires : {current}/{limit} | Puissance : {power} | Alliés : {allies}"
+  },
+  "faction.who.info": {
+    "en": "{player} -> {faction} ({role})",
+    "fr": "{player} -> {faction} ({role})"
+  },
+  "faction.who.not_in_faction": {
+    "en": "{player} is not in a faction.",
+    "fr": "{player} n'est pas dans une faction."
+  },
+  "faction.map.header": {
+    "en": "Map: {world} (chunk {x}, {z}), radius {radius}",
+    "fr": "Carte : {world} (chunk {x}, {z}), rayon {radius}"
+  },
+  "faction.invites.empty": {
+    "en": "No invites pending.",
+    "fr": "Aucune invitation en attente."
+  },
+  "faction.invites.header": {
+    "en": "Invites ({count}):",
+    "fr": "Invitations ({count}) :"
+  },
+  "faction.invites.entry": {
+    "en": "{faction} (by {inviter}, {seconds}s left)",
+    "fr": "{faction} (par {inviter}, {seconds}s restantes)"
+  },
+  "faction.invite.notification": {
+    "en": "You have been invited to a faction. Use /f accept <name>.",
+    "fr": "Vous avez été invité dans une faction. Utilisez /f accept <nom>."
+  },
+  "faction.kick.notification": {
+    "en": "You were kicked from your faction.",
+    "fr": "Vous avez été expulsé de votre faction."
+  },
+  "faction.notify.status": {
+    "en": "Notifications: {status}",
+    "fr": "Notifications : {status}"
+  },
+  "faction.notify.enabled": {
+    "en": "Notifications enabled.",
+    "fr": "Notifications activées."
+  },
+  "faction.notify.disabled": {
+    "en": "Notifications disabled.",
+    "fr": "Notifications désactivées."
+  },
+  "faction.notify.unknown_type": {
+    "en": "Unknown type. Use: minor, major, war, territory, role, system.",
+    "fr": "Type inconnu. Utilisez : minor, major, war, territory, role, system."
+  },
+  "faction.notify.history_empty": {
+    "en": "No notifications.",
+    "fr": "Aucune notification."
+  },
+  "faction.notify.history_header": {
+    "en": "Notifications ({count}):",
+    "fr": "Notifications ({count}) :"
+  },
+  "faction.chat.toggle": {
+    "en": "Chat mode set to: {mode}",
+    "fr": "Mode chat défini sur : {mode}"
+  },
+  "faction.chat.unavailable": {
+    "en": "Chat toggle not available.",
+    "fr": "Basculement du chat non disponible."
+  },
+  "faction.borders.unavailable": {
+    "en": "Borders view not available.",
+    "fr": "Affichage des bordures non disponible."
+  },
+  "faction.reload.unavailable": {
+    "en": "Reload is not available.",
+    "fr": "Le rechargement n'est pas disponible."
+  },
+  "admin.subcommand_unknown": {
+    "en": "Unknown admin subcommand.",
+    "fr": "Sous-commande admin inconnue."
+  },
+  "admin.power_number": {
+    "en": "Power must be a number or 'clear'.",
+    "fr": "La puissance doit être un nombre ou 'clear'."
+  },
+  "role.leader": {
+    "en": "Leader",
+    "fr": "Chef"
+  },
+  "role.officer": {
+    "en": "Officer",
+    "fr": "Officier"
+  },
+  "role.member": {
+    "en": "Member",
+    "fr": "Membre"
+  },
+  "role.recruit": {
+    "en": "Recruit",
+    "fr": "Recrue"
+  },
+  "stats.header": {
+    "en": "Combat Stats for {name}:",
+    "fr": "Stats de combat pour {name} :"
+  },
+  "stats.kills": {
+    "en": "Kills: {kills} | Deaths: {deaths} | KDR: {kdr}",
+    "fr": "Victimes : {kills} | Morts : {deaths} | KDR : {kdr}"
+  },
+  "war.usage": {
+    "en": "Usage: /f war <declare|status|end> [faction]",
+    "fr": "Utilisation : /f war <declare|status|end> [faction]"
+  },
+  "war.no_active": {
+    "en": "No active wars.",
+    "fr": "Aucune guerre active."
+  },
+  "war.active_header": {
+    "en": "Active Wars ({count}):",
+    "fr": "Guerres actives ({count}) :"
+  },
+  "war.entry": {
+    "en": "{attacker} vs {defender} - Score: {attackerScore}-{defenderScore}",
+    "fr": "{attacker} vs {defender} - Score : {attackerScore}-{defenderScore}"
+  },
+  "error.name.required": {
+    "en": "Faction name is required.",
+    "fr": "Le nom de la faction est requis."
+  },
+  "faction.rename.success": {
+    "en": "Faction renamed to {name}.",
+    "fr": "Faction renommée en {name}."
+  },
+  "error.rename.permission": {
+    "en": "You do not have permission to rename the faction.",
+    "fr": "Vous n'avez pas la permission de renommer la faction."
+  },
+  "error.disband.permission": {
+    "en": "You do not have permission to disband the faction.",
+    "fr": "Vous n'avez pas la permission de dissoudre la faction."
+  },
+  "error.invite.permission": {
+    "en": "You do not have permission to invite.",
+    "fr": "Vous n'avez pas la permission d'inviter."
+  },
+  "error.invite.target_already_in_faction": {
+    "en": "That player is already in a faction.",
+    "fr": "Ce joueur est déjà dans une faction."
+  },
+  "error.invite.faction_full": {
+    "en": "Your faction is full.",
+    "fr": "Votre faction est pleine."
+  },
+  "error.invite.already_sent": {
+    "en": "Invitation already sent to {player}.",
+    "fr": "Invitation déjà envoyée à {player}."
+  },
+  "faction.invite.sent_success": {
+    "en": "Invite sent to player.",
+    "fr": "Invitation envoyée au joueur."
+  },
+  "error.invite.no_invites": {
+    "en": "You do not have any invites.",
+    "fr": "Vous n'avez aucune invitation."
+  },
+  "error.invite.not_found": {
+    "en": "No invite found for that faction.",
+    "fr": "Aucune invitation trouvée pour cette faction."
+  },
+  "faction.invite.accept.success": {
+    "en": "You joined {name}.",
+    "fr": "Vous avez rejoint {name}."
+  },
+  "faction.invite.deny.success": {
+    "en": "Invite removed.",
+    "fr": "Invitation supprimée."
+  },
+  "error.leave.must_transfer": {
+    "en": "Transfer leadership or disband before leaving.",
+    "fr": "Transférez le leadership ou dissolvez avant de partir."
+  },
+  "faction.leave.success": {
+    "en": "You left the faction.",
+    "fr": "Vous avez quitté la faction."
+  },
+  "error.kick.permission": {
+    "en": "You do not have permission to kick.",
+    "fr": "Vous n'avez pas la permission d'expulser."
+  },
+  "error.kick.not_member": {
+    "en": "That player is not in your faction.",
+    "fr": "Ce joueur n'est pas dans votre faction."
+  },
+  "error.kick.cannot_kick_higher_rank": {
+    "en": "You cannot kick a member with equal or higher rank.",
+    "fr": "Vous ne pouvez pas expulser un membre de rang égal ou supérieur."
+  },
+  "faction.kick.success": {
+    "en": "Member kicked.",
+    "fr": "Membre expulsé."
+  },
+  "error.rank.permission": {
+    "en": "You do not have permission to change ranks.",
+    "fr": "Vous n'avez pas la permission de changer les rangs."
+  },
+  "error.rank.not_member": {
+    "en": "That player is not in your faction.",
+    "fr": "Ce joueur n'est pas dans votre faction."
+  },
+  "error.rank.cannot_change_leader": {
+    "en": "You cannot change the leader rank.",
+    "fr": "Vous ne pouvez pas changer le rang du leader."
+  },
+  "error.rank.cannot_change_higher": {
+    "en": "You cannot change a member with equal or higher rank.",
+    "fr": "Vous ne pouvez pas modifier un membre de rang égal ou supérieur."
+  },
+  "error.rank.no_change_available": {
+    "en": "No rank change available.",
+    "fr": "Aucun changement de rang disponible."
+  },
+  "faction.rank.updated": {
+    "en": "Member rank updated.",
+    "fr": "Rang du membre mis à jour."
+  },
+  "error.transfer.permission": {
+    "en": "You do not have permission to transfer leadership.",
+    "fr": "Vous n'avez pas la permission de transférer le leadership."
+  },
+  "error.transfer.only_leader": {
+    "en": "Only the leader can transfer leadership.",
+    "fr": "Seul le leader peut transférer le leadership."
+  },
+  "error.transfer.not_member": {
+    "en": "That player is not in your faction.",
+    "fr": "Ce joueur n'est pas dans votre faction."
+  },
+  "faction.transfer.success": {
+    "en": "Leadership transferred.",
+    "fr": "Leadership transféré."
+  },
+  "error.home.permission": {
+    "en": "You do not have permission to set home.",
+    "fr": "Vous n'avez pas la permission de définir le home."
+  },
+  "faction.home.set.success": {
+    "en": "Faction home set.",
+    "fr": "Home de faction défini."
+  },
+  "error.home.not_set": {
+    "en": "Faction home is not set.",
+    "fr": "Le home de faction n'est pas défini."
+  },
+  "error.claim.permission": {
+    "en": "You do not have permission to claim.",
+    "fr": "Vous n'avez pas la permission de claim."
+  },
+  "error.claim.already_claimed": {
+    "en": "That chunk is already claimed.",
+    "fr": "Ce chunk est déjà claim."
+  },
+  "error.claim.limit_reached": {
+    "en": "Claim limit reached ({limit}).",
+    "fr": "Limite de claims atteinte ({limit})."
+  },
+  "faction.claim.success": {
+    "en": "Chunk claimed.",
+    "fr": "Chunk claim."
+  },
+  "error.unclaim.permission": {
+    "en": "You do not have permission to unclaim.",
+    "fr": "Vous n'avez pas la permission d'unclaim."
+  },
+  "error.unclaim.not_owner": {
+    "en": "Your faction does not own this claim.",
+    "fr": "Votre faction ne possède pas ce claim."
+  },
+  "faction.unclaim.success": {
+    "en": "Chunk unclaimed.",
+    "fr": "Chunk unclaim."
+  },
+  "faction.home.ready": {
+    "en": "Home ready.",
+    "fr": "Home prêt."
+  },
+  "error.treasury.invalid_amount": {
+    "en": "Amount must be positive.",
+    "fr": "Le montant doit être positif."
+  },
+  "faction.treasury.deposit.success": {
+    "en": "Deposited {amount} to treasury.",
+    "fr": "{amount} déposé dans la trésorerie."
+  },
+  "faction.treasury.withdraw.success": {
+    "en": "Withdrew {amount} from treasury.",
+    "fr": "{amount} retiré de la trésorerie."
+  },
+  "error.treasury.insufficient_funds": {
+    "en": "Faction treasury does not have enough funds.",
+    "fr": "La trésorerie de la faction n'a pas assez de fonds."
+  },
+  "error.treasury.invalid_zero": {
+    "en": "Amount must be non-zero.",
+    "fr": "Le montant ne peut pas être zéro."
+  },
+  "error.description.permission": {
+    "en": "You do not have permission to edit the description.",
+    "fr": "Vous n'avez pas la permission de modifier la description."
+  },
+  "faction.description.cleared": {
+    "en": "Faction description cleared.",
+    "fr": "Description de faction effacée."
+  },
+  "error.description.too_long": {
+    "en": "Description too long (max {max} characters).",
+    "fr": "Description trop longue (max {max} caractères)."
+  },
+  "faction.description.updated": {
+    "en": "Faction description updated.",
+    "fr": "Description de faction mise à jour."
+  },
+  "error.ally.permission": {
+    "en": "You do not have permission to manage alliances.",
+    "fr": "Vous n'avez pas la permission de gérer les alliances."
+  },
+  "error.ally.self": {
+    "en": "You cannot ally with your own faction.",
+    "fr": "Vous ne pouvez pas vous allier avec votre propre faction."
+  },
+  "faction.ally.success": {
+    "en": "Alliance formed with {name}.",
+    "fr": "Alliance formée avec {name}."
+  },
+  "error.unally.not_allied": {
+    "en": "You are not allied with that faction.",
+    "fr": "Vous n'êtes pas allié avec cette faction."
+  },
+  "faction.unally.success": {
+    "en": "Alliance removed with {name}.",
+    "fr": "Alliance supprimée avec {name}."
+  },
+  "error.enemy.permission": {
+    "en": "You do not have permission to manage enemies.",
+    "fr": "Vous n'avez pas la permission de gérer les ennemis."
+  },
+  "error.enemy.self": {
+    "en": "You cannot enemy your own faction.",
+    "fr": "Vous ne pouvez pas être ennemi avec votre propre faction."
+  },
+  "faction.enemy.success": {
+    "en": "Now enemies with {name}.",
+    "fr": "Maintenant ennemis avec {name}."
+  },
+  "error.unenemy.not_enemy": {
+    "en": "You are not enemies with that faction.",
+    "fr": "Vous n'êtes pas ennemis avec cette faction."
+  },
+  "faction.unenemy.success": {
+    "en": "No longer enemies with {name}.",
+    "fr": "Plus ennemis avec {name}."
+  },
+  "error.admin.not_admin": {
+    "en": "You do not have admin permission.",
+    "fr": "Vous n'avez pas la permission admin."
+  },
+  "faction.admin.unclaim.success": {
+    "en": "Admin unclaimed chunk.",
+    "fr": "Chunk unclaim par admin."
+  },
+  "faction.admin.power.set": {
+    "en": "Power set to {power}.",
+    "fr": "Puissance définie à {power}."
+  },
+  "faction.admin.transfer.success": {
+    "en": "Admin transferred leadership.",
+    "fr": "Leadership transféré par admin."
+  }
+}

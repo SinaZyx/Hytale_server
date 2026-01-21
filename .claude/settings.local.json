@@ -2,7 +2,11 @@
   "permissions": {
     "allow": [
       "Bash(./gradlew.bat build)",
-      "Bash(unzip:*)"
+      "Bash(unzip:*)",
+      "Bash(.gradlew.bat build --console=plain)",
+      "Bash(Select-Object -First 100)",
+      "Bash(./gradlew.bat build:*)",
+      "Bash(./gradlew.bat compileJava:*)"
     ]
   }
 }

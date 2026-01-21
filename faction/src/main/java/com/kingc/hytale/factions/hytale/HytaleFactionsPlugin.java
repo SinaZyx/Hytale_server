@@ -40,6 +40,7 @@ import com.kingc.hytale.factions.model.NotificationType;
 import com.kingc.hytale.factions.model.War;
 import com.kingc.hytale.factions.service.CombatService;
 import com.kingc.hytale.factions.service.FactionSettings;
+import com.kingc.hytale.factions.translations.FactionTranslationService;
 import com.hypixel.hytale.server.core.event.events.player.PlayerChatEvent;
 import com.kingc.hytale.factions.model.ChatMode;
 import com.hypixel.hytale.protocol.SoundCategory;
@@ -100,6 +101,9 @@ public final class HytaleFactionsPlugin extends JavaPlugin {
 
     @Override
     protected void setup() {
+        // Initialize translation service
+        FactionTranslationService.init();
+
         try {
             plugin = new FactionsPlugin(getDataDirectory(), serverAdapter);
             plugin.setChatToggleHandler(playerId -> {

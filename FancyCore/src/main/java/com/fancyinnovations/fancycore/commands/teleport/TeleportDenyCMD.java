@@ -3,7 +3,8 @@ package com.fancyinnovations.fancycore.commands.teleport;
 import com.fancyinnovations.fancycore.api.player.FancyPlayer;
 import com.fancyinnovations.fancycore.api.player.FancyPlayerService;
 import com.fancyinnovations.fancycore.api.teleport.TeleportRequestService;
-import com.hypixel.hytale.server.core.Message;
+import com.fancyinnovations.fancycore.main.FancyCorePlugin;
+import com.fancyinnovations.fancycore.translations.TranslationService;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.arguments.system.OptionalArg;
 import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
@@ -15,6 +16,7 @@ import java.util.UUID;
 
 public class TeleportDenyCMD extends CommandBase {
 
+    private final TranslationService translator = FancyCorePlugin.get().getTranslationService();
     protected final OptionalArg<PlayerRef> senderArg = this.withOptionalArg("target", "The player who sent the request", ArgTypes.PLAYER_REF);
 
     public TeleportDenyCMD() {
@@ -26,13 +28,13 @@ public class TeleportDenyCMD extends CommandBase {
     @Override
     protected void executeSync(@NotNull CommandContext ctx) {
         if (!ctx.isPlayer()) {
-            ctx.sendMessage(Message.raw("This command can only be executed by a player."));
+            translator.getMessage("error.command.player_only").sendTo(ctx.sender());
             return;
         }
 
         FancyPlayer target = FancyPlayerService.get().getByUUID(ctx.sender().getUuid());
         if (target == null) {
-            ctx.sendMessage(Message.raw("FancyPlayer not found."));
+            translator.getMessage("error.player.not_found").sendTo(ctx.sender());
             return;
         }
 
@@ -44,37 +46,43 @@ public class TeleportDenyCMD extends CommandBase {
             PlayerRef senderPlayerRef = senderArg.get(ctx);
             FancyPlayer sender = FancyPlayerService.get().getByUUID(senderPlayerRef.getUuid());
             if (sender == null) {
-                ctx.sendMessage(Message.raw("Sender player not found."));
+                translator.getMessage("teleport.error.player_not_found", target.getLanguage()).sendTo(target);
                 return;
             }
 
             senderUUID = requestService.getRequest(target, sender);
             if (senderUUID == null) {
-                ctx.sendMessage(Message.raw("You do not have a pending teleport request from " + sender.getData().getUsername() + "."));
+                translator.getMessage("teleport.request.no_pending_from", target.getLanguage())
+                    .replace("player", sender.getData().getUsername())
+                    .sendTo(target);
                 return;
             }
         } else {
             // No player specified, get first request
             senderUUID = requestService.getFirstRequest(target);
             if (senderUUID == null) {
-                ctx.sendMessage(Message.raw("You do not have any pending teleport requests."));
+                translator.getMessage("teleport.request.no_pending", target.getLanguage()).sendTo(target);
                 return;
             }
         }
 
         FancyPlayer sender = FancyPlayerService.get().getByUUID(senderUUID);
         if (sender == null || !sender.isOnline()) {
-            ctx.sendMessage(Message.raw("The player who sent the request is no longer online."));
+            translator.getMessage("teleport.request.sender_offline", target.getLanguage()).sendTo(target);
             requestService.removeAllRequests(target);
             return;
         }
 
         // Remove the request
         if (requestService.removeRequest(target, sender)) {
-            ctx.sendMessage(Message.raw("Denied teleport request from " + sender.getData().getUsername() + "."));
-            sender.sendMessage(target.getData().getUsername() + " denied your teleport request.");
+            translator.getMessage("teleport.request.denied.self", target.getLanguage())
+                .replace("player", sender.getData().getUsername())
+                .sendTo(target);
+            translator.getMessage("teleport.request.denied.other", sender.getLanguage())
+                .replace("player", target.getData().getUsername())
+                .sendTo(sender);
         } else {
-            ctx.sendMessage(Message.raw("Failed to deny teleport request."));
+            translator.getMessage("teleport.request.denied.failed", target.getLanguage()).sendTo(target);
         }
     }
 }

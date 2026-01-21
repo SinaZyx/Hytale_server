@@ -2,17 +2,12 @@ package com.fancyinnovations.fancycore.commands.teleport;
 
 import com.fancyinnovations.fancycore.api.player.FancyPlayer;
 import com.fancyinnovations.fancycore.api.player.FancyPlayerService;
-import com.fancyinnovations.fancycore.commands.teleport.TeleportGuard;
+import com.fancyinnovations.fancycore.main.FancyCorePlugin;
+import com.fancyinnovations.fancycore.translations.TranslationService;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
-import com.hypixel.hytale.math.vector.Vector3d;
-import com.hypixel.hytale.math.vector.Vector3f;
-import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
-import com.hypixel.hytale.server.core.modules.entity.component.HeadRotation;
-import com.hypixel.hytale.server.core.modules.entity.component.TransformComponent;
-import com.hypixel.hytale.server.core.modules.entity.teleport.Teleport;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
@@ -22,6 +17,8 @@ import java.util.Map;
 
 public class TeleportBackCMD extends CommandBase {
 
+    private final TranslationService translator = FancyCorePlugin.get().getTranslationService();
+
     public TeleportBackCMD() {
         super("back", "Teleports you back to your previous location before your last teleport");
         requirePermission("fancycore.commands.back");
@@ -30,13 +27,13 @@ public class TeleportBackCMD extends CommandBase {
     @Override
     protected void executeSync(@NotNull CommandContext ctx) {
         if (!ctx.isPlayer()) {
-            ctx.sendMessage(Message.raw("This command can only be executed by a player."));
+            translator.getMessage("error.command.player_only").sendTo(ctx.sender());
             return;
         }
 
         FancyPlayer fp = FancyPlayerService.get().getByUUID(ctx.sender().getUuid());
         if (fp == null) {
-            ctx.sendMessage(Message.raw("FancyPlayer not found."));
+            translator.getMessage("error.player.not_found").sendTo(ctx.sender());
             return;
         }
 
@@ -48,13 +45,15 @@ public class TeleportBackCMD extends CommandBase {
 
         PlayerRef senderPlayerRef = fp.getPlayer();
         if (senderPlayerRef == null) {
-            ctx.sendMessage(Message.raw("You are not online."));
+            translator.getMessage("teleport.error.not_online", fp.getLanguage())
+                .sendTo(fp);
             return;
         }
 
         Ref<EntityStore> senderRef = senderPlayerRef.getReference();
         if (senderRef == null || !senderRef.isValid()) {
-            ctx.sendMessage(Message.raw("You are not in a world."));
+            translator.getMessage("teleport.error.sender_not_in_world", fp.getLanguage())
+                .sendTo(fp);
             return;
         }
 
@@ -62,7 +61,8 @@ public class TeleportBackCMD extends CommandBase {
         Map<String, Object> customData = fp.getData().getCustomData();
         Object backLocationObj = customData.get("teleport_back_location");
         if (backLocationObj == null || !(backLocationObj instanceof Map)) {
-            ctx.sendMessage(Message.raw("You do not have a previous location to teleport back to."));
+            translator.getMessage("teleport.back.no_location", fp.getLanguage())
+                .sendTo(fp);
             return;
         }
 
@@ -75,53 +75,26 @@ public class TeleportBackCMD extends CommandBase {
         Double yaw = ((Number) backLocation.get("yaw")).doubleValue();
         Double pitch = ((Number) backLocation.get("pitch")).doubleValue();
 
+        // Create Location from stored data
+        com.fancyinnovations.fancycore.api.teleport.Location targetLocation =
+            new com.fancyinnovations.fancycore.api.teleport.Location(worldName, x, y, z, yaw.floatValue(), pitch.floatValue());
+
+        translator.getMessage("teleport.delayed.start", fp.getLanguage())
+            .replace("seconds", "5")
+            .sendTo(fp);
+
+        // Save current location before teleporting
         Store<EntityStore> senderStore = senderRef.getStore();
         World currentWorld = ((EntityStore) senderStore.getExternalData()).getWorld();
+        TeleportLocationHelper.savePreviousLocation(fp, senderRef, senderStore, currentWorld);
 
-        // Get target world
-        World targetWorld = com.hypixel.hytale.server.core.universe.Universe.get().getWorld(worldName);
-        if (targetWorld == null) {
-            ctx.sendMessage(Message.raw("The world you were in is no longer loaded."));
-            return;
-        }
-
-        // Get current position to save as new back location
-        currentWorld.execute(() -> {
-            TransformComponent transformComponent = (TransformComponent) senderStore.getComponent(senderRef, TransformComponent.getComponentType());
-            if (transformComponent == null) {
-                ctx.sendMessage(Message.raw("Failed to get your transform."));
-                return;
-            }
-
-            HeadRotation headRotationComponent = (HeadRotation) senderStore.getComponent(senderRef, HeadRotation.getComponentType());
-            if (headRotationComponent == null) {
-                ctx.sendMessage(Message.raw("Failed to get your head rotation."));
-                return;
-            }
-
-            // Save current location as new back location
-            Map<String, Object> newBackLocation = new java.util.HashMap<>();
-            newBackLocation.put("world", currentWorld.getName());
-            newBackLocation.put("x", transformComponent.getPosition().getX());
-            newBackLocation.put("y", transformComponent.getPosition().getY());
-            newBackLocation.put("z", transformComponent.getPosition().getZ());
-            newBackLocation.put("yaw", headRotationComponent.getRotation().getYaw());
-            newBackLocation.put("pitch", headRotationComponent.getRotation().getPitch());
-            fp.getData().setCustomData("teleport_back_location", newBackLocation);
-
-            // Execute teleportation on the target world thread
-            targetWorld.execute(() -> {
-
-                // Create teleport component
-                Teleport teleport = new Teleport(targetWorld, new Vector3d(x, y, z), new Vector3f((float) yaw.doubleValue(), (float) pitch.doubleValue(), 0.0f));
-
-                // Add teleport component to sender
-                senderStore.addComponent(senderRef, Teleport.getComponentType(), teleport);
-                TeleportGuard.markTeleport(fp.getData().getUUID());
-
-                // Send success message
-                ctx.sendMessage(Message.raw("Teleported back to your previous location."));
-            });
-        });
+        TeleportLocationHelper.teleportDelayed(fp, targetLocation, 5,
+                () -> {
+                    TeleportGuard.markTeleport(fp.getData().getUUID());
+                    translator.getMessage("teleport.back.success", fp.getLanguage())
+                        .sendTo(fp);
+                },
+                () -> translator.getMessage("teleport.delayed.cancelled", fp.getLanguage())
+                    .sendTo(fp));
     }
 }

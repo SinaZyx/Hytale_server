@@ -4,21 +4,22 @@ import com.fancyinnovations.fancycore.api.player.FancyPlayer;
 import com.fancyinnovations.fancycore.api.player.FancyPlayerService;
 import com.fancyinnovations.fancycore.api.teleport.Location;
 import com.fancyinnovations.fancycore.api.teleport.SpawnService;
-import com.fancyinnovations.fancycore.commands.teleport.TeleportGuard;
+import com.fancyinnovations.fancycore.main.FancyCorePlugin;
+import com.fancyinnovations.fancycore.translations.TranslationService;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.Message;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.basecommands.AbstractPlayerCommand;
-import com.hypixel.hytale.server.core.modules.entity.teleport.Teleport;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
-import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
 import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 
 import javax.annotation.Nonnull;
 
 public class SpawnCMD extends AbstractPlayerCommand {
+
+    private final TranslationService translator = FancyCorePlugin.get().getTranslationService();
 
     public SpawnCMD() {
         super("spawn", "Teleports you to the server's spawn point");
@@ -28,13 +29,13 @@ public class SpawnCMD extends AbstractPlayerCommand {
     @Override
     protected void execute(@Nonnull CommandContext ctx, @Nonnull Store<EntityStore> store, @Nonnull Ref<EntityStore> ref, @Nonnull PlayerRef playerRef, @Nonnull World world) {
         if (!ctx.isPlayer()) {
-            ctx.sendMessage(Message.raw("This command can only be executed by a player."));
+            translator.getMessage("error.command.player_only").sendTo(ctx.sender());
             return;
         }
 
         FancyPlayer fp = FancyPlayerService.get().getByUUID(ctx.sender().getUuid());
         if (fp == null) {
-            ctx.sendMessage(Message.raw("FancyPlayer not found."));
+            translator.getMessage("error.player.not_found").sendTo(ctx.sender());
             return;
         }
 
@@ -45,12 +46,18 @@ public class SpawnCMD extends AbstractPlayerCommand {
         }
 
         Location location = SpawnService.get().getSpawnLocation();
-        World targetWorld = Universe.get().getWorld(location.worldName());
 
-        Teleport teleport = new Teleport(targetWorld, location.positionVec(), location.rotationVec());
-        store.addComponent(ref, Teleport.getComponentType(), teleport);
-        TeleportGuard.markTeleport(fp.getData().getUUID());
+        translator.getMessage("teleport.delayed.start", fp.getLanguage())
+            .replace("seconds", "5")
+            .sendTo(fp);
 
-        fp.sendMessage("Teleported to spawn point.");
+        TeleportLocationHelper.teleportDelayed(fp, location, 5,
+                () -> {
+                    TeleportGuard.markTeleport(fp.getData().getUUID());
+                    translator.getMessage("teleport.spawn.success", fp.getLanguage())
+                        .sendTo(fp);
+                },
+                () -> translator.getMessage("teleport.delayed.cancelled", fp.getLanguage())
+                    .sendTo(fp));
     }
 }

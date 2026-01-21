@@ -5,7 +5,8 @@ import com.fancyinnovations.fancycore.api.events.chat.PrivateMessageSentEvent;
 import com.fancyinnovations.fancycore.api.player.FancyPlayer;
 import com.fancyinnovations.fancycore.api.player.FancyPlayerService;
 import com.fancyinnovations.fancycore.commands.arguments.FancyCoreArgs;
-import com.hypixel.hytale.server.core.Message;
+import com.fancyinnovations.fancycore.main.FancyCorePlugin;
+import com.fancyinnovations.fancycore.translations.TranslationService;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
 import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
@@ -16,8 +17,11 @@ import java.util.List;
 
 public class MessageCMD extends CommandBase {
 
-    protected final RequiredArg<FancyPlayer> receiverArg = this.withRequiredArg("receiver", "The player to send the message to", FancyCoreArgs.PLAYER);
-    protected final RequiredArg<List<String>> messageArg = this.withListRequiredArg("message", "The message to send", ArgTypes.STRING);
+    private final TranslationService translator = FancyCorePlugin.get().getTranslationService();
+    protected final RequiredArg<FancyPlayer> receiverArg = this.withRequiredArg("receiver",
+            "The player to send the message to", FancyCoreArgs.PLAYER);
+    protected final RequiredArg<List<String>> messageArg = this.withListRequiredArg("message", "The message to send",
+            ArgTypes.STRING);
 
     public MessageCMD() {
         super("message", "Send a private message to another player");
@@ -29,35 +33,40 @@ public class MessageCMD extends CommandBase {
     @Override
     protected void executeSync(@NotNull CommandContext ctx) {
         if (!ctx.isPlayer()) {
-            ctx.sendMessage(Message.raw("This command can only be executed by a player."));
+            translator.getMessage("error.command.player_only").sendTo(ctx.sender());
             return;
         }
 
         FancyPlayer sender = FancyPlayerService.get().getByUUID(ctx.sender().getUuid());
         if (sender == null) {
-            ctx.sendMessage(Message.raw("FancyPlayer not found."));
+            translator.getMessage("error.player.not_found").sendTo(ctx.sender());
             return;
         }
 
-
         FancyPlayer receiver = receiverArg.get(ctx);
         if (!receiver.isOnline()) {
-            sender.sendMessage("The player " + receiver.getData().getUsername() + " is not online.");
+            translator.getMessage("chat.message.player_offline", sender.getLanguage())
+                    .replace("player", receiver.getData().getUsername())
+                    .sendTo(sender);
             return;
         }
 
         if (receiver.getData().getUUID().equals(sender.getData().getUUID())) {
-            sender.sendMessage("You cannot send a private message to yourself.");
+            translator.getMessage("chat.message.cannot_self", sender.getLanguage()).sendTo(sender);
             return;
         }
 
         if (!receiver.getData().isPrivateMessagesEnabled()) {
-            sender.sendMessage("The player " + receiver.getData().getUsername() + " is not accepting private messages.");
+            translator.getMessage("chat.message.disabled", sender.getLanguage())
+                    .replace("player", receiver.getData().getUsername())
+                    .sendTo(sender);
             return;
         }
 
         if (receiver.getData().getIgnoredPlayers().contains(sender.getData().getUUID())) {
-            sender.sendMessage("You cannot send a private message to " + receiver.getData().getUsername() + " because they are ignoring you.");
+            translator.getMessage("chat.message.ignored", sender.getLanguage())
+                    .replace("player", receiver.getData().getUsername())
+                    .sendTo(sender);
             return;
         }
 

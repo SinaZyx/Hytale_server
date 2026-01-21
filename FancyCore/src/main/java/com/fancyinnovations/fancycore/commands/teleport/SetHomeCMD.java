@@ -4,6 +4,7 @@ import com.fancyinnovations.fancycore.api.player.FancyPlayer;
 import com.fancyinnovations.fancycore.api.player.FancyPlayerService;
 import com.fancyinnovations.fancycore.api.player.Home;
 import com.fancyinnovations.fancycore.api.teleport.Location;
+import com.fancyinnovations.fancycore.main.FancyCorePlugin;
 import com.fancyinnovations.fancycore.utils.NumberUtils;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
@@ -41,13 +42,17 @@ public class SetHomeCMD extends AbstractWorldCommand {
     @Override
     protected void execute(@Nonnull CommandContext ctx, @Nonnull World world, @Nonnull Store<EntityStore> store) {
         if (!ctx.isPlayer()) {
-            ctx.sendMessage(Message.raw("This command can only be executed by a player."));
+            FancyCorePlugin.get().getTranslationService()
+                .getMessage("error.command.player_only")
+                .sendTo(ctx.sender());
             return;
         }
 
         FancyPlayer fp = FancyPlayerService.get().getByUUID(ctx.sender().getUuid());
         if (fp == null) {
-            ctx.sendMessage(Message.raw("FancyPlayer not found."));
+            FancyCorePlugin.get().getTranslationService()
+                .getMessage("error.player.not_found")
+                .sendTo(ctx.sender());
             return;
         }
         Ref<EntityStore> playerRef = ctx.senderAsPlayerRef();
@@ -72,7 +77,10 @@ public class SetHomeCMD extends AbstractWorldCommand {
 
         String name = nameArg.get(ctx);
         if (fp.getData().getHome(name) != null) {
-            fp.sendMessage("A home with the name '" + name + "' already exists.");
+            FancyCorePlugin.get().getTranslationService()
+                .getMessage("teleport.home.already_exists", fp.getLanguage())
+                .replace("name", name)
+                .sendTo(fp);
             return;
         }
 
@@ -85,8 +93,13 @@ public class SetHomeCMD extends AbstractWorldCommand {
                 rotation.getPitch());
         fp.getData().addHome(new Home(name, homeLocation));
 
-        fp.sendMessage("✓ Home '" + name + "' set at " + NumberUtils.formatNumber(homeLocation.x()) + ", "
-                + NumberUtils.formatNumber(homeLocation.y()) + ", " + NumberUtils.formatNumber(homeLocation.z())
-                + " in world '" + homeLocation.worldName() + "'.");
+        FancyCorePlugin.get().getTranslationService()
+            .getMessage("teleport.home.set", fp.getLanguage())
+            .replace("name", name)
+            .replace("x", NumberUtils.formatNumber(homeLocation.x()))
+            .replace("y", NumberUtils.formatNumber(homeLocation.y()))
+            .replace("z", NumberUtils.formatNumber(homeLocation.z()))
+            .replace("world", homeLocation.worldName())
+            .sendTo(fp);
     }
 }

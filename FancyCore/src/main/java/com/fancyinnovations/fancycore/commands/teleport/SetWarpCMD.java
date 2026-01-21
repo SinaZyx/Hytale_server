@@ -5,6 +5,7 @@ import com.fancyinnovations.fancycore.api.player.FancyPlayerService;
 import com.fancyinnovations.fancycore.api.teleport.Location;
 import com.fancyinnovations.fancycore.api.teleport.Warp;
 import com.fancyinnovations.fancycore.api.teleport.WarpService;
+import com.fancyinnovations.fancycore.main.FancyCorePlugin;
 import com.fancyinnovations.fancycore.utils.NumberUtils;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
@@ -40,26 +41,35 @@ public class SetWarpCMD extends AbstractWorldCommand {
     @Override
     protected void execute(@Nonnull CommandContext ctx, @Nonnull World world, @Nonnull Store<EntityStore> store) {
         if (!ctx.isPlayer()) {
-            ctx.sendMessage(Message.raw("This command can only be executed by a player."));
+            FancyCorePlugin.get().getTranslationService()
+                .getMessage("error.command.player_only")
+                .sendTo(ctx.sender());
             return;
         }
 
         FancyPlayer fp = FancyPlayerService.get().getByUUID(ctx.sender().getUuid());
         if (fp == null) {
-            ctx.sendMessage(Message.raw("FancyPlayer not found."));
+            FancyCorePlugin.get().getTranslationService()
+                .getMessage("error.player.not_found")
+                .sendTo(ctx.sender());
             return;
         }
         Ref<EntityStore> playerRef = ctx.senderAsPlayerRef();
 
         String warpName = nameArg.get(ctx);
         if (warpName == null || warpName.trim().isEmpty()) {
-            ctx.sendMessage(Message.raw("Warp name cannot be empty."));
+            FancyCorePlugin.get().getTranslationService()
+                .getMessage("teleport.warp.name_empty", fp.getLanguage())
+                .sendTo(fp);
             return;
         }
 
         // Check if warp already exists
         if (WarpService.get().getWarp(warpName) != null) {
-            ctx.sendMessage(Message.raw("A warp with the name \"" + warpName + "\" already exists."));
+            FancyCorePlugin.get().getTranslationService()
+                .getMessage("teleport.warp.already_exists", fp.getLanguage())
+                .replace("name", warpName)
+                .sendTo(fp);
             return;
         }
 
@@ -93,6 +103,13 @@ public class SetWarpCMD extends AbstractWorldCommand {
         );
         WarpService.get().setWarp(warp);
 
-        fp.sendMessage("Set warp " + warpName + " at " + NumberUtils.formatNumber(warp.location().x()) + ", " + NumberUtils.formatNumber(warp.location().y()) + ", " + NumberUtils.formatNumber(warp.location().z()) + " in world '" + warp.location().worldName() + "'.");
+        FancyCorePlugin.get().getTranslationService()
+            .getMessage("teleport.warp.set", fp.getLanguage())
+            .replace("name", warpName)
+            .replace("x", NumberUtils.formatNumber(warp.location().x()))
+            .replace("y", NumberUtils.formatNumber(warp.location().y()))
+            .replace("z", NumberUtils.formatNumber(warp.location().z()))
+            .replace("world", warp.location().worldName())
+            .sendTo(fp);
     }
 }

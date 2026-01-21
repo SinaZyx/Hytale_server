@@ -335,6 +335,122 @@ Exemple interdit :
 
 ---
 
+## 9. Système de Traduction i18n (Internationalisation)
+
+### 9.1 Architecture i18n
+
+Tous les plugins doivent supporter **plusieurs langues** via un système de traduction centralisé.
+
+**Composants requis** :
+
+1. **Fichier JSON** : `messages.json` ou `{plugin}_messages.json`
+2. **Service de traduction** : `TranslationService` ou `{Plugin}TranslationService`
+3. **Classe Message** : Wrapper avec support placeholders
+
+### 9.2 Structure du Fichier JSON
+
+**Format obligatoire** : Clés hiérarchiques avec traductions par langue.
+
+```json
+{
+  "error.not_found": {
+    "en": "Item not found.",
+    "fr": "Objet non trouvé."
+  },
+  "faction.create.success": {
+    "en": "Faction {name} created!",
+    "fr": "Faction {name} créée !"
+  }
+}
+```
+
+**Conventions de nommage** :
+- `error.*` : Messages d'erreur
+- `{feature}.{action}.{type}` : Organisation hiérarchique
+- Placeholders : `{variable}` (remplacés dynamiquement)
+
+### 9.3 Pattern Result<T> avec i18n
+
+**OBLIGATOIRE** : Les services métier doivent retourner des **clés de traduction**, pas des messages hardcodés.
+
+```java
+public record Result<T>(
+    boolean ok, 
+    String messageKey,      // Clé de traduction (ex: "error.not_found")
+    T value,
+    Map<String, String> args // Arguments pour placeholders
+)
+```
+
+**Service métier** :
+```java
+// ❌ INTERDIT
+return Result.error("You are not in a faction.");
+
+// ✅ AUTORISÉ
+return Result.error("error.not_in_faction");
+
+// ✅ AUTORISÉ avec placeholders
+return Result.ok("faction.create.success", faction, Map.of("name", faction.name()));
+```
+
+### 9.4 Traduction dans les Commandes
+
+**Pattern recommandé** : Helper `translateResult()` dans le dispatcher.
+
+```java
+private String translateResult(Result<?> result, String language) {
+    Message msg = translator.getMessage(result.messageKey(), language);
+    
+    // Remplacer placeholders
+    for (Map.Entry<String, String> entry : result.args().entrySet()) {
+        msg = msg.replace(entry.getKey(), entry.getValue());
+    }
+    
+    return msg.get(language);
+}
+```
+
+**Utilisation** :
+```java
+@Override
+protected void executeSync(CommandContext ctx) {
+    String language = getPlayerLanguage(ctx.sender());
+    Result<Faction> result = service.createFaction(playerId, name);
+    
+    String message = translateResult(result, language);
+    ctx.sendMessage(Message.raw(message));
+}
+```
+
+### 9.5 Règles i18n Impératives
+
+**À FAIRE** :
+- ✅ Toujours utiliser des clés de traduction
+- ✅ Utiliser placeholders `{variable}` pour valeurs dynamiques
+- ✅ Fournir traductions EN + FR minimum
+- ✅ Nommer clés de manière hiérarchique
+
+**À ÉVITER** :
+- ❌ Messages hardcodés : `"Faction created!"`
+- ❌ Concaténation : `"Hello " + name`
+- ❌ Clés dupliquées dans JSON
+- ❌ Traductions incomplètes
+
+### 9.6 Checklist i18n
+
+Avant de générer du code avec messages :
+
+- [ ] Vérifier que `messages.json` existe
+- [ ] Créer clés de traduction pour nouveaux messages
+- [ ] Utiliser `Result<T>` avec messageKey
+- [ ] Ajouter Map.of() pour placeholders si nécessaire
+- [ ] Tester avec EN et FR
+
+**Référence** : Voir FancyCore et HytaleFactions pour implémentation complète.
+
+---
+
 ## 10. Vérification avant réponse (obligatoire)
 
 Avant de produire une réponse, l'IA doit mentalement valider :

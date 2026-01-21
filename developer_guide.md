@@ -1282,7 +1282,144 @@ if (base != null) {
 
 ---
 
-## 22. Statistiques Finales
+## 20. Système de Traduction i18n (Internationalisation)
+
+> **Architecture complète** pour supporter plusieurs langues dans vos plugins Hytale.
+> Basé sur l'implémentation de FancyCore et HytaleFactions.
+
+### 20.1 Architecture Générale
+
+Le système i18n repose sur **3 composants principaux** :
+
+1. **Fichier JSON de traductions** (`messages.json` / `faction_messages.json`)
+2. **Service de traduction** (`TranslationService` / `FactionTranslationService`)
+3. **Classe Message** (`Message` / `FactionMessage`)
+
+**Structure** :
+```
+Plugin
+├── resources/
+│   └── messages.json          # Fichier de traductions (EN/FR/ES/etc.)
+├── service/
+│   └── TranslationService.java # Service de chargement/récupération
+└── model/
+    └── Message.java            # Wrapper de message traduit
+```
+
+### 20.2 Structure du Fichier JSON
+
+**Format** : Clés hiérarchiques avec traductions par langue.
+
+```json
+{
+  "error.not_found": {
+    "en": "Item not found.",
+    "fr": "Objet non trouvé."
+  },
+  "faction.create.success": {
+    "en": "Faction {name} created!",
+    "fr": "Faction {name} créée !"
+  },
+  "error.cooldown": {
+    "en": "Wait {seconds}s before using {action} again.",
+    "fr": "Attendez {seconds}s avant de réutiliser {action}."
+  }
+}
+```
+
+**Conventions** :
+- `error.*` : Messages d'erreur
+- `{feature}.{action}.{type}` : Organisation hiérarchique
+- Placeholders : `{variable}` (remplacés dynamiquement)
+
+### 20.3 Pattern Result<T> avec i18n
+
+**Architecture** : Retourner des clés de traduction au lieu de messages hardcodés.
+
+```java
+public record Result<T>(
+    boolean ok, 
+    String messageKey,      // Clé de traduction
+    T value,
+    Map<String, String> args // Arguments pour placeholders
+) {
+    public static <T> Result<T> ok(String key, T value, Map<String, String> args) {
+        return new Result<>(true, key, value, args);
+    }
+    
+    public static <T> Result<T> error(String key, Map<String, String> args) {
+        return new Result<>(false, key, null, args);
+    }
+}
+```
+
+**Service métier** :
+```java
+public Result<Faction> createFaction(UUID playerId, String name) {
+    if (name.length() < 3) {
+        return Result.error("error.name_too_short", Map.of("min", "3"));
+    }
+    
+    Faction faction = new Faction(name);
+    return Result.ok("faction.create.success", faction, Map.of("name", name));
+}
+```
+
+**Commande avec traduction** :
+```java
+public class CreateFactionCommand extends CommandBase {
+    private final FactionService service;
+    private final TranslationService translator;
+    
+    @Override
+    protected void executeSync(CommandContext ctx) {
+        String language = getPlayerLanguage(ctx.sender());
+        Result<Faction> result = service.createFaction(playerId, name);
+        
+        // Traduire le résultat
+        String message = translateResult(result, language);
+        ctx.sendMessage(Message.raw(message));
+    }
+    
+    private String translateResult(Result<?> result, String language) {
+        Message msg = translator.getMessage(result.messageKey(), language);
+        for (Map.Entry<String, String> entry : result.args().entrySet()) {
+            msg = msg.replace(entry.getKey(), entry.getValue());
+        }
+        return msg.get(language);
+    }
+}
+```
+
+### 20.4 Migration de Code Existant
+
+**Avant** (hardcodé) :
+```java
+return Result.error("You are not in a faction.");
+return Result.ok("Faction " + name + " created!", faction);
+```
+
+**Après** (i18n) :
+```java
+return Result.error("error.not_in_faction");
+return Result.ok("faction.create.success", faction, Map.of("name", name));
+```
+
+### 20.5 Checklist i18n
+
+- [ ] Créer `messages.json` avec structure hiérarchique
+- [ ] Implémenter `TranslationService` avec chargement JSON
+- [ ] Modifier `Result<T>` pour accepter args Map
+- [ ] Créer helper `translateResult()` dans dispatcher
+- [ ] Migrer tous les messages hardcodés vers clés
+- [ ] Implémenter stockage langue joueur
+- [ ] Créer commande `/language`
+
+**Exemple complet** : Voir FancyCore et HytaleFactions pour implémentation de référence.
+
+---
+
+## 21. Statistiques Finales
 
 | Catégorie | Classes Documentées |
 |-----------|---------------------|

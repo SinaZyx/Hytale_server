@@ -6,7 +6,8 @@ import com.fancyinnovations.fancycore.api.player.FancyPlayer;
 import com.fancyinnovations.fancycore.api.player.FancyPlayerService;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
-import com.hypixel.hytale.server.core.Message;
+import com.fancyinnovations.fancycore.main.FancyCorePlugin;
+import com.fancyinnovations.fancycore.translations.TranslationService;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
 import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
@@ -24,6 +25,7 @@ import java.util.List;
 
 public class CreateKitCMD extends AbstractPlayerCommand {
 
+    private final TranslationService translator = FancyCorePlugin.get().getTranslationService();
     protected final RequiredArg<String> nameArg = this.withRequiredArg("name", "name for the new kit", ArgTypes.STRING);
 
     public CreateKitCMD() {
@@ -32,27 +34,28 @@ public class CreateKitCMD extends AbstractPlayerCommand {
     }
 
     @Override
-    protected void execute(@NotNull CommandContext ctx, @NotNull Store<EntityStore> store, @NotNull Ref<EntityStore> ref, @NotNull PlayerRef playerRef, @NotNull World world) {
+    protected void execute(@NotNull CommandContext ctx, @NotNull Store<EntityStore> store,
+            @NotNull Ref<EntityStore> ref, @NotNull PlayerRef playerRef, @NotNull World world) {
         if (!ctx.isPlayer()) {
-            ctx.sendMessage(Message.raw("This command can only be executed by a player."));
+            translator.getMessage("error.command.player_only").sendTo(ctx.sender());
             return;
         }
 
         FancyPlayer fp = FancyPlayerService.get().getByUUID(ctx.sender().getUuid());
         if (fp == null) {
-            ctx.sendMessage(Message.raw("FancyPlayer not found."));
+            translator.getMessage("error.player.not_found").sendTo(ctx.sender());
             return;
         }
 
         String name = nameArg.get(ctx);
         if (KitsService.get().getKit(name) != null) {
-            fp.sendMessage("A kit with this name already exists");
+            translator.getMessage("kit.already_exists", fp.getLanguage()).sendTo(fp);
             return;
         }
 
         Player player = ref.getStore().getComponent(ref, Player.getComponentType());
         if (player == null) {
-            fp.sendMessage("You are not an player");
+            translator.getMessage("kit.error.not_player", fp.getLanguage()).sendTo(fp);
             return;
         }
         ItemContainer container = player.getInventory().getStorage();
@@ -68,9 +71,10 @@ public class CreateKitCMD extends AbstractPlayerCommand {
         }
 
         Kit kit = new Kit(name, name, name);
-
         KitsService.get().createKit(kit, items);
 
-        fp.sendMessage("Created kit "+kit.name());
+        translator.getMessage("kit.created", fp.getLanguage())
+                .replace("name", kit.name())
+                .sendTo(fp);
     }
 }

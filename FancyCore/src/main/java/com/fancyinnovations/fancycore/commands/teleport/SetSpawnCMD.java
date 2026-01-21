@@ -4,6 +4,7 @@ import com.fancyinnovations.fancycore.api.player.FancyPlayer;
 import com.fancyinnovations.fancycore.api.player.FancyPlayerService;
 import com.fancyinnovations.fancycore.api.teleport.Location;
 import com.fancyinnovations.fancycore.api.teleport.SpawnService;
+import com.fancyinnovations.fancycore.main.FancyCorePlugin;
 import com.fancyinnovations.fancycore.utils.NumberUtils;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
@@ -28,8 +29,10 @@ import javax.annotation.Nonnull;
 
 public class SetSpawnCMD extends AbstractWorldCommand {
 
-    private final OptionalArg<RelativeDoublePosition> positionArg = this.withOptionalArg("position", "position to set", ArgTypes.RELATIVE_POSITION);
-    private final DefaultArg<Vector3f> rotationArg = this.withDefaultArg("rotation", "rotation to set", ArgTypes.ROTATION, Vector3f.FORWARD, "forward looking direction");
+    private final OptionalArg<RelativeDoublePosition> positionArg = this.withOptionalArg("position", "position to set",
+            ArgTypes.RELATIVE_POSITION);
+    private final DefaultArg<Vector3f> rotationArg = this.withDefaultArg("rotation", "rotation to set",
+            ArgTypes.ROTATION, Vector3f.FORWARD, "forward looking direction");
 
     public SetSpawnCMD() {
         super("setspawn", "Sets the server's spawn point to your current location");
@@ -46,7 +49,9 @@ public class SetSpawnCMD extends AbstractWorldCommand {
 
         FancyPlayer fp = FancyPlayerService.get().getByUUID(ctx.sender().getUuid());
         if (fp == null) {
-            fp.sendMessage("FancyPlayer not found.");
+            FancyCorePlugin.get().getTranslationService()
+                    .getMessage("error.player.not_found")
+                    .sendTo(ctx.sender());
             return;
         }
         Ref<EntityStore> playerRef = ctx.senderAsPlayerRef();
@@ -56,14 +61,15 @@ public class SetSpawnCMD extends AbstractWorldCommand {
             RelativeDoublePosition relativePosition = this.positionArg.get(ctx);
             position = relativePosition.getRelativePosition(ctx, world, store);
         } else {
-            TransformComponent transformComponent = store.getComponent(playerRef, TransformComponent.getComponentType());
+            TransformComponent transformComponent = store.getComponent(playerRef,
+                    TransformComponent.getComponentType());
             position = transformComponent.getPosition().clone();
         }
 
         Vector3f rotation;
         if (this.rotationArg.provided(ctx)) {
             rotation = this.rotationArg.get(ctx);
-        } else  {
+        } else {
             HeadRotation headRotationComponent = store.getComponent(playerRef, HeadRotation.getComponentType());
             rotation = headRotationComponent.getRotation();
         }
@@ -74,8 +80,7 @@ public class SetSpawnCMD extends AbstractWorldCommand {
                 position.getY(),
                 position.getZ(),
                 rotation.getYaw(),
-                rotation.getPitch()
-        );
+                rotation.getPitch());
         SpawnService.get().setSpawnLocation(spawnLocation);
 
         Transform transform = new Transform(position, rotation);
@@ -83,6 +88,12 @@ public class SetSpawnCMD extends AbstractWorldCommand {
         worldConfig.setSpawnProvider(new GlobalSpawnProvider(transform));
         worldConfig.markChanged();
 
-        fp.sendMessage("Spawn point set to " + NumberUtils.formatNumber(spawnLocation.x()) + ", " + NumberUtils.formatNumber(spawnLocation.y()) + ", " + NumberUtils.formatNumber(spawnLocation.z()) + " in world '" + spawnLocation.worldName() + "'.");
+        FancyCorePlugin.get().getTranslationService()
+                .getMessage("teleport.spawn.set", fp.getLanguage())
+                .replace("x", NumberUtils.formatNumber(spawnLocation.x()))
+                .replace("y", NumberUtils.formatNumber(spawnLocation.y()))
+                .replace("z", NumberUtils.formatNumber(spawnLocation.z()))
+                .replace("world", spawnLocation.worldName())
+                .sendTo(fp);
     }
 }

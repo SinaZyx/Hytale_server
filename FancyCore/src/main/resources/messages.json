@@ -1,0 +1,638 @@
+{
+  "error.permission": {
+    "en": "&cYou do not have permission to use this command.",
+    "fr": "&cVous n'avez pas la permission d'utiliser cette commande."
+  },
+  "fancycore.language.changed": {
+    "en": "&aLanguage changed to {lang}.",
+    "fr": "&aLangue changee en {lang}."
+  },
+  "error.command.player_only": {
+    "en": "&cThis command is only available for players.",
+    "fr": "&cCette commande est reservee aux joueurs."
+  },
+  "error.arg.invalid_language": {
+    "en": "&cInvalid language. Available languages: {languages}",
+    "fr": "&cLangue invalide. Langues disponibles : {languages}"
+  },
+  "error.player.not_found": {
+    "en": "&cFancyPlayer not found.",
+    "fr": "&cJoueur introuvable."
+  },
+  "teleport.error.target_not_in_world": {
+    "en": "&cTarget player is not in a world.",
+    "fr": "&cLe joueur cible n'est pas dans un monde."
+  },
+  "teleport.error.sender_not_in_world": {
+    "en": "&cYou are not in a world.",
+    "fr": "&cVous n'etes pas dans un monde."
+  },
+  "teleport.error.destination_not_in_world": {
+    "en": "&cDestination player is not in a world.",
+    "fr": "&cLa destination n'est pas dans un monde."
+  },
+  "teleport.success.others": {
+    "en": "&aTeleported {target} to {destination}.",
+    "fr": "&a{target} teleporte vers {destination}."
+  },
+  "teleport.success.self": {
+    "en": "&aTeleported to {destination}.",
+    "fr": "&aTeleporte vers {destination}."
+  },
+  "punishments.warning.default_reason": {
+    "en": "You have been warned for: {reason}.",
+    "fr": "Vous avez ete averti pour : {reason}."
+  },
+  "punishments.mute.perm.default_reason": {
+    "en": "You have been muted for: {reason}.",
+    "fr": "Vous avez ete mute pour : {reason}."
+  },
+  "punishments.mute.temp.default_reason": {
+    "en": "You have been temporarily muted for: {reason}. Duration: {duration}.",
+    "fr": "Vous avez ete temporairement mute pour : {reason}. Duree : {duration}."
+  },
+  "punishments.kick.default_reason": {
+    "en": "You have been kicked from the server for: {reason}.",
+    "fr": "Vous avez ete expulse du serveur pour : {reason}."
+  },
+  "punishments.ban.perm.default_reason": {
+    "en": "You have been banned from the server.\nReason: {reason}.",
+    "fr": "Vous avez ete banni du serveur.\nRaison : {reason}."
+  },
+  "punishments.ban.temp.default_reason": {
+    "en": "You have been temporarily banned from the server for: {reason}. Duration: {duration}.",
+    "fr": "Vous avez ete temporairement banni du serveur pour : {reason}. Duree : {duration}."
+  },
+  "error.player.offline": {
+    "en": "&cPlayer {player} is offline.",
+    "fr": "&cLe joueur {player} est hors ligne."
+  },
+  "error.player.self": {
+    "en": "&cYou cannot target yourself.",
+    "fr": "&cVous ne pouvez pas vous cibler vous-même."
+  },
+  "error.unknown_command": {
+    "en": "&cUnknown command. Use /help for a list of commands.",
+    "fr": "&cCommande inconnue. Utilisez /help pour la liste des commandes."
+  },
+  "error.invalid_arguments": {
+    "en": "&cInvalid arguments. Use: {usage}",
+    "fr": "&cArguments invalides. Utilisation : {usage}"
+  },
+  "error.no_permission": {
+    "en": "&cYou do not have permission to perform this action.",
+    "fr": "&cVous n'avez pas la permission d'effectuer cette action."
+  },
+  "success.command_executed": {
+    "en": "&aCommand executed successfully.",
+    "fr": "&aCommande exécutée avec succès."
+  },
+  "success.player_action": {
+    "en": "&aAction performed on {player}.",
+    "fr": "&aAction effectuée sur {player}."
+  },
+  "error.cooldown": {
+    "en": "&cYou must wait {seconds} seconds before using this again.",
+    "fr": "&cVous devez attendre {seconds} secondes avant de réutiliser ceci."
+  },
+  "error.combat_tagged": {
+    "en": "&cYou cannot do this while in combat.",
+    "fr": "&cVous ne pouvez pas faire ceci en combat."
+  },
+  "error.world.not_found": {
+    "en": "&cWorld not found.",
+    "fr": "&cMonde introuvable."
+  },
+  "error.location.invalid": {
+    "en": "&cInvalid location.",
+    "fr": "&cEmplacement invalide."
+  },
+  "info.loading": {
+    "en": "&eLoading...",
+    "fr": "&eChargement..."
+  },
+  "info.processing": {
+    "en": "&eProcessing your request...",
+    "fr": "&eTraitement de votre requête..."
+  },
+  "info.saved": {
+    "en": "&aData saved successfully.",
+    "fr": "&aDonnées sauvegardées avec succès."
+  },
+  "error.save_failed": {
+    "en": "&cFailed to save data.",
+    "fr": "&cÉchec de la sauvegarde des données."
+  },
+  "error.load_failed": {
+    "en": "&cFailed to load data.",
+    "fr": "&cÉchec du chargement des données."
+  },
+  "error.already_exists": {
+    "en": "&c{name} already exists.",
+    "fr": "&c{name} existe déjà."
+  },
+  "error.not_found": {
+    "en": "&c{name} not found.",
+    "fr": "&c{name} introuvable."
+  },
+  "success.created": {
+    "en": "&a{name} created successfully.",
+    "fr": "&a{name} créé avec succès."
+  },
+  "success.deleted": {
+    "en": "&a{name} deleted successfully.",
+    "fr": "&a{name} supprimé avec succès."
+  },
+  "success.updated": {
+    "en": "&a{name} updated successfully.",
+    "fr": "&a{name} mis à jour avec succès."
+  },
+  "confirm.action": {
+    "en": "&eAre you sure you want to {action}? Type &6/confirm&e to proceed.",
+    "fr": "&eÊtes-vous sûr de vouloir {action} ? Tapez &6/confirm&e pour continuer."
+  },
+  "confirm.timeout": {
+    "en": "&cConfirmation timeout. Action cancelled.",
+    "fr": "&cDélai de confirmation expiré. Action annulée."
+  },
+  "confirm.cancelled": {
+    "en": "&cAction cancelled.",
+    "fr": "&cAction annulée."
+  },
+  "list.header": {
+    "en": "&e--- {title} ---",
+    "fr": "&e--- {title} ---"
+  },
+  "list.empty": {
+    "en": "&cNo {items} found.",
+    "fr": "&cAucun {items} trouvé."
+  },
+  "list.footer": {
+    "en": "&ePage {current}/{total}",
+    "fr": "&ePage {current}/{total}"
+  },
+  "pagination.next": {
+    "en": "&aClick to view next page",
+    "fr": "&aCliquez pour voir la page suivante"
+  },
+  "pagination.previous": {
+    "en": "&aClick to view previous page",
+    "fr": "&aCliquez pour voir la page précédente"
+  },
+  "teleport.delayed.start": {
+    "en": "&eTeleportation in {seconds} seconds... Do not move.",
+    "fr": "&eTéléportation dans {seconds} secondes... Ne bougez pas."
+  },
+  "teleport.delayed.cancelled": {
+    "en": "&cTeleportation cancelled: you moved.",
+    "fr": "&cTéléportation annulée : vous avez bougé."
+  },
+  "teleport.spawn.success": {
+    "en": "&aTeleported to spawn point.",
+    "fr": "&aTéléporté au point d'apparition."
+  },
+  "teleport.home.success": {
+    "en": "&aTeleported to home.",
+    "fr": "&aTéléporté à la maison."
+  },
+  "teleport.home.not_found": {
+    "en": "&cHome with the name '{name}' does not exist.",
+    "fr": "&cLa maison nommée '{name}' n'existe pas."
+  },
+  "teleport.home.no_homes": {
+    "en": "&cYou do not have any homes set.",
+    "fr": "&cVous n'avez aucune maison définie."
+  },
+  "teleport.warp.success": {
+    "en": "&aTeleported to warp '{name}'.",
+    "fr": "&aTéléporté au warp '{name}'."
+  },
+  "teleport.warp.not_found": {
+    "en": "&cWarp '{name}' not found.",
+    "fr": "&cWarp '{name}' introuvable."
+  },
+  "teleport.request.sent": {
+    "en": "&aTeleport request sent to {target}.",
+    "fr": "&aDemande de téléportation envoyée à {target}."
+  },
+  "teleport.request.accepted": {
+    "en": "&aAccepted teleport request from {player}. Teleportation in {seconds} seconds...",
+    "fr": "&aDemande de téléportation de {player} acceptée. Téléportation dans {seconds} secondes..."
+  },
+  "teleport.back.success": {
+    "en": "&aTeleported back to previous location.",
+    "fr": "&aTéléporté à l'emplacement précédent."
+  },
+  "teleport.back.no_location": {
+    "en": "&cNo previous location found.",
+    "fr": "&cAucun emplacement précédent trouvé."
+  },
+  "teleport.home.set": {
+    "en": "&a✓ Home '{name}' set at {x}, {y}, {z} in world '{world}'.",
+    "fr": "&a✓ Maison '{name}' définie à {x}, {y}, {z} dans le monde '{world}'."
+  },
+  "teleport.home.already_exists": {
+    "en": "&cA home with the name '{name}' already exists.",
+    "fr": "&cUne maison nommée '{name}' existe déjà."
+  },
+  "teleport.home.name_empty": {
+    "en": "&cHome name cannot be empty.",
+    "fr": "&cLe nom de la maison ne peut pas être vide."
+  },
+  "teleport.home.deleted": {
+    "en": "&aHome '{name}' deleted.",
+    "fr": "&aMaison '{name}' supprimée."
+  },
+  "teleport.warp.set": {
+    "en": "&aSet warp '{name}' at {x}, {y}, {z} in world '{world}'.",
+    "fr": "&aWarp '{name}' défini à {x}, {y}, {z} dans le monde '{world}'."
+  },
+  "teleport.warp.already_exists": {
+    "en": "&cA warp with the name '{name}' already exists.",
+    "fr": "&cUn warp nommé '{name}' existe déjà."
+  },
+  "teleport.warp.name_empty": {
+    "en": "&cWarp name cannot be empty.",
+    "fr": "&cLe nom du warp ne peut pas être vide."
+  },
+  "teleport.warp.deleted": {
+    "en": "&aWarp '{name}' deleted.",
+    "fr": "&aWarp '{name}' supprimé."
+  },
+  "teleport.warp.no_permission": {
+    "en": "&cYou do not have permission to use this warp.",
+    "fr": "&cVous n'avez pas la permission d'utiliser ce warp."
+  },
+  "teleport.request.no_self": {
+    "en": "&cYou cannot send a teleport request to yourself.",
+    "fr": "&cVous ne pouvez pas vous envoyer une demande de téléportation."
+  },
+  "teleport.request.already_pending": {
+    "en": "&cYou already have a pending teleport request to {player}.",
+    "fr": "&cVous avez déjà une demande de téléportation en attente pour {player}."
+  },
+  "teleport.request.received": {
+    "en": "&e{player} has sent you a teleport request. Use &6/tpaccept&e to accept or &6/tpdeny&e to deny.",
+    "fr": "&e{player} vous a envoyé une demande de téléportation. Utilisez &6/tpaccept&e pour accepter ou &6/tpdeny&e pour refuser."
+  },
+  "teleport.request.no_pending": {
+    "en": "&cYou do not have any pending teleport requests.",
+    "fr": "&cVous n'avez aucune demande de téléportation en attente."
+  },
+  "teleport.request.no_pending_from": {
+    "en": "&cYou do not have a pending teleport request from {player}.",
+    "fr": "&cVous n'avez pas de demande de téléportation en attente de {player}."
+  },
+  "teleport.request.sender_offline": {
+    "en": "&cThe player who sent the request is no longer online.",
+    "fr": "&cLe joueur qui a envoyé la demande n'est plus en ligne."
+  },
+  "teleport.request.sender_not_in_world": {
+    "en": "&cThe player who sent the request is not in a world.",
+    "fr": "&cLe joueur qui a envoyé la demande n'est pas dans un monde."
+  },
+  "teleport.request.accepted.self": {
+    "en": "&aAccepted teleport request from {player}. Teleportation in {seconds} seconds...",
+    "fr": "&aDemande de téléportation de {player} acceptée. Téléportation dans {seconds} secondes..."
+  },
+  "teleport.request.accepted.other": {
+    "en": "&a{player} accepted your teleport request. Teleportation in {seconds} seconds... Do not move.",
+    "fr": "&a{player} a accepté votre demande de téléportation. Téléportation dans {seconds} secondes... Ne bougez pas."
+  },
+  "teleport.request.denied.self": {
+    "en": "&aDenied teleport request from {player}.",
+    "fr": "&aDemande de téléportation de {player} refusée."
+  },
+  "teleport.request.denied.other": {
+    "en": "&c{player} denied your teleport request.",
+    "fr": "&c{player} a refusé votre demande de téléportation."
+  },
+  "teleport.request.denied.failed": {
+    "en": "&cFailed to deny teleport request.",
+    "fr": "&cÉchec du refus de la demande de téléportation."
+  },
+  "teleport.request.refused": {
+    "en": "&cTeleport refused: {reason}",
+    "fr": "&cTéléportation refusée : {reason}"
+  },
+  "teleport.request.completed.sender": {
+    "en": "&aTeleported to {player}.",
+    "fr": "&aTéléporté vers {player}."
+  },
+  "teleport.request.completed.target": {
+    "en": "&a{player} teleported to you.",
+    "fr": "&a{player} s'est téléporté vers vous."
+  },
+  "teleport.request.cancelled.sender": {
+    "en": "&cTeleportation cancelled: you moved.",
+    "fr": "&cTéléportation annulée : vous avez bougé."
+  },
+  "teleport.request.cancelled.target": {
+    "en": "&cTeleportation cancelled: {player} moved.",
+    "fr": "&cTéléportation annulée : {player} a bougé."
+  },
+  "teleport.death.success": {
+    "en": "&aTeleported to your last death location.",
+    "fr": "&aTéléporté à votre dernier emplacement de mort."
+  },
+  "teleport.death.no_location": {
+    "en": "&cYou have not died in this world.",
+    "fr": "&cVous n'êtes pas mort dans ce monde."
+  },
+  "teleport.death.failed": {
+    "en": "&cFailed to get player component.",
+    "fr": "&cÉchec de récupération du composant joueur."
+  },
+  "teleport.error.not_online": {
+    "en": "&cYou are not online.",
+    "fr": "&cVous n'êtes pas en ligne."
+  },
+  "teleport.error.player_offline": {
+    "en": "&cTarget player is not online.",
+    "fr": "&cLe joueur cible n'est pas en ligne."
+  },
+  "teleport.error.player_not_found": {
+    "en": "&cTarget player not found.",
+    "fr": "&cJoueur cible introuvable."
+  },
+  "teleport.error.transform_failed": {
+    "en": "&cFailed to get your transform.",
+    "fr": "&cÉchec de récupération de votre transformation."
+  },
+  "teleport.error.rotation_failed": {
+    "en": "&cFailed to get your head rotation.",
+    "fr": "&cÉchec de récupération de votre rotation de tête."
+  },
+  "moderation.ban.success": {
+    "en": "&aPlayer {target} has been banned for {duration}. Reason: {reason}",
+    "fr": "&aLe joueur {target} a été banni pour {duration}. Raison : {reason}"
+  },
+  "moderation.ban.permanent.success": {
+    "en": "&aPlayer {target} has been permanently banned. Reason: {reason}",
+    "fr": "&aLe joueur {target} a été banni définitivement. Raison : {reason}"
+  },
+  "moderation.unban.success": {
+    "en": "&aPlayer {target} has been unbanned.",
+    "fr": "&aLe joueur {target} a été débanni."
+  },
+  "moderation.unban.not_banned": {
+    "en": "&cPlayer {target} is not banned.",
+    "fr": "&cLe joueur {target} n'est pas banni."
+  },
+  "moderation.mute.success": {
+    "en": "&aPlayer {target} has been muted for {duration}. Reason: {reason}",
+    "fr": "&aLe joueur {target} a été réduit au silence pour {duration}. Raison : {reason}"
+  },
+  "moderation.mute.permanent.success": {
+    "en": "&aPlayer {target} has been permanently muted. Reason: {reason}",
+    "fr": "&aLe joueur {target} a été réduit au silence définitivement. Raison : {reason}"
+  },
+  "moderation.unmute.success": {
+    "en": "&aPlayer {target} has been unmuted.",
+    "fr": "&aLe joueur {target} peut parler à nouveau."
+  },
+  "moderation.unmute.not_muted": {
+    "en": "&cPlayer {target} is not muted.",
+    "fr": "&cLe joueur {target} n'est pas muet."
+  },
+  "moderation.kick.success": {
+    "en": "&aPlayer {target} has been kicked. Reason: {reason}",
+    "fr": "&aLe joueur {target} a été expulsé. Raison : {reason}"
+  },
+  "moderation.warn.success": {
+    "en": "&aPlayer {target} has been warned. Reason: {reason}",
+    "fr": "&aLe joueur {target} a été averti. Raison : {reason}"
+  },
+  "moderation.player_offline": {
+    "en": "&cPlayer {target} is not online.",
+    "fr": "&cLe joueur {target} n'est pas en ligne."
+  },
+  "moderation.history.header": {
+    "en": "&e--- Punishment History for {player} ---",
+    "fr": "&e--- Historique des sanctions pour {player} ---"
+  },
+  "moderation.history.empty": {
+    "en": "&aNo punishment history found for {player}.",
+    "fr": "&aAucun historique de sanctions trouvé pour {player}."
+  },
+  "moderation.clear.success": {
+    "en": "&aCleared punishment history for {player}.",
+    "fr": "&aHistorique des sanctions effacé pour {player}."
+  },
+  "economy.balance.self": {
+    "en": "&eYour balance: &6{amount} {currency}",
+    "fr": "&eVotre solde : &6{amount} {currency}"
+  },
+  "economy.balance.other": {
+    "en": "&e{player}'s balance: &6{amount} {currency}",
+    "fr": "&eSolde de {player} : &6{amount} {currency}"
+  },
+  "economy.pay.success": {
+    "en": "&aYou sent &6{amount} {currency}&a to {target}.",
+    "fr": "&aVous avez envoyé &6{amount} {currency}&a à {target}."
+  },
+  "economy.pay.received": {
+    "en": "&aYou received &6{amount} {currency}&a from {sender}.",
+    "fr": "&aVous avez reçu &6{amount} {currency}&a de {sender}."
+  },
+  "economy.pay.insufficient_funds": {
+    "en": "&cInsufficient funds. Required: &6{required}&c, Available: &6{available}",
+    "fr": "&cFonds insuffisants. Requis : &6{required}&c, Disponible : &6{available}"
+  },
+  "economy.pay.invalid_amount": {
+    "en": "&cInvalid amount. Amount must be positive.",
+    "fr": "&cMontant invalide. Le montant doit être positif."
+  },
+  "economy.set.success": {
+    "en": "&aSet {player}'s balance to &6{amount} {currency}&a.",
+    "fr": "&aSolde de {player} défini à &6{amount} {currency}&a."
+  },
+  "economy.add.success": {
+    "en": "&aAdded &6{amount} {currency}&a to {player}'s balance.",
+    "fr": "&a&6{amount} {currency}&a ajouté au solde de {player}."
+  },
+  "economy.remove.success": {
+    "en": "&aRemoved &6{amount} {currency}&a from {player}'s balance.",
+    "fr": "&a&6{amount} {currency}&a retiré du solde de {player}."
+  },
+  "economy.currency.created": {
+    "en": "&aCurrency '{name}' created.",
+    "fr": "&aMonnaie '{name}' créée."
+  },
+  "economy.currency.deleted": {
+    "en": "&aCurrency '{name}' deleted.",
+    "fr": "&aMonnaie '{name}' supprimée."
+  },
+  "economy.currency.not_found": {
+    "en": "&cCurrency '{name}' not found.",
+    "fr": "&cMonnaie '{name}' introuvable."
+  },
+  "economy.currency.already_exists": {
+    "en": "&cCurrency '{name}' already exists.",
+    "fr": "&cLa monnaie '{name}' existe déjà."
+  },
+  "chat.message.player_offline": {
+    "en": "&cPlayer {player} is not online.",
+    "fr": "&cLe joueur {player} n'est pas en ligne."
+  },
+  "chat.message.cannot_self": {
+    "en": "&cYou cannot send a private message to yourself.",
+    "fr": "&cVous ne pouvez pas vous envoyer un message privé."
+  },
+  "chat.message.disabled": {
+    "en": "&c{player} is not accepting private messages.",
+    "fr": "&c{player} n'accepte pas les messages privés."
+  },
+  "chat.message.ignored": {
+    "en": "&cYou cannot send a private message to {player} because they are ignoring you.",
+    "fr": "&cVous ne pouvez pas envoyer de message privé à {player} car ils vous ignorent."
+  },
+  "chat.reply.no_target": {
+    "en": "&cYou have no one to reply to.",
+    "fr": "&cVous n'avez personne à qui répondre."
+  },
+  "chat.ignore.added": {
+    "en": "&aYou are now ignoring {player}.",
+    "fr": "&aVous ignorez maintenant {player}."
+  },
+  "chat.ignore.removed": {
+    "en": "&aYou are no longer ignoring {player}.",
+    "fr": "&aVous n'ignorez plus {player}."
+  },
+  "chat.ignore.already": {
+    "en": "&cYou are already ignoring {player}.",
+    "fr": "&cVous ignorez déjà {player}."
+  },
+  "chat.ignore.not": {
+    "en": "&cYou are not ignoring {player}.",
+    "fr": "&cVous n'ignorez pas {player}."
+  },
+  "chat.toggle.enabled": {
+    "en": "&aPrivate messages enabled.",
+    "fr": "&aMessages privés activés."
+  },
+  "chat.toggle.disabled": {
+    "en": "&cPrivate messages disabled.",
+    "fr": "&cMessages privés désactivés."
+  },
+  "kit.received": {
+    "en": "&aYou have received the kit: {name}",
+    "fr": "&aVous avez reçu le kit : {name}"
+  },
+  "kit.no_permission": {
+    "en": "&cYou do not have permission to use this kit.",
+    "fr": "&cVous n'avez pas la permission d'utiliser ce kit."
+  },
+  "kit.list.header": {
+    "en": "&e--- Available Kits ---",
+    "fr": "&e--- Kits Disponibles ---"
+  },
+  "kit.list.entry": {
+    "en": "&7- &a{name}",
+    "fr": "&7- &a{name}"
+  },
+  "kit.list.empty": {
+    "en": "&cNo kits available.",
+    "fr": "&cAucun kit disponible."
+  },
+  "kit.created": {
+    "en": "&aKit '{name}' created successfully.",
+    "fr": "&aKit '{name}' créé avec succès."
+  },
+  "kit.deleted": {
+    "en": "&aKit '{name}' deleted successfully.",
+    "fr": "&aKit '{name}' supprimé avec succès."
+  },
+  "kit.already_exists": {
+    "en": "&cA kit with this name already exists.",
+    "fr": "&cUn kit avec ce nom existe déjà."
+  },
+  "kit.error.not_player": {
+    "en": "&cYou must be a player to use this command.",
+    "fr": "&cVous devez être un joueur pour utiliser cette commande."
+  },
+  "economy.currency.no_primary": {
+    "en": "&cNo primary currency is set.",
+    "fr": "&cAucune monnaie principale n'est définie."
+  },
+  "kit.created": {
+    "en": "&aKit '{name}' created.",
+    "fr": "&aKit '{name}' créé."
+  },
+  "kit.deleted": {
+    "en": "&aKit '{name}' deleted.",
+    "fr": "&aKit '{name}' supprimé."
+  },
+  "kit.not_found": {
+    "en": "&cKit '{name}' not found.",
+    "fr": "&cKit '{name}' introuvable."
+  },
+  "kit.claimed": {
+    "en": "&aYou received the kit '{name}'.",
+    "fr": "&aVous avez reçu le kit '{name}'."
+  },
+  "kit.cooldown": {
+    "en": "&cYou must wait {time} before claiming this kit again.",
+    "fr": "&cVous devez attendre {time} avant de récupérer ce kit à nouveau."
+  },
+  "permission.added": {
+    "en": "&aPermission '{permission}' added to {target}.",
+    "fr": "&aPermission '{permission}' ajoutée à {target}."
+  },
+  "permission.removed": {
+    "en": "&aPermission '{permission}' removed from {target}.",
+    "fr": "&aPermission '{permission}' retirée de {target}."
+  },
+  "group.created": {
+    "en": "&aGroup '{name}' created.",
+    "fr": "&aGroupe '{name}' créé."
+  },
+  "group.deleted": {
+    "en": "&aGroup '{name}' deleted.",
+    "fr": "&aGroupe '{name}' supprimé."
+  },
+  "group.not_found": {
+    "en": "&cGroup '{name}' not found.",
+    "fr": "&cGroupe '{name}' introuvable."
+  },
+  "group.player_added": {
+    "en": "&aPlayer {player} added to group '{group}'.",
+    "fr": "&aJoueur {player} ajouté au groupe '{group}'."
+  },
+  "group.player_removed": {
+    "en": "&aPlayer {player} removed from group '{group}'.",
+    "fr": "&aJoueur {player} retiré du groupe '{group}'."
+  },
+  "chat.message_sent": {
+    "en": "&aMessage sent to {target}.",
+    "fr": "&aMessage envoyé à {target}."
+  },
+  "chat.no_reply_target": {
+    "en": "&cNo one to reply to.",
+    "fr": "&cPersonne à qui répondre."
+  },
+  "chat.muted": {
+    "en": "&cYou are muted and cannot send messages.",
+    "fr": "&cVous êtes muet et ne pouvez pas envoyer de messages."
+  },
+  "teleport.spawn.set": {
+    "en": "&aSpawn point set to {x}, {y}, {z} in world '{world}'.",
+    "fr": "&aPoint d'apparition défini à {x}, {y}, {z} dans le monde '{world}'."
+  },
+  "teleport.list.homes.header": {
+    "en": "&eYour Homes:",
+    "fr": "&eVos Maisons :"
+  },
+  "teleport.list.homes.entry": {
+    "en": "&7- {name} &f(World: {world}, X: {x}, Y: {y}, Z: {z})",
+    "fr": "&7- {name} &f(Monde: {world}, X: {x}, Y: {y}, Z: {z})"
+  },
+  "teleport.list.warps.header": {
+    "en": "&eAvailable Warps:",
+    "fr": "&eWarps Disponibles :"
+  },
+  "teleport.list.warps.entry": {
+    "en": "&7- {name} &f(World: {world}, X: {x}, Y: {y}, Z: {z})",
+    "fr": "&7- {name} &f(Monde: {world}, X: {x}, Y: {y}, Z: {z})"
+  }
+}

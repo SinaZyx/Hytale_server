@@ -2,7 +2,8 @@ package com.fancyinnovations.fancycore.commands.teleport;
 
 import com.fancyinnovations.fancycore.api.teleport.Warp;
 import com.fancyinnovations.fancycore.api.teleport.WarpService;
-import com.hypixel.hytale.server.core.Message;
+import com.fancyinnovations.fancycore.main.FancyCorePlugin;
+import com.fancyinnovations.fancycore.translations.TranslationService;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
 import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
@@ -11,6 +12,7 @@ import org.jetbrains.annotations.NotNull;
 
 public class DeleteWarpCMD extends CommandBase {
 
+    private final TranslationService translator = FancyCorePlugin.get().getTranslationService();
     protected final RequiredArg<String> nameArg = this.withRequiredArg("warp", "name of the warp", ArgTypes.STRING);
 
     public DeleteWarpCMD() {
@@ -23,20 +25,22 @@ public class DeleteWarpCMD extends CommandBase {
     protected void executeSync(@NotNull CommandContext ctx) {
         String warpName = nameArg.get(ctx);
         if (warpName == null || warpName.trim().isEmpty()) {
-            ctx.sendMessage(Message.raw("Warp name cannot be empty."));
+            translator.getMessage("teleport.warp.name_empty").sendTo(ctx.sender());
             return;
         }
 
         Warp warp = WarpService.get().getWarp(warpName);
         if (warp == null) {
-            ctx.sendMessage(Message.raw("Warp \"" + warpName + "\" does not exist."));
+            translator.getMessage("teleport.warp.not_found")
+                .replace("name", warpName)
+                .sendTo(ctx.sender());
             return;
         }
 
-        // Delete warp
         WarpService.get().deleteWarp(warp.name());
 
-        // Send success message
-        ctx.sendMessage(Message.raw("Warp \"" + warpName + "\" deleted."));
+        translator.getMessage("teleport.warp.deleted")
+            .replace("name", warpName)
+            .sendTo(ctx.sender());
     }
 }

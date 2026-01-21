@@ -22,18 +22,6 @@ public class PunishmentServiceImpl implements PunishmentService {
     public PunishmentServiceImpl() {
         this.storage = FancyCorePlugin.get().getPunishmentStorage();
         this.translator = FancyCorePlugin.get().getTranslationService();
-
-        translator
-                .addMessage("punishments.warning.default_reason", "en", "You have been warned for: {reason}.")
-                .addMessage("punishments.mute.perm.default_reason", "en", "You have been muted for: {reason}.")
-                .addMessage("punishments.mute.temp.default_reason", "en",
-                        "You have been temporarily muted for: {reason}. Duration: {duration}.")
-                .addMessage("punishments.kick.default_reason", "en",
-                        "You have been kicked from the server for: {reason}.")
-                .addMessage("punishments.ban.perm.default_reason", "en",
-                        "You have been banned from the server.\nReason: {reason}.")
-                .addMessage("punishments.ban.temp.default_reason", "en",
-                        "You have been temporarily banned from the server for: {reason}. Duration: {duration}.");
     }
 
     @Override

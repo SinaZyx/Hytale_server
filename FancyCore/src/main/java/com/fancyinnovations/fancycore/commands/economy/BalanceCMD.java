@@ -6,7 +6,8 @@ import com.fancyinnovations.fancycore.api.player.FancyPlayer;
 import com.fancyinnovations.fancycore.api.player.FancyPlayerService;
 import com.fancyinnovations.fancycore.commands.arguments.FancyCoreArgs;
 import com.fancyinnovations.fancycore.utils.NumberUtils;
-import com.hypixel.hytale.server.core.Message;
+import com.fancyinnovations.fancycore.main.FancyCorePlugin;
+import com.fancyinnovations.fancycore.translations.TranslationService;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.arguments.system.OptionalArg;
 import com.hypixel.hytale.server.core.command.system.basecommands.CommandBase;
@@ -14,7 +15,9 @@ import org.jetbrains.annotations.NotNull;
 
 public class BalanceCMD extends CommandBase {
 
-    protected final OptionalArg<FancyPlayer> targetArg = this.withOptionalArg("target", "Username or UUID", FancyCoreArgs.PLAYER);
+    private final TranslationService translator = FancyCorePlugin.get().getTranslationService();
+    protected final OptionalArg<FancyPlayer> targetArg = this.withOptionalArg("target", "Username or UUID",
+            FancyCoreArgs.PLAYER);
 
     public BalanceCMD() {
         super("balance", "Check your or someone else's balance.");
@@ -25,13 +28,13 @@ public class BalanceCMD extends CommandBase {
     @Override
     protected void executeSync(@NotNull CommandContext ctx) {
         if (!ctx.isPlayer()) {
-            ctx.sendMessage(Message.raw("This command can only be executed by a player."));
+            translator.getMessage("error.command.player_only").sendTo(ctx.sender());
             return;
         }
 
         FancyPlayer fp = FancyPlayerService.get().getByUUID(ctx.sender().getUuid());
         if (fp == null) {
-            ctx.sendMessage(Message.raw("FancyPlayer not found."));
+            translator.getMessage("error.player.not_found").sendTo(ctx.sender());
             return;
         }
 
@@ -39,12 +42,16 @@ public class BalanceCMD extends CommandBase {
 
         Currency currency = CurrencyService.get().getPrimaryCurrency();
         if (currency == null) {
-            fp.sendMessage("No primary currency is set.");
+            translator.getMessage("economy.currency.no_primary", fp.getLanguage()).sendTo(fp);
             return;
         }
 
         double balance = target.getData().getBalance(currency);
-
-        fp.sendMessage(target.getData().getUsername() + " currently has " +  currency.symbol() + NumberUtils.formatNumber(balance) + " " + currency.name());
+        String key = target.equals(fp) ? "economy.balance.self" : "economy.balance.other";
+        translator.getMessage(key, fp.getLanguage())
+                .replace("player", target.getData().getUsername())
+                .replace("amount", currency.symbol() + NumberUtils.formatNumber(balance))
+                .replace("currency", currency.name())
+                .sendTo(fp);
     }
 }

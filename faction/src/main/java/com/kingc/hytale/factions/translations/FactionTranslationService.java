@@ -1,11 +1,8 @@
-package com.fancyinnovations.fancycore.translations;
+package com.kingc.hytale.factions.translations;
 
-import com.fancyinnovations.fancycore.main.FancyCorePlugin;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 import com.google.gson.reflect.TypeToken;
-import de.oliver.fancyanalytics.logger.properties.StringProperty;
-import de.oliver.fancyanalytics.logger.properties.ThrowableProperty;
 
 import java.io.File;
 import java.io.InputStream;
@@ -22,18 +19,20 @@ import java.util.Set;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class TranslationService {
+public class FactionTranslationService {
 
     private static final String DEFAULT_LANGUAGE = "en";
-    private static final String DEFAULT_RESOURCE_PATH = "/messages.json";
-    private static final String LANG_FILE_PATH = "mods/FancyCore/lang/messages.json";
+    private static final String DEFAULT_RESOURCE_PATH = "/faction_messages.json";
+    private static final String LANG_FILE_PATH = "mods/Factions/lang/faction_messages.json";
     private static final Type MESSAGE_MAP_TYPE = new TypeToken<Map<String, Map<String, String>>>() { }.getType();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
-    private final Map<String, Map<String, Message>> messages;
+    private static FactionTranslationService instance;
+
+    private final Map<String, Map<String, FactionMessage>> messages;
     private final Map<String, Map<String, String>> defaultMessages;
 
-    public TranslationService() {
+    private FactionTranslationService() {
         this.messages = new ConcurrentHashMap<>();
         this.defaultMessages = loadDefaultMessages();
         applyMessages(this.defaultMessages, false);
@@ -41,47 +40,55 @@ public class TranslationService {
         applyMessages(loadMessagesFromFile(), false);
     }
 
-    public TranslationService addMessage(String key, String language, String message) {
+    public static void init() {
+        if (instance == null) {
+            instance = new FactionTranslationService();
+        }
+    }
+
+    public static FactionTranslationService get() {
+        if (instance == null) {
+            init();
+        }
+        return instance;
+    }
+
+    public FactionTranslationService addMessage(String key, String language, String message) {
         String lang = normalizeLanguage(language);
         if (key == null || key.isBlank() || lang == null || message == null) {
             return this;
         }
         this.messages.computeIfAbsent(key, k -> new ConcurrentHashMap<>())
-                .put(lang, new Message(key, message));
+                .put(lang, new FactionMessage(key, message));
         return this;
     }
 
-    public Message getMessage(String key, String language) {
+    public FactionMessage getMessage(String key, String language) {
         String lang = normalizeLanguage(language);
         if (lang == null) {
             lang = DEFAULT_LANGUAGE;
         }
 
-        Map<String, Message> langMap = this.messages.get(key);
+        Map<String, FactionMessage> langMap = this.messages.get(key);
         if (langMap == null) {
-            return new Message(key, "Missing translation for key: " + key);
+            return new FactionMessage(key, "Missing translation for key: " + key);
         }
 
-        Message message = langMap.get(lang);
+        FactionMessage message = langMap.get(lang);
         if (message == null) {
             message = langMap.get(DEFAULT_LANGUAGE);
         }
 
         if (message == null) {
             message = langMap.values().stream().findFirst()
-                    .orElse(new Message(key, "Missing translation for key: " + key));
+                    .orElse(new FactionMessage(key, "Missing translation for key: " + key));
         }
 
-        return new Message(message.getKey(), message.getRawMessage());
+        return new FactionMessage(message.getKey(), message.getRawMessage());
     }
 
-    public Message getMessage(String key) {
+    public FactionMessage getMessage(String key) {
         return getMessage(key, DEFAULT_LANGUAGE);
-    }
-
-    public Message getMessage(String key, com.fancyinnovations.fancycore.api.player.FancyPlayer player) {
-        String language = player != null ? player.getLanguage() : DEFAULT_LANGUAGE;
-        return getMessage(key, language);
     }
 
     public String getDefaultLanguage() {
@@ -90,7 +97,7 @@ public class TranslationService {
 
     public Set<String> getAvailableLanguages() {
         Set<String> languages = new TreeSet<>();
-        for (Map<String, Message> langMap : this.messages.values()) {
+        for (Map<String, FactionMessage> langMap : this.messages.values()) {
             languages.addAll(langMap.keySet());
         }
         if (languages.isEmpty()) {
@@ -125,23 +132,20 @@ public class TranslationService {
                     continue;
                 }
                 this.messages.computeIfAbsent(key, k -> new ConcurrentHashMap<>())
-                        .put(language, new Message(key, message));
+                        .put(language, new FactionMessage(key, message));
             }
         }
     }
 
     private boolean hasMessage(String key, String language) {
-        Map<String, Message> langMap = this.messages.get(key);
+        Map<String, FactionMessage> langMap = this.messages.get(key);
         return langMap != null && langMap.containsKey(language);
     }
 
     private Map<String, Map<String, String>> loadDefaultMessages() {
-        try (InputStream input = TranslationService.class.getResourceAsStream(DEFAULT_RESOURCE_PATH)) {
+        try (InputStream input = FactionTranslationService.class.getResourceAsStream(DEFAULT_RESOURCE_PATH)) {
             if (input == null) {
-                FancyCorePlugin.get().getFancyLogger().warn(
-                        "Missing default translation resource",
-                        StringProperty.of("resource", DEFAULT_RESOURCE_PATH)
-                );
+                System.err.println("[Factions] Missing default translation resource: " + DEFAULT_RESOURCE_PATH);
                 return new LinkedHashMap<>();
             }
             try (Reader reader = new InputStreamReader(input, StandardCharsets.UTF_8)) {
@@ -149,11 +153,7 @@ public class TranslationService {
                 return data != null ? data : new LinkedHashMap<>();
             }
         } catch (Exception e) {
-            FancyCorePlugin.get().getFancyLogger().warn(
-                    "Failed to load default translations",
-                    StringProperty.of("resource", DEFAULT_RESOURCE_PATH),
-                    ThrowableProperty.of(e)
-            );
+            System.err.println("[Factions] Failed to load default translations: " + e.getMessage());
             return new LinkedHashMap<>();
         }
     }
@@ -175,11 +175,7 @@ public class TranslationService {
         try {
             Files.writeString(file.toPath(), GSON.toJson(defaultMessages), StandardCharsets.UTF_8);
         } catch (Exception e) {
-            FancyCorePlugin.get().getFancyLogger().warn(
-                    "Failed to create translation file",
-                    StringProperty.of("path", LANG_FILE_PATH),
-                    ThrowableProperty.of(e)
-            );
+            System.err.println("[Factions] Failed to create translation file: " + e.getMessage());
         }
     }
 
@@ -193,11 +189,7 @@ public class TranslationService {
             Map<String, Map<String, String>> data = GSON.fromJson(reader, MESSAGE_MAP_TYPE);
             return data != null ? data : null;
         } catch (Exception e) {
-            FancyCorePlugin.get().getFancyLogger().warn(
-                    "Failed to load translation file",
-                    StringProperty.of("path", LANG_FILE_PATH),
-                    ThrowableProperty.of(e)
-            );
+            System.err.println("[Factions] Failed to load translation file: " + e.getMessage());
             return null;
         }
     }

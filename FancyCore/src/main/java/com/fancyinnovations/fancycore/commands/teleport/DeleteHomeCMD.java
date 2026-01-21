@@ -2,7 +2,8 @@ package com.fancyinnovations.fancycore.commands.teleport;
 
 import com.fancyinnovations.fancycore.api.player.FancyPlayer;
 import com.fancyinnovations.fancycore.api.player.FancyPlayerService;
-import com.hypixel.hytale.server.core.Message;
+import com.fancyinnovations.fancycore.main.FancyCorePlugin;
+import com.fancyinnovations.fancycore.translations.TranslationService;
 import com.hypixel.hytale.server.core.command.system.CommandContext;
 import com.hypixel.hytale.server.core.command.system.arguments.system.RequiredArg;
 import com.hypixel.hytale.server.core.command.system.arguments.types.ArgTypes;
@@ -13,6 +14,7 @@ import java.util.Map;
 
 public class DeleteHomeCMD extends CommandBase {
 
+    private final TranslationService translator = FancyCorePlugin.get().getTranslationService();
     protected final RequiredArg<String> nameArg = this.withRequiredArg("", "Home name", ArgTypes.STRING);
 
     public DeleteHomeCMD() {
@@ -24,19 +26,20 @@ public class DeleteHomeCMD extends CommandBase {
     @Override
     protected void executeSync(@NotNull CommandContext ctx) {
         if (!ctx.isPlayer()) {
-            ctx.sendMessage(Message.raw("This command can only be executed by a player."));
+            translator.getMessage("error.command.player_only").sendTo(ctx.sender());
             return;
         }
 
         FancyPlayer fp = FancyPlayerService.get().getByUUID(ctx.sender().getUuid());
         if (fp == null) {
-            ctx.sendMessage(Message.raw("FancyPlayer not found."));
+            translator.getMessage("error.player.not_found").sendTo(ctx.sender());
             return;
         }
 
         String homeName = nameArg.get(ctx);
         if (homeName == null || homeName.trim().isEmpty()) {
-            ctx.sendMessage(Message.raw("Home name cannot be empty."));
+            translator.getMessage("teleport.home.name_empty", fp.getLanguage())
+                .sendTo(fp);
             return;
         }
 
@@ -46,7 +49,9 @@ public class DeleteHomeCMD extends CommandBase {
         Map<String, Map<String, Object>> homes = (Map<String, Map<String, Object>>) customData.get("homes");
 
         if (homes == null || !homes.containsKey(homeName)) {
-            ctx.sendMessage(Message.raw("Home \"" + homeName + "\" does not exist."));
+            translator.getMessage("teleport.home.not_found", fp.getLanguage())
+                .replace("name", homeName)
+                .sendTo(fp);
             return;
         }
 
@@ -55,6 +60,8 @@ public class DeleteHomeCMD extends CommandBase {
         fp.getData().setCustomData("homes", homes);
 
         // Send success message
-        ctx.sendMessage(Message.raw("Home \"" + homeName + "\" deleted."));
+        translator.getMessage("teleport.home.deleted", fp.getLanguage())
+            .replace("name", homeName)
+            .sendTo(fp);
     }
 }
