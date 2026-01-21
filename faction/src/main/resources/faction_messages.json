@@ -31,6 +31,10 @@
     "en": "Name too long. Maximum {max} characters.",
     "fr": "Nom trop long. Maximum {max} caractères."
   },
+  "error.arg.invalid_language": {
+    "en": "Invalid language. Available: en, fr",
+    "fr": "Langue invalide. Disponibles : en, fr"
+  },
   "faction.create.success": {
     "en": "Faction created: {name}",
     "fr": "Faction créée : {name}"
@@ -135,11 +139,11 @@
     "en": "Teleportation in {seconds} seconds... Do not move.",
     "fr": "Téléportation dans {seconds} secondes... Ne bougez pas."
   },
-  "faction.home.teleport_cancelled": {
+  "faction.home.cancelled": {
     "en": "Teleportation cancelled: you moved.",
     "fr": "Téléportation annulée : vous avez bougé."
   },
-  "faction.home.teleport_success": {
+  "faction.home.success": {
     "en": "Teleported to faction home.",
     "fr": "Téléporté à la base de faction."
   },
@@ -790,10 +794,6 @@
   "faction.unclaim.success": {
     "en": "Chunk unclaimed.",
     "fr": "Chunk unclaim."
-  },
-  "faction.home.ready": {
-    "en": "Home ready.",
-    "fr": "Home prêt."
   },
   "error.treasury.invalid_amount": {
     "en": "Amount must be positive.",

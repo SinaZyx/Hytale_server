@@ -712,19 +712,40 @@ public final class CommandDispatcher {
         if (playerId == null) {
             return;
         }
+        System.out.println("[DEBUG] Handling home command for " + playerId);
+
         Result<Location> result = service.getHome(playerId);
         if (!result.ok()) {
+            System.out.println("[DEBUG] getHome failed: " + result.message());
             send(source, result.message());
             return;
         }
         Location home = result.value();
-        send(source, translator.getMessage("faction.home.teleport_start").getRawMessage());
+        System.out.println("[DEBUG] Home location found: " + home);
 
+        // Message avec placeholder {seconds}
+        FactionMessage teleportMsg = translator.getMessage("faction.home.teleport_start", "en");
+        if (teleportMsg == null) {
+            System.out.println("[DEBUG] Message faction.home.teleport_start not found!");
+            send(source, "Error: Translation missing");
+            return;
+        }
+
+        teleportMsg = teleportMsg.replace("seconds", "5");
+        send(source, teleportMsg.getRawMessage());
+
+        System.out.println("[DEBUG] Starting teleport delayed task...");
         server.teleportDelayed(playerId, home, 5,
-                () -> server.sendMessage(playerId,
-                        PREFIX + translator.getMessage("faction.home.success").getRawMessage()),
-                () -> server.sendMessage(playerId,
-                        PREFIX + translator.getMessage("faction.home.cancelled").getRawMessage()));
+                () -> {
+                    System.out.println("[DEBUG] Teleport success callback");
+                    server.sendMessage(playerId,
+                            PREFIX + translator.getMessage("faction.home.success", "en").getRawMessage());
+                },
+                () -> {
+                    System.out.println("[DEBUG] Teleport cancelled callback");
+                    server.sendMessage(playerId,
+                            PREFIX + translator.getMessage("faction.home.cancelled", "en").getRawMessage());
+                });
     }
 
     private void handleClaim(CommandSource source) {
