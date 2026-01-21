@@ -32,6 +32,19 @@ public final class DuelsSettings {
     // Messages
     private String messagePrefix = "[Duels] ";
 
+    // Notifications
+    private boolean enableToasts = true;
+    private boolean enableTitles = true;
+
+    // Economy
+    private boolean economyEnabled = false;
+    private int victoryReward = 100;
+    private int entryFee = 0;
+
+    // Effects
+    private boolean enableParticles = true;
+    private boolean enableSounds = true;
+
     public DuelsSettings() {}
 
     public static DuelsSettings load(Path filePath) throws IOException {
@@ -91,4 +104,12 @@ public final class DuelsSettings {
     public String messagePrefix() {
         return messagePrefix;
     }
+
+    public boolean enableToasts() { return enableToasts; }
+    public boolean enableTitles() { return enableTitles; }
+    public boolean economyEnabled() { return economyEnabled; }
+    public int victoryReward() { return victoryReward; }
+    public int entryFee() { return entryFee; }
+    public boolean enableParticles() { return enableParticles; }
+    public boolean enableSounds() { return enableSounds; }
 }

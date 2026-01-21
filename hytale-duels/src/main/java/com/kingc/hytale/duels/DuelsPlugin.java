@@ -3,6 +3,8 @@ package com.kingc.hytale.duels;
 import com.kingc.hytale.duels.api.CommandSource;
 import com.kingc.hytale.duels.api.Location;
 import com.kingc.hytale.duels.api.ServerAdapter;
+import com.kingc.hytale.duels.api.event.DuelEventBus;
+import com.kingc.hytale.duels.notifications.NotificationService;
 import com.kingc.hytale.duels.arena.ArenaRepository;
 import com.kingc.hytale.duels.arena.ArenaService;
 import com.kingc.hytale.duels.command.CommandDispatcher;
@@ -12,6 +14,7 @@ import com.kingc.hytale.duels.match.MatchService;
 import com.kingc.hytale.duels.queue.QueueService;
 import com.kingc.hytale.duels.ranking.RankingRepository;
 import com.kingc.hytale.duels.ranking.RankingService;
+import com.kingc.hytale.duels.translations.DuelsTranslationService;
 
 import java.io.IOException;
 import java.nio.file.Files;
@@ -31,6 +34,8 @@ public final class DuelsPlugin {
     private final MatchService matchService;
     private final QueueService queueService;
     private final CommandDispatcher dispatcher;
+    private final DuelEventBus eventBus;
+    private final NotificationService notificationService;
 
     public DuelsPlugin(Path dataDir, ServerAdapter server) throws IOException {
         this.dataDir = dataDir;
@@ -38,6 +43,7 @@ public final class DuelsPlugin {
 
         Files.createDirectories(dataDir);
 
+        DuelsTranslationService.init();
         this.settings = DuelsSettings.load(dataDir.resolve("settings.json"));
 
         this.kitRepository = new KitRepository(dataDir.resolve("kits.json"));
@@ -49,7 +55,10 @@ public final class DuelsPlugin {
         this.rankingRepository = new RankingRepository(dataDir.resolve("rankings.json"));
         this.rankingService = new RankingService(rankingRepository, server, server::nowEpochMs);
 
-        this.matchService = new MatchService(server, arenaService, kitService, rankingService, server::nowEpochMs);
+        this.eventBus = new DuelEventBus();
+        this.notificationService = new NotificationService(server);
+
+        this.matchService = new MatchService(server, arenaService, kitService, rankingService, eventBus, notificationService, server::nowEpochMs);
         this.queueService = new QueueService(server, matchService, server::nowEpochMs);
 
         this.dispatcher = new CommandDispatcher(matchService, queueService, kitService, rankingService, server);
@@ -103,5 +112,13 @@ public final class DuelsPlugin {
 
     public RankingService rankingService() {
         return rankingService;
+    }
+
+    public DuelEventBus eventBus() {
+        return eventBus;
+    }
+
+    public NotificationService notificationService() {
+        return notificationService;
     }
 }
