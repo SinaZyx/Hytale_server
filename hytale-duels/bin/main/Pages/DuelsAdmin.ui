@@ -1,0 +1,313 @@
+// Duels Admin Panel UI
+// Style similaire a FactionsMenu.ui
+
+VerticalLayout {
+    Name: "DuelsAdminRoot";
+    Style: (
+        BackgroundColor: #1a1a1a,
+        Padding: 20,
+        Width: 600,
+        Height: 500
+    );
+    Anchor: (CenterX: 0, CenterY: 0);
+
+    Children: [
+        // Header
+        VerticalLayout {
+            Style: (Padding: 10, BackgroundColor: #252525);
+            Anchor: (Bottom: 15);
+            Children: [
+                Label {
+                    Text: "Duels - Administration";
+                    Style: (FontSize: 20, TextColor: #ffffff, Alignment: Center, FontWeight: Bold);
+                },
+                Label {
+                    Name: "AdminStats";
+                    Text: "Kits: 0 | Arenes: 0 | Matchs actifs: 0";
+                    Style: (FontSize: 12, TextColor: #9aa7b0, Alignment: Center);
+                    Anchor: (Top: 5);
+                }
+            ];
+        },
+
+        // Navigation Tabs
+        HorizontalLayout {
+            Style: (Padding: 5, BackgroundColor: #2a2a2a);
+            Anchor: (Bottom: 10);
+            Children: [
+                Button {
+                    Name: "NavKitsButton";
+                    Style: (Padding: 10, BackgroundColor: #333333);
+                    Anchor: (Right: 5);
+                    Children: [
+                        Label { Text: "Kits"; Style: (FontSize: 14, TextColor: #d7e0e8); }
+                    ];
+                },
+                VerticalLayout {
+                    Name: "NavKitsIndicator";
+                    Visible: true;
+                    Style: (Height: 3, Width: 50, BackgroundColor: #4fc3f7);
+                },
+                Button {
+                    Name: "NavArenasButton";
+                    Style: (Padding: 10, BackgroundColor: #333333);
+                    Anchor: (Right: 5);
+                    Children: [
+                        Label { Text: "Arenes"; Style: (FontSize: 14, TextColor: #d7e0e8); }
+                    ];
+                },
+                VerticalLayout {
+                    Name: "NavArenasIndicator";
+                    Visible: false;
+                    Style: (Height: 3, Width: 50, BackgroundColor: #4fc3f7);
+                },
+                Button {
+                    Name: "NavMatchesButton";
+                    Style: (Padding: 10, BackgroundColor: #333333);
+                    Children: [
+                        Label { Text: "Matchs"; Style: (FontSize: 14, TextColor: #d7e0e8); }
+                    ];
+                },
+                VerticalLayout {
+                    Name: "NavMatchesIndicator";
+                    Visible: false;
+                    Style: (Height: 3, Width: 50, BackgroundColor: #4fc3f7);
+                }
+            ];
+        },
+
+        // === KITS VIEW ===
+        VerticalLayout {
+            Name: "KitsView";
+            Visible: true;
+            Style: (Padding: 10);
+            Children: [
+                // Create kit section
+                HorizontalLayout {
+                    Style: (Padding: 5, BackgroundColor: #2a2a2a);
+                    Anchor: (Bottom: 10);
+                    Children: [
+                        TextInput {
+                            Name: "NewKitIdInput";
+                            Placeholder: "ID du nouveau kit...";
+                            Style: (Width: 200, Padding: 8, BackgroundColor: #333333, TextColor: #ffffff);
+                            Anchor: (Right: 10);
+                        },
+                        Button {
+                            Name: "KitCreateButton";
+                            Style: (Padding: 8, BackgroundColor: #4caf50);
+                            Children: [
+                                Label { Text: "Creer"; Style: (FontSize: 12, TextColor: #ffffff); }
+                            ];
+                        }
+                    ];
+                },
+
+                // Kits list
+                ScrollView {
+                    Style: (Height: 200, BackgroundColor: #1e1e1e, Padding: 5);
+                    Anchor: (Bottom: 10);
+                    Children: [
+                        VerticalLayout {
+                            Name: "KitsList";
+                        }
+                    ];
+                },
+
+                // Kit edit panel
+                VerticalLayout {
+                    Name: "KitEditPanel";
+                    Visible: false;
+                    Style: (Padding: 10, BackgroundColor: #2a2a2a);
+                    Children: [
+                        Label {
+                            Text: "Modifier le kit";
+                            Style: (FontSize: 14, TextColor: #ffffff, FontWeight: Bold);
+                            Anchor: (Bottom: 10);
+                        },
+                        HorizontalLayout {
+                            Anchor: (Bottom: 5);
+                            Children: [
+                                Label { Text: "Nom:"; Style: (FontSize: 12, TextColor: #9aa7b0, Width: 80); },
+                                TextInput {
+                                    Name: "KitNameInput";
+                                    Style: (Width: 200, Padding: 5, BackgroundColor: #333333, TextColor: #ffffff);
+                                }
+                            ];
+                        },
+                        HorizontalLayout {
+                            Anchor: (Bottom: 10);
+                            Children: [
+                                Label { Text: "Icone:"; Style: (FontSize: 12, TextColor: #9aa7b0, Width: 80); },
+                                TextInput {
+                                    Name: "KitIconInput";
+                                    Style: (Width: 200, Padding: 5, BackgroundColor: #333333, TextColor: #ffffff);
+                                }
+                            ];
+                        },
+                        HorizontalLayout {
+                            Children: [
+                                Button {
+                                    Name: "KitSaveButton";
+                                    Style: (Padding: 8, BackgroundColor: #4caf50);
+                                    Anchor: (Right: 10);
+                                    Children: [
+                                        Label { Text: "Sauvegarder"; Style: (FontSize: 12, TextColor: #ffffff); }
+                                    ];
+                                },
+                                Button {
+                                    Name: "KitDeleteButton";
+                                    Style: (Padding: 8, BackgroundColor: #f44336);
+                                    Children: [
+                                        Label { Text: "Supprimer"; Style: (FontSize: 12, TextColor: #ffffff); }
+                                    ];
+                                }
+                            ];
+                        }
+                    ];
+                }
+            ];
+        },
+
+        // === ARENAS VIEW ===
+        VerticalLayout {
+            Name: "ArenasView";
+            Visible: false;
+            Style: (Padding: 10);
+            Children: [
+                // Create arena section
+                HorizontalLayout {
+                    Style: (Padding: 5, BackgroundColor: #2a2a2a);
+                    Anchor: (Bottom: 10);
+                    Children: [
+                        TextInput {
+                            Name: "NewArenaIdInput";
+                            Placeholder: "ID de la nouvelle arene...";
+                            Style: (Width: 200, Padding: 8, BackgroundColor: #333333, TextColor: #ffffff);
+                            Anchor: (Right: 10);
+                        },
+                        Button {
+                            Name: "ArenaCreateButton";
+                            Style: (Padding: 8, BackgroundColor: #4caf50);
+                            Children: [
+                                Label { Text: "Creer"; Style: (FontSize: 12, TextColor: #ffffff); }
+                            ];
+                        }
+                    ];
+                },
+
+                // Arenas list
+                ScrollView {
+                    Style: (Height: 150, BackgroundColor: #1e1e1e, Padding: 5);
+                    Anchor: (Bottom: 10);
+                    Children: [
+                        VerticalLayout {
+                            Name: "ArenasList";
+                        }
+                    ];
+                },
+
+                // Arena edit panel
+                VerticalLayout {
+                    Name: "ArenaEditPanel";
+                    Visible: false;
+                    Style: (Padding: 10, BackgroundColor: #2a2a2a);
+                    Children: [
+                        Label {
+                            Text: "Modifier l'arene";
+                            Style: (FontSize: 14, TextColor: #ffffff, FontWeight: Bold);
+                            Anchor: (Bottom: 10);
+                        },
+                        HorizontalLayout {
+                            Anchor: (Bottom: 5);
+                            Children: [
+                                Label { Text: "Nom:"; Style: (FontSize: 12, TextColor: #9aa7b0, Width: 100); },
+                                TextInput {
+                                    Name: "ArenaNameInput";
+                                    Style: (Width: 200, Padding: 5, BackgroundColor: #333333, TextColor: #ffffff);
+                                }
+                            ];
+                        },
+                        HorizontalLayout {
+                            Anchor: (Bottom: 5);
+                            Children: [
+                                Label { Text: "Max joueurs:"; Style: (FontSize: 12, TextColor: #9aa7b0, Width: 100); },
+                                TextInput {
+                                    Name: "ArenaMaxPlayersInput";
+                                    Style: (Width: 60, Padding: 5, BackgroundColor: #333333, TextColor: #ffffff);
+                                }
+                            ];
+                        },
+                        Label {
+                            Name: "ArenaSpawnsInfo";
+                            Text: "Spawns Team1: 0 | Spawns Team2: 0";
+                            Style: (FontSize: 11, TextColor: #9aa7b0);
+                            Anchor: (Bottom: 10);
+                        },
+                        HorizontalLayout {
+                            Anchor: (Bottom: 10);
+                            Children: [
+                                Button {
+                                    Name: "ArenaSetSpawn1Button";
+                                    Style: (Padding: 6, BackgroundColor: #2196f3);
+                                    Anchor: (Right: 5);
+                                    Children: [
+                                        Label { Text: "Set Spawn T1"; Style: (FontSize: 11, TextColor: #ffffff); }
+                                    ];
+                                },
+                                Button {
+                                    Name: "ArenaSetSpawn2Button";
+                                    Style: (Padding: 6, BackgroundColor: #ff9800);
+                                    Children: [
+                                        Label { Text: "Set Spawn T2"; Style: (FontSize: 11, TextColor: #ffffff); }
+                                    ];
+                                }
+                            ];
+                        },
+                        HorizontalLayout {
+                            Children: [
+                                Button {
+                                    Name: "ArenaSaveButton";
+                                    Style: (Padding: 8, BackgroundColor: #4caf50);
+                                    Anchor: (Right: 10);
+                                    Children: [
+                                        Label { Text: "Sauvegarder"; Style: (FontSize: 12, TextColor: #ffffff); }
+                                    ];
+                                },
+                                Button {
+                                    Name: "ArenaDeleteButton";
+                                    Style: (Padding: 8, BackgroundColor: #f44336);
+                                    Children: [
+                                        Label { Text: "Supprimer"; Style: (FontSize: 12, TextColor: #ffffff); }
+                                    ];
+                                }
+                            ];
+                        }
+                    ];
+                }
+            ];
+        },
+
+        // === MATCHES VIEW ===
+        VerticalLayout {
+            Name: "MatchesView";
+            Visible: false;
+            Style: (Padding: 10);
+            Children: [
+                Label {
+                    Text: "Matchs en cours";
+                    Style: (FontSize: 14, TextColor: #ffffff, FontWeight: Bold);
+                    Anchor: (Bottom: 10);
+                },
+                ScrollView {
+                    Style: (Height: 300, BackgroundColor: #1e1e1e, Padding: 5);
+                    Children: [
+                        VerticalLayout {
+                            Name: "MatchesList";
+                        }
+                    ];
+                }
+            ];
+        }
+    ];
+}
