@@ -10,6 +10,7 @@ import com.kingc.hytale.duels.match.MatchType;
 import com.kingc.hytale.duels.queue.QueueService;
 import com.kingc.hytale.duels.ranking.PlayerStats;
 import com.kingc.hytale.duels.ranking.RankingService;
+import com.kingc.hytale.duels.translations.DuelsTranslationService;
 
 import java.util.List;
 import java.util.Optional;
@@ -55,14 +56,14 @@ public final class CommandDispatcher {
     private boolean handleDuel(CommandSource source, String args) {
         String[] parts = args.split("\\s+", 2);
         if (parts.length == 0 || parts[0].isEmpty()) {
-            source.sendMessage(PREFIX + "Usage: /duel <joueur> [kit] | /duel accept | /duel decline");
+            DuelsTranslationService.get().sendMessage(source, "command.usage", "usage", "/duel <joueur> [kit] | /duel accept | /duel decline");
             return true;
         }
 
         String subCommand = parts[0].toLowerCase();
         Optional<UUID> playerIdOpt = source.playerId();
         if (playerIdOpt.isEmpty()) {
-            source.sendMessage(PREFIX + "Commande joueur uniquement.");
+            DuelsTranslationService.get().sendMessage(source, "error.permission");
             return true;
         }
 
@@ -71,12 +72,12 @@ public final class CommandDispatcher {
         return switch (subCommand) {
             case "accept" -> {
                 MatchService.Result result = matchService.acceptDuel(playerId);
-                source.sendMessage(PREFIX + result.message());
+                source.sendMessage(PREFIX + result.message()); // TODO: Refactor MatchService
                 yield true;
             }
             case "decline" -> {
                 MatchService.Result result = matchService.declineDuel(playerId);
-                source.sendMessage(PREFIX + result.message());
+                source.sendMessage(PREFIX + result.message()); // TODO: Refactor MatchService
                 yield true;
             }
             case "help" -> {
@@ -90,7 +91,7 @@ public final class CommandDispatcher {
 
                 Optional<PlayerRef> targetOpt = server.getPlayerByName(targetName);
                 if (targetOpt.isEmpty()) {
-                    source.sendMessage(PREFIX + "Joueur introuvable: " + targetName);
+                    DuelsTranslationService.get().sendMessage(source, "error.player_not_found");
                     yield true;
                 }
 
@@ -98,8 +99,10 @@ public final class CommandDispatcher {
                 source.sendMessage(PREFIX + result.message());
 
                 if (result.success()) {
-                    targetOpt.get().sendMessage(PREFIX + source.player().map(PlayerRef::name).orElse("Quelqu'un")
-                        + " te defie en duel! /duel accept ou /duel decline");
+                    DuelsTranslationService.get().getMessage("duel.invite.received")
+                            .with("player", source.player().map(PlayerRef::name).orElse("Unknown"))
+                            .with("kit", kitId)
+                            .send(targetOpt.get());
                 }
                 yield true;
             }
@@ -109,13 +112,13 @@ public final class CommandDispatcher {
     private boolean handleQueue(CommandSource source, String args) {
         String[] parts = args.split("\\s+", 2);
         if (parts.length == 0 || parts[0].isEmpty()) {
-            source.sendMessage(PREFIX + "Usage: /queue 1v1 [kit] | /queue 2v2 [kit] | /queue leave | /queue status");
+            DuelsTranslationService.get().sendMessage(source, "command.usage", "usage", "/queue 1v1 [kit] | /queue 2v2 [kit] | /queue leave | /queue status");
             return true;
         }
 
         Optional<UUID> playerIdOpt = source.playerId();
         if (playerIdOpt.isEmpty()) {
-            source.sendMessage(PREFIX + "Commande joueur uniquement.");
+            DuelsTranslationService.get().sendMessage(source, "error.permission");
             return true;
         }
 
@@ -125,34 +128,37 @@ public final class CommandDispatcher {
         return switch (subCommand) {
             case "leave" -> {
                 QueueService.Result result = queueService.leaveQueue(playerId);
-                source.sendMessage(PREFIX + result.message());
+                source.sendMessage(PREFIX + result.message()); // TODO: Refactor QueueService
                 yield true;
             }
             case "status" -> {
                 if (queueService.isInQueue(playerId)) {
                     MatchType type = queueService.getPlayerQueueType(playerId).orElse(MatchType.DUEL_1V1);
-                    source.sendMessage(PREFIX + "En file " + type.name() + " (" + queueService.getQueueSize(type) + " joueurs)");
+                    DuelsTranslationService.get().getMessage("queue.joined")
+                            .with("type", type.name())
+                            .with("kit", "Unknown") // TODO: Store kit in queue
+                            .send(source);
                 } else if (matchService.isInMatch(playerId)) {
-                    source.sendMessage(PREFIX + "En match.");
+                    DuelsTranslationService.get().sendMessage(source, "error.already_in_match");
                 } else {
-                    source.sendMessage(PREFIX + "Pas en file.");
+                    DuelsTranslationService.get().sendMessage(source, "queue.not_in_queue");
                 }
                 yield true;
             }
             case "1v1" -> {
                 String kitId = parts.length > 1 ? parts[1] : "tank";
                 QueueService.Result result = queueService.joinQueue(playerId, MatchType.DUEL_1V1, kitId);
-                source.sendMessage(PREFIX + result.message());
+                source.sendMessage(PREFIX + result.message()); // TODO: Refactor QueueService
                 yield true;
             }
             case "2v2" -> {
                 String kitId = parts.length > 1 ? parts[1] : "tank";
                 QueueService.Result result = queueService.joinQueue(playerId, MatchType.DUEL_2V2, kitId);
-                source.sendMessage(PREFIX + result.message());
+                source.sendMessage(PREFIX + result.message()); // TODO: Refactor QueueService
                 yield true;
             }
             default -> {
-                source.sendMessage(PREFIX + "Usage: /queue 1v1 [kit] | /queue 2v2 [kit] | /queue leave");
+                DuelsTranslationService.get().sendMessage(source, "command.usage", "usage", "/queue 1v1 [kit] | /queue 2v2 [kit] | /queue leave");
                 yield true;
             }
         };
@@ -161,7 +167,7 @@ public final class CommandDispatcher {
     private boolean handleKit(CommandSource source, String args) {
         String[] parts = args.split("\\s+", 2);
         if (parts.length == 0 || parts[0].isEmpty()) {
-            source.sendMessage(PREFIX + "Usage: /kit list | /kit info <nom> | /kit preview <nom> | /kit save <nom> | /kit delete <nom>");
+            DuelsTranslationService.get().sendMessage(source, "command.usage", "usage", "/kit list | /kit info <nom> | /kit preview <nom> | /kit save <nom> | /kit delete <nom>");
             return true;
         }
 
@@ -177,13 +183,13 @@ public final class CommandDispatcher {
             }
             case "info" -> {
                 if (parts.length < 2) {
-                    source.sendMessage(PREFIX + "Usage: /kit info <nom>");
+                    DuelsTranslationService.get().sendMessage(source, "command.usage", "usage", "/kit info <nom>");
                     yield true;
                 }
                 String kitId = parts[1];
                 Optional<KitDefinition> kitOpt = kitService.getKit(kitId);
                 if (kitOpt.isEmpty()) {
-                    source.sendMessage(PREFIX + "Kit inconnu: " + kitId);
+                    DuelsTranslationService.get().sendMessage(source, "kit.not_found", "kit", kitId);
                     yield true;
                 }
                 KitDefinition kit = kitOpt.get();
@@ -198,18 +204,18 @@ public final class CommandDispatcher {
             }
             case "preview" -> {
                 if (parts.length < 2) {
-                    source.sendMessage(PREFIX + "Usage: /kit preview <nom>");
+                    DuelsTranslationService.get().sendMessage(source, "command.usage", "usage", "/kit preview <nom>");
                     yield true;
                 }
                 Optional<UUID> playerIdOpt = source.playerId();
                 if (playerIdOpt.isEmpty()) {
-                    source.sendMessage(PREFIX + "Commande joueur uniquement.");
+                    DuelsTranslationService.get().sendMessage(source, "error.permission");
                     yield true;
                 }
                 String kitId = parts[1];
                 Optional<KitDefinition> kitOpt = kitService.getKit(kitId);
                 if (kitOpt.isEmpty()) {
-                    source.sendMessage(PREFIX + "Kit inconnu: " + kitId);
+                    DuelsTranslationService.get().sendMessage(source, "kit.not_found", "kit", kitId);
                     yield true;
                 }
                 Optional<PlayerRef> playerOpt = server.getPlayer(playerIdOpt.get());
@@ -221,39 +227,39 @@ public final class CommandDispatcher {
             }
             case "save" -> {
                 if (parts.length < 2) {
-                    source.sendMessage(PREFIX + "Usage: /kit save <nom>");
+                    DuelsTranslationService.get().sendMessage(source, "command.usage", "usage", "/kit save <nom>");
                     yield true;
                 }
                 Optional<UUID> playerIdOpt = source.playerId();
                 if (playerIdOpt.isEmpty()) {
-                    source.sendMessage(PREFIX + "Commande joueur uniquement.");
+                    DuelsTranslationService.get().sendMessage(source, "error.permission");
                     yield true;
                 }
                 String kitId = parts[1].toLowerCase().replace(" ", "_");
                 Optional<PlayerRef> playerOpt = server.getPlayer(playerIdOpt.get());
                 if (playerOpt.isPresent()) {
                     kitService.saveKitFromPlayer(playerOpt.get(), kitId, kitId);
-                    source.sendMessage(PREFIX + "Kit '" + kitId + "' sauvegarde depuis ton inventaire!");
+                    DuelsTranslationService.get().sendMessage(source, "kit.saved", "kit", kitId);
                 } else {
-                    source.sendMessage(PREFIX + "Erreur: joueur introuvable.");
+                    DuelsTranslationService.get().sendMessage(source, "error.player_not_found");
                 }
                 yield true;
             }
             case "delete" -> {
                 if (parts.length < 2) {
-                    source.sendMessage(PREFIX + "Usage: /kit delete <nom>");
+                    DuelsTranslationService.get().sendMessage(source, "command.usage", "usage", "/kit delete <nom>");
                     yield true;
                 }
                 String kitId = parts[1].toLowerCase();
                 if (kitService.deleteKit(kitId)) {
                     source.sendMessage(PREFIX + "Kit '" + kitId + "' supprime.");
                 } else {
-                    source.sendMessage(PREFIX + "Kit inconnu: " + kitId);
+                    DuelsTranslationService.get().sendMessage(source, "kit.not_found", "kit", kitId);
                 }
                 yield true;
             }
             default -> {
-                source.sendMessage(PREFIX + "Usage: /kit list | /kit info <nom> | /kit preview <nom> | /kit save <nom> | /kit delete <nom>");
+                DuelsTranslationService.get().sendMessage(source, "command.usage", "usage", "/kit list | /kit info <nom> | /kit preview <nom> | /kit save <nom> | /kit delete <nom>");
                 yield true;
             }
         };
@@ -270,7 +276,7 @@ public final class CommandDispatcher {
             // Stats d'un autre joueur
             Optional<PlayerRef> targetOpt = server.getPlayerByName(targetName);
             if (targetOpt.isEmpty()) {
-                source.sendMessage(PREFIX + "Joueur introuvable: " + targetName);
+                DuelsTranslationService.get().sendMessage(source, "error.player_not_found");
                 return true;
             }
             targetId = targetOpt.get().id();
@@ -279,7 +285,7 @@ public final class CommandDispatcher {
             // Ses propres stats
             Optional<UUID> playerIdOpt = source.playerId();
             if (playerIdOpt.isEmpty()) {
-                source.sendMessage(PREFIX + "Usage: /stats [joueur]");
+                DuelsTranslationService.get().sendMessage(source, "command.usage", "usage", "/stats [joueur]");
                 return true;
             }
             targetId = playerIdOpt.get();

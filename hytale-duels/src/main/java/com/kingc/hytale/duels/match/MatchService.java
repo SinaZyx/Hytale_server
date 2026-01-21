@@ -2,10 +2,14 @@ package com.kingc.hytale.duels.match;
 
 import com.kingc.hytale.duels.api.PlayerRef;
 import com.kingc.hytale.duels.api.ServerAdapter;
+import com.kingc.hytale.duels.api.event.DuelEventBus;
+import com.kingc.hytale.duels.api.event.MatchEndedEvent;
+import com.kingc.hytale.duels.api.event.MatchStartedEvent;
 import com.kingc.hytale.duels.arena.Arena;
 import com.kingc.hytale.duels.arena.ArenaService;
 import com.kingc.hytale.duels.kit.KitDefinition;
 import com.kingc.hytale.duels.kit.KitService;
+import com.kingc.hytale.duels.notifications.NotificationService;
 import com.kingc.hytale.duels.ranking.RankingService;
 
 import java.util.ArrayList;
@@ -26,6 +30,8 @@ public final class MatchService {
     private final ArenaService arenaService;
     private final KitService kitService;
     private final RankingService rankingService;
+    private final DuelEventBus eventBus;
+    private final NotificationService notificationService;
     private final LongSupplier clock;
 
     private final Map<UUID, DuelRequest> pendingRequests = new ConcurrentHashMap<>();
@@ -35,7 +41,7 @@ public final class MatchService {
     private final AtomicInteger matchIdCounter = new AtomicInteger(1);
     private final java.util.Set<String> warnedMatches = ConcurrentHashMap.newKeySet();
 
-    private final java.util.concurrent.ScheduledExecutorService timeoutScheduler = 
+    private final java.util.concurrent.ScheduledExecutorService timeoutScheduler =
         java.util.concurrent.Executors.newSingleThreadScheduledExecutor(r -> {
             Thread t = new Thread(r, "Duels-MatchTimer");
             t.setDaemon(true);
@@ -43,13 +49,15 @@ public final class MatchService {
         });
 
     public MatchService(ServerAdapter server, ArenaService arenaService, KitService kitService,
-                        RankingService rankingService, LongSupplier clock) {
+                        RankingService rankingService, DuelEventBus eventBus, NotificationService notificationService, LongSupplier clock) {
         this.server = server;
         this.arenaService = arenaService;
         this.kitService = kitService;
         this.rankingService = rankingService;
+        this.eventBus = eventBus;
+        this.notificationService = notificationService;
         this.clock = clock;
-        
+
         // Start the timeout checker (every 5 seconds)
         timeoutScheduler.scheduleAtFixedRate(this::checkMatchTimeouts, 5, 5, java.util.concurrent.TimeUnit.SECONDS);
     }
@@ -139,8 +147,8 @@ public final class MatchService {
         }
 
         teleportAndEquipPlayers(match, arena, kitOpt.get());
-        initiateMatchCountdown(match); // Call the new countdown method
-        
+        initiateMatchCountdown(match);
+
         return Result.success("Match demarre dans " + arena.displayName() + "!");
     }
 
@@ -154,6 +162,15 @@ public final class MatchService {
         timeoutScheduler.schedule(() -> {
             match.start(clock.getAsLong());
             showTitleToAll(match, "COMBAT!", "", "#FF0000", 0.2f, 1.5f, 0.3f);
+
+            // Fire event and notify
+            eventBus.fire(new MatchStartedEvent(match));
+            for (UUID playerId : match.allPlayers()) {
+                 server.getPlayer(playerId).ifPresent(p -> {
+                     String opponentName = match.getTeamOf(playerId) == 1 ? "Team 2" : "Team 1"; // Simplification
+                     notificationService.sendMatchStart(p, opponentName);
+                 });
+            }
         }, 3, java.util.concurrent.TimeUnit.SECONDS);
     }
 
@@ -164,7 +181,7 @@ public final class MatchService {
     }
 
     private void broadcast(Match match, String message) {
-        match.allPlayers().forEach(uuid -> 
+        match.allPlayers().forEach(uuid ->
             server.getPlayer(uuid).ifPresent(p -> p.sendMessage(message))
         );
     }
@@ -173,8 +190,11 @@ public final class MatchService {
         for (int i = 0; i < match.team1().size(); i++) {
             UUID playerId = match.team1().get(i);
             server.getPlayer(playerId).ifPresent(player -> {
+                // Determine spawn point: use index if multiple spawns exist, or cycle
+                com.kingc.hytale.duels.api.Location spawn;
                 if (!arena.team1Spawns().isEmpty()) {
-                    player.teleport(arena.team1Spawns().get(0));
+                    spawn = arena.team1Spawns().get(i % arena.team1Spawns().size());
+                    player.teleport(spawn);
                 }
                 kitService.applyKit(player, kit);
             });
@@ -183,8 +203,10 @@ public final class MatchService {
         for (int i = 0; i < match.team2().size(); i++) {
             UUID playerId = match.team2().get(i);
             server.getPlayer(playerId).ifPresent(player -> {
+                com.kingc.hytale.duels.api.Location spawn;
                 if (!arena.team2Spawns().isEmpty()) {
-                    player.teleport(arena.team2Spawns().get(0));
+                    spawn = arena.team2Spawns().get(i % arena.team2Spawns().size());
+                    player.teleport(spawn);
                 }
                 kitService.applyKit(player, kit);
             });
@@ -199,6 +221,8 @@ public final class MatchService {
 
         long now = clock.getAsLong();
         match.end(winners, now);
+
+        eventBus.fire(new MatchEndedEvent(match));
 
         for (UUID playerId : match.allPlayers()) {
             playerToMatch.remove(playerId);
@@ -275,12 +299,13 @@ public final class MatchService {
         // Titres visuels pour victoire/défaite
         for (UUID winnerId : winners) {
             server.getPlayer(winnerId).ifPresent(p -> {
-                server.showTitle(p, "VICTOIRE!", "+ELO", "#00FF00", 0.3f, 3.5f, 0.5f);
+                // TODO: Calculate actual ELO gain to pass here
+                notificationService.sendVictory(p, 0);
             });
         }
         for (UUID loserId : losers) {
             server.getPlayer(loserId).ifPresent(p -> {
-                server.showTitle(p, "DEFAITE", "-ELO", "#FF0000", 0.3f, 3.5f, 0.5f);
+                notificationService.sendDefeat(p, 0);
             });
         }
     }
@@ -313,22 +338,22 @@ public final class MatchService {
 
     private void checkMatchTimeouts() {
         long now = clock.getAsLong();
-        
+
         for (Match match : activeMatches.values()) {
             if (match.state() != Match.MatchState.PLAYING) continue;
-            
+
             long elapsed = now - match.startedAt();
-            
+
             // 1-minute warning
             if (elapsed >= WARNING_TIME_MS && !warnedMatches.contains(match.matchId())) {
                 warnedMatches.add(match.matchId());
                 for (UUID playerId : match.allPlayers()) {
-                    server.getPlayer(playerId).ifPresent(p -> 
+                    server.getPlayer(playerId).ifPresent(p ->
                         p.sendMessage("[Duels] ⚠ 1 minute restante!")
                     );
                 }
             }
-            
+
             // Timeout - end as draw
             if (elapsed >= MATCH_TIMEOUT_MS) {
                 endMatchAsDraw(match.matchId());

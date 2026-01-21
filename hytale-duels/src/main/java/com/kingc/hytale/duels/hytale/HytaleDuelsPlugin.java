@@ -58,6 +58,12 @@ public final class HytaleDuelsPlugin extends JavaPlugin {
             if (deathScanner != null) deathScanner.stop();
             flush();
         });
+
+        DuelsEventListener listener = new DuelsEventListener(core);
+        // Register specifically for KillerMessage to detect PvP deaths accurately
+        getEventRegistry().registerGlobal(com.hypixel.hytale.server.core.modules.entity.damage.event.KillFeedEvent.KillerMessage.class, listener::onPlayerDeath);
+        // Also DecedentMessage for deaths without killers (e.g. falling) if needed, but for duels usually PvP matters
+        // getEventRegistry().registerGlobal(com.hypixel.hytale.server.core.modules.entity.damage.event.KillFeedEvent.DecedentMessage.class, listener::onPlayerDeath);
     }
 
     public DuelsPlugin core() {

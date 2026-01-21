@@ -1,0 +1,82 @@
+{
+  "duel.invite.sent": {
+    "en": "Duel invitation sent to {player}!",
+    "fr": "Invitation de duel envoyée à {player}!"
+  },
+  "duel.invite.received": {
+    "en": "{player} challenged you to a duel! Kit: {kit}",
+    "fr": "{player} vous défie en duel ! Kit : {kit}"
+  },
+  "queue.joined": {
+    "en": "Joined {type} queue with kit {kit}",
+    "fr": "File {type} rejointe avec le kit {kit}"
+  },
+  "match.start": {
+    "en": "Match starting in {seconds}...",
+    "fr": "Match dans {seconds}..."
+  },
+  "match.victory": {
+    "en": "Victory! +{elo} ELO",
+    "fr": "Victoire ! +{elo} ELO"
+  },
+  "match.defeat": {
+    "en": "Defeat! {elo} ELO",
+    "fr": "Défaite ! {elo} ELO"
+  },
+  "ranking.promoted": {
+    "en": "Rank up! You are now {rank}!",
+    "fr": "Promotion ! Vous êtes maintenant {rank} !"
+  },
+  "error.no_arena": {
+    "en": "No arena available",
+    "fr": "Aucune arène disponible"
+  },
+  "error.already_in_match": {
+    "en": "You are already in a match",
+    "fr": "Vous êtes déjà dans un match"
+  },
+  "arena.spawn_set": {
+    "en": "Spawn set for {type} in arena {arena}",
+    "fr": "Point de spawn défini pour {type} dans l'arène {arena}"
+  },
+  "error.permission": {
+      "en": "You do not have permission to use this command.",
+      "fr": "Vous n'avez pas la permission d'utiliser cette commande."
+  },
+  "error.player_not_found": {
+      "en": "Player not found.",
+      "fr": "Joueur introuvable."
+  },
+  "command.usage": {
+      "en": "Usage: {usage}",
+      "fr": "Utilisation : {usage}"
+  },
+  "kit.not_found": {
+      "en": "Kit not found: {kit}",
+      "fr": "Kit introuvable : {kit}"
+  },
+  "kit.saved": {
+      "en": "Kit {kit} saved.",
+      "fr": "Kit {kit} sauvegardé."
+  },
+  "arena.created": {
+      "en": "Arena {arena} created.",
+      "fr": "Arène {arena} créée."
+  },
+  "arena.not_found": {
+      "en": "Arena not found: {arena}",
+      "fr": "Arène introuvable : {arena}"
+  },
+  "queue.left": {
+      "en": "You left the queue.",
+      "fr": "Vous avez quitté la file."
+  },
+  "queue.not_in_queue": {
+      "en": "You are not in a queue.",
+      "fr": "Vous n'êtes pas dans une file."
+  },
+  "match.ended": {
+      "en": "Match ended.",
+      "fr": "Match terminé."
+  }
+}
