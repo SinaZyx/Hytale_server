@@ -1,0 +1,227 @@
+$C = "../Common.ui";
+
+$C.@PageOverlay {
+  LayoutMode: Middle;
+
+  Group #Root {
+    Anchor: (Width: 700, Height: 550);
+    LayoutMode: Top;
+    Background: #0f1621(0.98);
+    Padding: (Full: 20);
+
+    Group #Header {
+      LayoutMode: Top;
+      Background: #1a2330(0.95);
+      Padding: (Full: 12);
+      Anchor: (Bottom: 15);
+
+      Label {
+        Text: "Duels - Administration";
+        Style: (FontSize: 20, TextColor: #ffffff, RenderBold: true);
+        Anchor: (Bottom: 5);
+      }
+
+      Label #AdminStats {
+        Text: "Kits: 0 | Arenes: 0 | Matchs actifs: 0";
+        Style: (FontSize: 12, TextColor: #9aa7b0);
+      }
+    }
+
+    Group #NavPanel {
+      LayoutMode: Left;
+      Anchor: (Height: 40, Bottom: 10);
+
+      Group #NavKitsRow {
+        LayoutMode: Top;
+        Anchor: (Width: 100, Right: 5);
+
+        TextButton #NavKitsButton {
+          Text: "Kits";
+          Anchor: (Height: 30);
+        }
+
+        Group #NavKitsIndicator {
+          Anchor: (Height: 4);
+          Background: #4fc3f7;
+          Visible: true;
+        }
+      }
+
+      Group #NavArenasRow {
+        LayoutMode: Top;
+        Anchor: (Width: 100, Right: 5);
+
+        TextButton #NavArenasButton {
+          Text: "Arenes";
+          Anchor: (Height: 30);
+        }
+
+        Group #NavArenasIndicator {
+          Anchor: (Height: 4);
+          Background: #4fc3f7;
+          Visible: false;
+        }
+      }
+
+      Group #NavMatchesRow {
+        LayoutMode: Top;
+        Anchor: (Width: 100);
+
+        TextButton #NavMatchesButton {
+          Text: "Matchs";
+          Anchor: (Height: 30);
+        }
+
+        Group #NavMatchesIndicator {
+          Anchor: (Height: 4);
+          Background: #4fc3f7;
+          Visible: false;
+        }
+      }
+    }
+
+    Group #KitsView {
+      Visible: true;
+      LayoutMode: Top;
+      Background: #1a2330(0.95);
+      Padding: (Full: 12);
+      Anchor: (Bottom: 10);
+
+      Group #CreateKitRow {
+        LayoutMode: Left;
+        Anchor: (Bottom: 10);
+
+        TextButton #KitCreateButton {
+          Text: "Creer Kit";
+          Anchor: (Width: 120, Height: 28);
+        }
+      }
+
+      Group #KitsList {
+        LayoutMode: Top;
+        Anchor: (Height: 150);
+        Background: #0a1119;
+      }
+
+      Group #KitEditPanel {
+        Visible: false;
+        LayoutMode: Top;
+        Background: #0a1119;
+        Padding: (Full: 10);
+        Anchor: (Top: 10);
+
+        Label {
+          Text: "Modifier le kit";
+          Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
+          Anchor: (Bottom: 10);
+        }
+
+        Group {
+          LayoutMode: Left;
+
+          TextButton #KitSaveButton {
+            Text: "Sauvegarder";
+            Anchor: (Width: 120, Height: 28, Right: 10);
+          }
+
+          TextButton #KitDeleteButton {
+            Text: "Supprimer";
+            Anchor: (Width: 100, Height: 28);
+          }
+        }
+      }
+    }
+
+    Group #ArenasView {
+      Visible: false;
+      LayoutMode: Top;
+      Background: #1a2330(0.95);
+      Padding: (Full: 12);
+      Anchor: (Bottom: 10);
+
+      Group #CreateArenaRow {
+        LayoutMode: Left;
+        Anchor: (Bottom: 10);
+
+        TextButton #ArenaCreateButton {
+          Text: "Creer Arene";
+          Anchor: (Width: 120, Height: 28);
+        }
+      }
+
+      Group #ArenasList {
+        LayoutMode: Top;
+        Anchor: (Height: 120);
+        Background: #0a1119;
+      }
+
+      Group #ArenaEditPanel {
+        Visible: false;
+        LayoutMode: Top;
+        Background: #0a1119;
+        Padding: (Full: 10);
+        Anchor: (Top: 10);
+
+        Label {
+          Text: "Modifier l'arene";
+          Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
+          Anchor: (Bottom: 10);
+        }
+
+        Label #ArenaSpawnsInfo {
+          Text: "Spawns Team1: 0 | Spawns Team2: 0";
+          Style: (FontSize: 11, TextColor: #9aa7b0);
+          Anchor: (Bottom: 10);
+        }
+
+        Group {
+          LayoutMode: Left;
+          Anchor: (Bottom: 10);
+
+          TextButton #ArenaSetSpawn1Button {
+            Text: "Set Spawn T1";
+            Anchor: (Width: 110, Height: 26, Right: 5);
+          }
+
+          TextButton #ArenaSetSpawn2Button {
+            Text: "Set Spawn T2";
+            Anchor: (Width: 110, Height: 26);
+          }
+        }
+
+        Group {
+          LayoutMode: Left;
+
+          TextButton #ArenaSaveButton {
+            Text: "Sauvegarder";
+            Anchor: (Width: 120, Height: 28, Right: 10);
+          }
+
+          TextButton #ArenaDeleteButton {
+            Text: "Supprimer";
+            Anchor: (Width: 100, Height: 28);
+          }
+        }
+      }
+    }
+
+    Group #MatchesView {
+      Visible: false;
+      LayoutMode: Top;
+      Background: #1a2330(0.95);
+      Padding: (Full: 12);
+
+      Label {
+        Text: "Matchs en cours";
+        Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
+        Anchor: (Bottom: 10);
+      }
+
+      Group #MatchesList {
+        LayoutMode: Top;
+        Anchor: (Height: 280);
+        Background: #0a1119;
+      }
+    }
+  }
+}

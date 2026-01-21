@@ -1,0 +1,56 @@
+$C = "../Common.ui";
+
+$C.@PageOverlay {
+  LayoutMode: Middle;
+
+  Group #Root {
+    Anchor: (Width: 600, Height: 450);
+    LayoutMode: Top;
+    Background: #0f1621(0.98);
+    Padding: (Full: 20);
+
+    Label {
+      Text: "Guide des Duels";
+      Style: (FontSize: 22, TextColor: #4fc3f7, RenderBold: true);
+      Anchor: (Bottom: 15);
+    }
+
+    Group { Anchor: (Height: 1); Background: #2b3542; }
+    Group { Anchor: (Height: 12); }
+
+    Group #CommandsSection {
+      Background: #1a2330(0.95);
+      LayoutMode: Top;
+      Padding: (Full: 12);
+      Anchor: (Bottom: 10);
+
+      Label {
+        Text: "COMMANDES";
+        Style: (FontSize: 11, TextColor: #6e7da1, RenderUppercase: true, LetterSpacing: 1);
+        Anchor: (Bottom: 8);
+      }
+
+      Group #CommandsList {
+        LayoutMode: Top;
+        Anchor: (Height: 180);
+      }
+    }
+
+    Group #RulesSection {
+      Background: #1a2330(0.95);
+      LayoutMode: Top;
+      Padding: (Full: 12);
+
+      Label {
+        Text: "REGLES";
+        Style: (FontSize: 11, TextColor: #6e7da1, RenderUppercase: true, LetterSpacing: 1);
+        Anchor: (Bottom: 8);
+      }
+
+      Group #RulesList {
+        LayoutMode: Top;
+        Anchor: (Height: 80);
+      }
+    }
+  }
+}

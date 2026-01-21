@@ -1,0 +1,288 @@
+$C = "../Common.ui";
+
+$C.@PageOverlay {
+  LayoutMode: Middle;
+
+  Group #Root {
+    Anchor: (Width: 600, Height: 520);
+    LayoutMode: Top;
+    Background: #0f1621(0.98);
+    Padding: (Full: 20);
+
+    Group #Header {
+      LayoutMode: Left;
+      Background: #1a2330(0.95);
+      Padding: (Full: 15);
+      Anchor: (Bottom: 15);
+
+      Group {
+        LayoutMode: Top;
+        Anchor: (Width: 200);
+
+        Label {
+          Text: "Ton classement";
+          Style: (FontSize: 11, TextColor: #6e7da1);
+        }
+
+        Label #PlayerRank {
+          Text: "Chargement...";
+          Style: (FontSize: 18, TextColor: #ffffff, RenderBold: true);
+        }
+
+        Label #PlayerElo {
+          Text: "...";
+          Style: (FontSize: 14, TextColor: #4fc3f7);
+        }
+      }
+
+      Group {
+        LayoutMode: Top;
+        Anchor: (Width: 150);
+
+        Label {
+          Text: "Position";
+          Style: (FontSize: 11, TextColor: #6e7da1);
+        }
+
+        Label #PlayerPosition {
+          Text: "...";
+          Style: (FontSize: 16, TextColor: #4fc3f7, RenderBold: true);
+        }
+
+        Label #PlayerWinLoss {
+          Text: "...";
+          Style: (FontSize: 12, TextColor: #9aa7b0);
+        }
+      }
+    }
+
+    Group #NavPanel {
+      LayoutMode: Left;
+      Anchor: (Height: 40, Bottom: 10);
+
+      Group #NavLeaderboardRow {
+        LayoutMode: Top;
+        Anchor: (Width: 130, Right: 5);
+
+        TextButton #NavLeaderboardButton {
+          Text: "Classement";
+          Anchor: (Height: 30);
+        }
+
+        Group #NavLeaderboardIndicator {
+          Anchor: (Height: 4);
+          Background: #4fc3f7;
+          Visible: true;
+        }
+      }
+
+      Group #NavMyStatsRow {
+        LayoutMode: Top;
+        Anchor: (Width: 130, Right: 5);
+
+        TextButton #NavMyStatsButton {
+          Text: "Mes Stats";
+          Anchor: (Height: 30);
+        }
+
+        Group #NavMyStatsIndicator {
+          Anchor: (Height: 4);
+          Background: #4fc3f7;
+          Visible: false;
+        }
+      }
+
+      Group #NavRanksRow {
+        LayoutMode: Top;
+        Anchor: (Width: 130);
+
+        TextButton #NavRanksButton {
+          Text: "Rangs";
+          Anchor: (Height: 30);
+        }
+
+        Group #NavRanksIndicator {
+          Anchor: (Height: 4);
+          Background: #4fc3f7;
+          Visible: false;
+        }
+      }
+    }
+
+    Group #LeaderboardView {
+      Visible: true;
+      LayoutMode: Top;
+      Background: #1a2330(0.95);
+      Padding: (Full: 12);
+      Anchor: (Bottom: 10);
+
+      Group #SortButtons {
+        LayoutMode: Left;
+        Anchor: (Bottom: 10);
+
+        Label { Text: "Trier par:"; Style: (FontSize: 11, TextColor: #6e7da1); Anchor: (Right: 10); }
+
+        Group {
+          LayoutMode: Top;
+          Anchor: (Width: 60, Right: 5);
+
+          TextButton #SortEloButton {
+            Text: "ELO";
+            Anchor: (Height: 24);
+          }
+
+          Group #SortEloActive {
+            Anchor: (Height: 2);
+            Background: #4fc3f7;
+            Visible: true;
+          }
+        }
+
+        Group {
+          LayoutMode: Top;
+          Anchor: (Width: 80, Right: 5);
+
+          TextButton #SortWinsButton {
+            Text: "Victoires";
+            Anchor: (Height: 24);
+          }
+
+          Group #SortWinsActive {
+            Anchor: (Height: 2);
+            Background: #4fc3f7;
+            Visible: false;
+          }
+        }
+
+        Group {
+          LayoutMode: Top;
+          Anchor: (Width: 80);
+
+          TextButton #SortWinrateButton {
+            Text: "Winrate";
+            Anchor: (Height: 24);
+          }
+
+          Group #SortWinrateActive {
+            Anchor: (Height: 2);
+            Background: #4fc3f7;
+            Visible: false;
+          }
+        }
+      }
+
+      Group #LeaderboardList {
+        LayoutMode: Top;
+        Anchor: (Height: 250);
+        Background: #0a1119;
+      }
+    }
+
+    Group #MyStatsView {
+      Visible: false;
+      LayoutMode: Top;
+      Background: #1a2330(0.95);
+      Padding: (Full: 12);
+
+      Group #StatsGrid {
+        LayoutMode: Left;
+        Anchor: (Bottom: 15);
+
+        Group {
+          LayoutMode: Top;
+          Anchor: (Width: 220, Right: 10);
+          Padding: (Full: 10);
+          Background: #0a1119;
+
+          Label { Text: "ELO"; Style: (FontSize: 11, TextColor: #6e7da1); }
+          Label #StatElo { Text: "1000"; Style: (FontSize: 24, TextColor: #4fc3f7, RenderBold: true); }
+
+          Group { Anchor: (Height: 10); }
+
+          Label { Text: "Victoires"; Style: (FontSize: 11, TextColor: #6e7da1); }
+          Label #StatWins { Text: "0"; Style: (FontSize: 18, TextColor: #4aff7f); }
+
+          Group { Anchor: (Height: 10); }
+
+          Label { Text: "Defaites"; Style: (FontSize: 11, TextColor: #6e7da1); }
+          Label #StatLosses { Text: "0"; Style: (FontSize: 18, TextColor: #ff4a4a); }
+        }
+
+        Group {
+          LayoutMode: Top;
+          Anchor: (Width: 220);
+          Padding: (Full: 10);
+          Background: #0a1119;
+
+          Label { Text: "Winrate"; Style: (FontSize: 11, TextColor: #6e7da1); }
+          Label #StatWinRate { Text: "0"; Style: (FontSize: 24, TextColor: #ffaa4a, RenderBold: true); }
+
+          Group { Anchor: (Height: 10); }
+
+          Label { Text: "Serie actuelle"; Style: (FontSize: 11, TextColor: #6e7da1); }
+          Label #StatWinStreak { Text: "0"; Style: (FontSize: 18, TextColor: #d7e0e8); }
+
+          Group { Anchor: (Height: 10); }
+
+          Label { Text: "Meilleure serie"; Style: (FontSize: 11, TextColor: #6e7da1); }
+          Label #StatBestStreak { Text: "0"; Style: (FontSize: 18, TextColor: #ffd700); }
+        }
+      }
+
+      Group {
+        LayoutMode: Left;
+        Background: #0a1119;
+        Padding: (Full: 10);
+        Anchor: (Bottom: 15);
+
+        Label { Text: "Total matchs joues:"; Style: (FontSize: 12, TextColor: #9aa7b0); Anchor: (Right: 10); }
+        Label #StatTotalMatches { Text: "0"; Style: (FontSize: 14, TextColor: #d7e0e8, RenderBold: true); }
+      }
+
+      Group {
+        LayoutMode: Top;
+        Background: #0a1119;
+        Padding: (Full: 10);
+
+        Label { Text: "Prochain rang"; Style: (FontSize: 11, TextColor: #6e7da1); Anchor: (Bottom: 5); }
+
+        Group {
+          LayoutMode: Left;
+          Anchor: (Bottom: 8);
+
+          Label #NextRankName { Text: "Gold III"; Style: (FontSize: 14, TextColor: #ffd700); Anchor: (Right: 10); }
+          Label #NextRankElo { Text: "+300 ELO"; Style: (FontSize: 12, TextColor: #9aa7b0); }
+        }
+
+        Group {
+          Background: #1a1a1a;
+          Anchor: (Height: 8);
+
+          Group #ProgressBar {
+            Background: #4fc3f7;
+            Anchor: (Height: 8, Width: 100);
+          }
+        }
+      }
+    }
+
+    Group #RanksView {
+      Visible: false;
+      LayoutMode: Top;
+      Background: #1a2330(0.95);
+      Padding: (Full: 12);
+
+      Label {
+        Text: "Tous les rangs";
+        Style: (FontSize: 14, TextColor: #ffffff, RenderBold: true);
+        Anchor: (Bottom: 10);
+      }
+
+      Group #RanksList {
+        LayoutMode: Top;
+        Anchor: (Height: 280);
+        Background: #0a1119;
+      }
+    }
+  }
+}

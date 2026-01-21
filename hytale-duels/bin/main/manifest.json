@@ -1,0 +1,22 @@
+{
+    "Group": "KingC",
+    "Name": "HytaleDuels",
+    "Version": "0.1.0",
+    "Description": "Plugin de duels 1v1/2v2 avec systeme de kits et ELO",
+    "Authors": [
+        {
+            "Name": "KingC"
+        }
+    ],
+    "Website": "",
+    "ServerVersion": "*",
+    "Dependencies": {
+        
+    },
+    "OptionalDependencies": {
+        
+    },
+    "DisabledByDefault": false,
+    "Main": "com.kingc.hytale.duels.hytale.HytaleDuelsPlugin",
+    "IncludesAssetPack": true
+}
