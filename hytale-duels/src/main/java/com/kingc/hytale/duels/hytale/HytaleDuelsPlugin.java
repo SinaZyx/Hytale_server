@@ -11,7 +11,8 @@ import javax.annotation.Nonnull;
 import java.io.IOException;
 
 public final class HytaleDuelsPlugin extends JavaPlugin {
-    private static final com.hypixel.hytale.logger.HytaleLogger LOGGER = com.hypixel.hytale.logger.HytaleLogger.forEnclosingClass();
+    private static final com.hypixel.hytale.logger.HytaleLogger LOGGER = com.hypixel.hytale.logger.HytaleLogger
+            .forEnclosingClass();
 
     private DuelsPlugin core;
     private HytaleServerAdapter serverAdapter;
@@ -26,7 +27,7 @@ public final class HytaleDuelsPlugin extends JavaPlugin {
         try {
             this.serverAdapter = new HytaleServerAdapter(this);
             this.core = new DuelsPlugin(getDataDirectory(), serverAdapter);
-            
+
             this.deathScanner = new HytaleDeathScanner(this);
             this.deathScanner.start();
 
@@ -55,9 +56,20 @@ public final class HytaleDuelsPlugin extends JavaPlugin {
 
     private void registerEvents() {
         getEventRegistry().register(ShutdownEvent.class, event -> {
-            if (deathScanner != null) deathScanner.stop();
+            if (deathScanner != null)
+                deathScanner.stop();
             flush();
         });
+
+        DuelsEventListener listener = new DuelsEventListener(core);
+        // Register specifically for KillerMessage to detect PvP deaths accurately
+        getEventRegistry().register(
+                com.hypixel.hytale.server.core.modules.entity.damage.event.KillFeedEvent.KillerMessage.class,
+                listener::onPlayerDeath);
+        // Also DecedentMessage for deaths without killers (e.g. falling) if needed, but
+        // for duels usually PvP matters
+        // getEventRegistry().registerGlobal(com.hypixel.hytale.server.core.modules.entity.damage.event.KillFeedEvent.DecedentMessage.class,
+        // listener::onPlayerDeath);
     }
 
     public DuelsPlugin core() {
@@ -65,61 +77,70 @@ public final class HytaleDuelsPlugin extends JavaPlugin {
     }
 
     public void openRankingMenu(com.hypixel.hytale.server.core.universe.PlayerRef playerRef) {
-        if (playerRef == null) return;
-        com.hypixel.hytale.server.core.universe.world.World world = com.hypixel.hytale.server.core.universe.Universe.get().getWorld(playerRef.getWorldUuid());
+        if (playerRef == null)
+            return;
+        com.hypixel.hytale.server.core.universe.world.World world = com.hypixel.hytale.server.core.universe.Universe
+                .get().getWorld(playerRef.getWorldUuid());
         if (world != null) {
             world.execute(() -> {
-                 var entityStore = world.getEntityStore();
-                 if (entityStore != null) {
-                     var store = entityStore.getStore();
-                     var ref = entityStore.getRefFromUUID(playerRef.getUuid());
-                     if (store != null && ref != null) {
-                         var player = store.getComponent(ref, com.hypixel.hytale.server.core.entity.entities.Player.getComponentType());
-                         if (player != null) {
-                             player.getPageManager().openCustomPage(ref, store, new RankingMenuPage(this, playerRef));
-                         }
-                     }
-                 }
+                var entityStore = world.getEntityStore();
+                if (entityStore != null) {
+                    var store = entityStore.getStore();
+                    var ref = entityStore.getRefFromUUID(playerRef.getUuid());
+                    if (store != null && ref != null) {
+                        var player = store.getComponent(ref,
+                                com.hypixel.hytale.server.core.entity.entities.Player.getComponentType());
+                        if (player != null) {
+                            player.getPageManager().openCustomPage(ref, store, new RankingMenuPage(this, playerRef));
+                        }
+                    }
+                }
             });
         }
     }
 
     public void openAdminMenu(com.hypixel.hytale.server.core.universe.PlayerRef playerRef) {
-        if (playerRef == null) return;
-        com.hypixel.hytale.server.core.universe.world.World world = com.hypixel.hytale.server.core.universe.Universe.get().getWorld(playerRef.getWorldUuid());
+        if (playerRef == null)
+            return;
+        com.hypixel.hytale.server.core.universe.world.World world = com.hypixel.hytale.server.core.universe.Universe
+                .get().getWorld(playerRef.getWorldUuid());
         if (world != null) {
             world.execute(() -> {
-                 var entityStore = world.getEntityStore();
-                 if (entityStore != null) {
-                     var store = entityStore.getStore();
-                     var ref = entityStore.getRefFromUUID(playerRef.getUuid());
-                     if (store != null && ref != null) {
-                         var player = store.getComponent(ref, com.hypixel.hytale.server.core.entity.entities.Player.getComponentType());
-                         if (player != null) {
-                             player.getPageManager().openCustomPage(ref, store, new DuelsAdminPage(this, playerRef));
-                         }
-                     }
-                 }
+                var entityStore = world.getEntityStore();
+                if (entityStore != null) {
+                    var store = entityStore.getStore();
+                    var ref = entityStore.getRefFromUUID(playerRef.getUuid());
+                    if (store != null && ref != null) {
+                        var player = store.getComponent(ref,
+                                com.hypixel.hytale.server.core.entity.entities.Player.getComponentType());
+                        if (player != null) {
+                            player.getPageManager().openCustomPage(ref, store, new DuelsAdminPage(this, playerRef));
+                        }
+                    }
+                }
             });
         }
     }
 
     public void openHelpMenu(com.hypixel.hytale.server.core.universe.PlayerRef playerRef) {
-        if (playerRef == null) return;
-        com.hypixel.hytale.server.core.universe.world.World world = com.hypixel.hytale.server.core.universe.Universe.get().getWorld(playerRef.getWorldUuid());
+        if (playerRef == null)
+            return;
+        com.hypixel.hytale.server.core.universe.world.World world = com.hypixel.hytale.server.core.universe.Universe
+                .get().getWorld(playerRef.getWorldUuid());
         if (world != null) {
             world.execute(() -> {
-                 var entityStore = world.getEntityStore();
-                 if (entityStore != null) {
-                     var store = entityStore.getStore();
-                     var ref = entityStore.getRefFromUUID(playerRef.getUuid());
-                     if (store != null && ref != null) {
-                         var player = store.getComponent(ref, com.hypixel.hytale.server.core.entity.entities.Player.getComponentType());
-                         if (player != null) {
-                             player.getPageManager().openCustomPage(ref, store, new HelpMenuPage(this, playerRef));
-                         }
-                     }
-                 }
+                var entityStore = world.getEntityStore();
+                if (entityStore != null) {
+                    var store = entityStore.getStore();
+                    var ref = entityStore.getRefFromUUID(playerRef.getUuid());
+                    if (store != null && ref != null) {
+                        var player = store.getComponent(ref,
+                                com.hypixel.hytale.server.core.entity.entities.Player.getComponentType());
+                        if (player != null) {
+                            player.getPageManager().openCustomPage(ref, store, new HelpMenuPage(this, playerRef));
+                        }
+                    }
+                }
             });
         }
     }

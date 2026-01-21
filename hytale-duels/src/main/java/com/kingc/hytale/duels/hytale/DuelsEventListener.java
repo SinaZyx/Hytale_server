@@ -1,6 +1,11 @@
 package com.kingc.hytale.duels.hytale;
 
-// import com.hypixel.hytale.server.core.event.events.player.PlayerDeathEvent;
+import com.hypixel.hytale.component.Ref;
+import com.hypixel.hytale.component.Store;
+import com.hypixel.hytale.server.core.entity.entities.Player;
+import com.hypixel.hytale.server.core.modules.entity.damage.event.KillFeedEvent;
+import com.hypixel.hytale.server.core.universe.PlayerRef;
+import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.kingc.hytale.duels.DuelsPlugin;
 
 public class DuelsEventListener {
@@ -10,10 +15,20 @@ public class DuelsEventListener {
         this.core = core;
     }
 
-    // public void onPlayerDeath(PlayerDeathEvent event) {
-    //    var player = event.getPlayer();
-    //    if (player != null) {
-    //        core.onPlayerDeath(player.getUuid());
-    //    }
-    // }
+    public void onPlayerDeath(KillFeedEvent.KillerMessage event) {
+        if (event == null)
+            return;
+
+        Ref<EntityStore> victimRef = event.getTargetRef();
+
+        if (victimRef != null && victimRef.isValid()) {
+            Store<EntityStore> store = victimRef.getStore();
+            // Player player = store.getComponent(victimRef, Player.getComponentType());
+
+            PlayerRef playerRef = store.getComponent(victimRef, PlayerRef.getComponentType());
+            if (playerRef != null) {
+                core.onPlayerDeath(playerRef.getUuid());
+            }
+        }
+    }
 }
