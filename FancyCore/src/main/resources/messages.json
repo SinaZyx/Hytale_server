@@ -555,10 +555,6 @@
     "en": "&cNo primary currency is set.",
     "fr": "&cAucune monnaie principale n'est définie."
   },
-  "kit.created": {
-    "en": "&aKit '{name}' created.",
-    "fr": "&aKit '{name}' créé."
-  },
   "kit.deleted": {
     "en": "&aKit '{name}' deleted.",
     "fr": "&aKit '{name}' supprimé."

@@ -131,9 +131,17 @@
     "en": "Faction home set at current location.",
     "fr": "Base de faction définie à l'emplacement actuel."
   },
+  "faction.home.set.success": {
+    "en": "Faction home set.",
+    "fr": "Home de faction défini."
+  },
   "faction.home.not_set": {
     "en": "Faction home is not set.",
     "fr": "La base de faction n'est pas définie."
+  },
+  "error.home.not_set": {
+    "en": "Faction home is not set.",
+    "fr": "Le home de faction n'est pas défini."
   },
   "faction.home.teleport_start": {
     "en": "Teleportation in {seconds} seconds... Do not move.",
@@ -695,10 +703,6 @@
     "en": "Transfer leadership or disband before leaving.",
     "fr": "Transférez le leadership ou dissolvez avant de partir."
   },
-  "faction.leave.success": {
-    "en": "You left the faction.",
-    "fr": "Vous avez quitté la faction."
-  },
   "error.kick.permission": {
     "en": "You do not have permission to kick.",
     "fr": "Vous n'avez pas la permission d'expulser."
@@ -710,10 +714,6 @@
   "error.kick.cannot_kick_higher_rank": {
     "en": "You cannot kick a member with equal or higher rank.",
     "fr": "Vous ne pouvez pas expulser un membre de rang égal ou supérieur."
-  },
-  "faction.kick.success": {
-    "en": "Member kicked.",
-    "fr": "Membre expulsé."
   },
   "error.rank.permission": {
     "en": "You do not have permission to change ranks.",
@@ -763,10 +763,6 @@
     "en": "Faction home set.",
     "fr": "Home de faction défini."
   },
-  "error.home.not_set": {
-    "en": "Faction home is not set.",
-    "fr": "Le home de faction n'est pas défini."
-  },
   "error.claim.permission": {
     "en": "You do not have permission to claim.",
     "fr": "Vous n'avez pas la permission de claim."
@@ -779,10 +775,6 @@
     "en": "Claim limit reached ({limit}).",
     "fr": "Limite de claims atteinte ({limit})."
   },
-  "faction.claim.success": {
-    "en": "Chunk claimed.",
-    "fr": "Chunk claim."
-  },
   "error.unclaim.permission": {
     "en": "You do not have permission to unclaim.",
     "fr": "Vous n'avez pas la permission d'unclaim."
@@ -790,10 +782,6 @@
   "error.unclaim.not_owner": {
     "en": "Your faction does not own this claim.",
     "fr": "Votre faction ne possède pas ce claim."
-  },
-  "faction.unclaim.success": {
-    "en": "Chunk unclaimed.",
-    "fr": "Chunk unclaim."
   },
   "error.treasury.invalid_amount": {
     "en": "Amount must be positive.",

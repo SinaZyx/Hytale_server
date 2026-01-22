@@ -27,18 +27,31 @@ public class TranslationService {
     private static final String DEFAULT_LANGUAGE = "en";
     private static final String DEFAULT_RESOURCE_PATH = "/messages.json";
     private static final String LANG_FILE_PATH = "mods/FancyCore/lang/messages.json";
-    private static final Type MESSAGE_MAP_TYPE = new TypeToken<Map<String, Map<String, String>>>() { }.getType();
+    private static final Type MESSAGE_MAP_TYPE = new TypeToken<Map<String, Map<String, String>>>() {
+    }.getType();
     private static final Gson GSON = new GsonBuilder().setPrettyPrinting().create();
 
     private final Map<String, Map<String, Message>> messages;
     private final Map<String, Map<String, String>> defaultMessages;
 
     public TranslationService() {
+        FancyCorePlugin.get().getFancyLogger().info("Initializing TranslationService...");
         this.messages = new ConcurrentHashMap<>();
         this.defaultMessages = loadDefaultMessages();
+        FancyCorePlugin.get().getFancyLogger().info(
+                "Loaded " + (defaultMessages != null ? defaultMessages.size() : 0) + " default translation keys.");
+
         applyMessages(this.defaultMessages, false);
         ensureLangFileExists();
-        applyMessages(loadMessagesFromFile(), false);
+
+        Map<String, Map<String, String>> externalMessages = loadMessagesFromFile();
+        if (externalMessages != null) {
+            FancyCorePlugin.get().getFancyLogger()
+                    .info("Loaded " + externalMessages.size() + " external translation keys.");
+            applyMessages(externalMessages, false);
+        } else {
+            FancyCorePlugin.get().getFancyLogger().info("No external translation file found or loaded.");
+        }
     }
 
     public TranslationService addMessage(String key, String language, String message) {
@@ -57,17 +70,27 @@ public class TranslationService {
             lang = DEFAULT_LANGUAGE;
         }
 
+        // FancyCorePlugin.get().getFancyLogger().debug("Looking up translation",
+        // StringProperty.of("key", key), StringProperty.of("lang", lang));
+
         Map<String, Message> langMap = this.messages.get(key);
         if (langMap == null) {
+            FancyCorePlugin.get().getFancyLogger().warn("Translation key not found", StringProperty.of("key", key));
             return new Message(key, "Missing translation for key: " + key);
         }
 
         Message message = langMap.get(lang);
         if (message == null) {
+            // FancyCorePlugin.get().getFancyLogger().debug("Language not found for key,
+            // falling back to default", StringProperty.of("key", key),
+            // StringProperty.of("requested", lang), StringProperty.of("default",
+            // DEFAULT_LANGUAGE));
             message = langMap.get(DEFAULT_LANGUAGE);
         }
 
         if (message == null) {
+            // FancyCorePlugin.get().getFancyLogger().debug("Default language not found
+            // dynamically picking first available", StringProperty.of("key", key));
             message = langMap.values().stream().findFirst()
                     .orElse(new Message(key, "Missing translation for key: " + key));
         }
@@ -104,6 +127,7 @@ public class TranslationService {
             return;
         }
 
+        int count = 0;
         for (Map.Entry<String, Map<String, String>> entry : source.entrySet()) {
             String key = entry.getKey();
             if (key == null || key.isBlank()) {
@@ -126,8 +150,11 @@ public class TranslationService {
                 }
                 this.messages.computeIfAbsent(key, k -> new ConcurrentHashMap<>())
                         .put(language, new Message(key, message));
+                count++;
             }
         }
+        // FancyCorePlugin.get().getFancyLogger().debug("Applied messages",
+        // StringProperty.of("count", String.valueOf(count)));
     }
 
     private boolean hasMessage(String key, String language) {
@@ -136,12 +163,12 @@ public class TranslationService {
     }
 
     private Map<String, Map<String, String>> loadDefaultMessages() {
+        FancyCorePlugin.get().getFancyLogger().info("Loading default translation resource: " + DEFAULT_RESOURCE_PATH);
         try (InputStream input = TranslationService.class.getResourceAsStream(DEFAULT_RESOURCE_PATH)) {
             if (input == null) {
                 FancyCorePlugin.get().getFancyLogger().warn(
                         "Missing default translation resource",
-                        StringProperty.of("resource", DEFAULT_RESOURCE_PATH)
-                );
+                        StringProperty.of("resource", DEFAULT_RESOURCE_PATH));
                 return new LinkedHashMap<>();
             }
             try (Reader reader = new InputStreamReader(input, StandardCharsets.UTF_8)) {
@@ -152,8 +179,7 @@ public class TranslationService {
             FancyCorePlugin.get().getFancyLogger().warn(
                     "Failed to load default translations",
                     StringProperty.of("resource", DEFAULT_RESOURCE_PATH),
-                    ThrowableProperty.of(e)
-            );
+                    ThrowableProperty.of(e));
             return new LinkedHashMap<>();
         }
     }
@@ -161,6 +187,7 @@ public class TranslationService {
     private void ensureLangFileExists() {
         File file = new File(LANG_FILE_PATH);
         if (file.exists()) {
+            FancyCorePlugin.get().getFancyLogger().info("External translation file exists: " + file.getAbsolutePath());
             return;
         }
 
@@ -173,22 +200,26 @@ public class TranslationService {
         }
 
         try {
+            FancyCorePlugin.get().getFancyLogger()
+                    .info("Creating external translation file: " + file.getAbsolutePath());
             Files.writeString(file.toPath(), GSON.toJson(defaultMessages), StandardCharsets.UTF_8);
         } catch (Exception e) {
             FancyCorePlugin.get().getFancyLogger().warn(
                     "Failed to create translation file",
                     StringProperty.of("path", LANG_FILE_PATH),
-                    ThrowableProperty.of(e)
-            );
+                    ThrowableProperty.of(e));
         }
     }
 
     private Map<String, Map<String, String>> loadMessagesFromFile() {
         File file = new File(LANG_FILE_PATH);
         if (!file.exists()) {
+            FancyCorePlugin.get().getFancyLogger()
+                    .info("External translation file not found at: " + file.getAbsolutePath());
             return null;
         }
 
+        FancyCorePlugin.get().getFancyLogger().info("Loading external translations from: " + file.getAbsolutePath());
         try (Reader reader = Files.newBufferedReader(file.toPath(), StandardCharsets.UTF_8)) {
             Map<String, Map<String, String>> data = GSON.fromJson(reader, MESSAGE_MAP_TYPE);
             return data != null ? data : null;
@@ -196,8 +227,7 @@ public class TranslationService {
             FancyCorePlugin.get().getFancyLogger().warn(
                     "Failed to load translation file",
                     StringProperty.of("path", LANG_FILE_PATH),
-                    ThrowableProperty.of(e)
-            );
+                    ThrowableProperty.of(e));
             return null;
         }
     }
