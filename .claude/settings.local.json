@@ -6,7 +6,11 @@
       "Bash(.gradlew.bat build --console=plain)",
       "Bash(Select-Object -First 100)",
       "Bash(./gradlew.bat build:*)",
-      "Bash(./gradlew.bat compileJava:*)"
+      "Bash(./gradlew.bat compileJava:*)",
+      "Bash(where:*)",
+      "Bash(\"C:/Program Files/Java/jdk-25/bin/javap\" -public -classpath \"C:/Users/kingc/hytale-workspace/HytaleServer.jar\" com.hypixel.hytale.server.core.ui.builder.UICommandBuilder)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
     ]
   }
 }

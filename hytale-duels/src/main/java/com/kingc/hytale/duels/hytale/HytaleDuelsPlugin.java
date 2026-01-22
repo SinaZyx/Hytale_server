@@ -52,6 +52,7 @@ public final class HytaleDuelsPlugin extends JavaPlugin {
         registry.registerCommand(new DuelsDebugCommand(this));
         registry.registerCommand(new PipeCommand(this));
         registry.registerCommand(new SetLobbyCommand(this));
+        registry.registerCommand(new ArenaCommand(this));
     }
 
     private void registerEvents() {
