@@ -15,34 +15,13 @@ public class DuelsEventListener {
         this.core = core;
     }
 
-    public void onPlayerDeath(KillFeedEvent event) {
-        // KillFeedEvent is complex, often using nested classes for specific messages
-        // But let's assume we can inspect it or it's a wrapper.
-        // The guide mentions KillFeedEvent.KillerMessage and DecedentMessage.
-        // We will listen to the base event if registered, or specific ones.
-        // Assuming we registered KillFeedEvent.class:
-
-        Ref<EntityStore> victimRef = null;
-
-        if (event instanceof KillFeedEvent.KillerMessage) {
-            victimRef = ((KillFeedEvent.KillerMessage) event).getTargetRef();
-        } else if (event instanceof KillFeedEvent.DecedentMessage) {
-            // Need to find how to get victim from DecedentMessage, often it is the context
-            // But usually KillerMessage is enough for PvP
-        }
+    public void onPlayerDeath(KillFeedEvent.KillerMessage event) {
+        // Corrected signature to directly accept KillerMessage since we register for it specifically
+        Ref<EntityStore> victimRef = event.getTargetRef();
 
         if (victimRef != null && victimRef.isValid()) {
              Store<EntityStore> store = victimRef.getStore();
-             Player player = store.getComponent(victimRef, Player.getComponentType());
-             // We need PlayerRef usually for IDs, or get UUID from UUIDComponent
-             // Player component usually has access or we can get PlayerRef component if it exists
-             // Or use HytaleServerAdapter logic to find UUID.
-
-             // Actually, the easiest way to get UUID from Ref<EntityStore>:
-             // It's not direct unless we have the component.
-             // HytalePlayerRef wrapper uses:
-             // playerEntity.getStore().getComponent(playerEntity, PlayerRef.getComponentType())
-
+             // Assuming HytalePlayerRef logic for consistency or just direct UUID retrieval
              PlayerRef playerRef = store.getComponent(victimRef, PlayerRef.getComponentType());
              if (playerRef != null) {
                  core.onPlayerDeath(playerRef.getUuid());

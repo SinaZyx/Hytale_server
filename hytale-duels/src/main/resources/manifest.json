@@ -11,10 +11,10 @@
     "Website": "",
     "ServerVersion": "*",
     "Dependencies": {
-        
+
     },
     "OptionalDependencies": {
-        
+
     },
     "DisabledByDefault": false,
     "Main": "com.kingc.hytale.duels.hytale.HytaleDuelsPlugin",

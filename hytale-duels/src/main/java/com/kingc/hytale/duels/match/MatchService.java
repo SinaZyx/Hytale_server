@@ -188,12 +188,13 @@ public final class MatchService {
 
     private void teleportAndEquipPlayers(Match match, Arena arena, KitDefinition kit) {
         for (int i = 0; i < match.team1().size(); i++) {
+            final int index = i;
             UUID playerId = match.team1().get(i);
             server.getPlayer(playerId).ifPresent(player -> {
                 // Determine spawn point: use index if multiple spawns exist, or cycle
                 com.kingc.hytale.duels.api.Location spawn;
                 if (!arena.team1Spawns().isEmpty()) {
-                    spawn = arena.team1Spawns().get(i % arena.team1Spawns().size());
+                    spawn = arena.team1Spawns().get(index % arena.team1Spawns().size());
                     player.teleport(spawn);
                 }
                 kitService.applyKit(player, kit);
@@ -201,11 +202,12 @@ public final class MatchService {
         }
 
         for (int i = 0; i < match.team2().size(); i++) {
+            final int index = i;
             UUID playerId = match.team2().get(i);
             server.getPlayer(playerId).ifPresent(player -> {
                 com.kingc.hytale.duels.api.Location spawn;
                 if (!arena.team2Spawns().isEmpty()) {
-                    spawn = arena.team2Spawns().get(i % arena.team2Spawns().size());
+                    spawn = arena.team2Spawns().get(index % arena.team2Spawns().size());
                     player.teleport(spawn);
                 }
                 kitService.applyKit(player, kit);

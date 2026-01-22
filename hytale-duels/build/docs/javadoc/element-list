@@ -1,0 +1,14 @@
+com.kingc.hytale.duels
+com.kingc.hytale.duels.api
+com.kingc.hytale.duels.api.event
+com.kingc.hytale.duels.arena
+com.kingc.hytale.duels.command
+com.kingc.hytale.duels.hytale
+com.kingc.hytale.duels.integration
+com.kingc.hytale.duels.kit
+com.kingc.hytale.duels.logging
+com.kingc.hytale.duels.match
+com.kingc.hytale.duels.notifications
+com.kingc.hytale.duels.queue
+com.kingc.hytale.duels.ranking
+com.kingc.hytale.duels.translations
