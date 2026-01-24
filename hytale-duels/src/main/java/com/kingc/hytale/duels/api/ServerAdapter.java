@@ -9,7 +9,7 @@ public interface ServerAdapter {
     Optional<PlayerRef> getPlayerByName(String name);
     void giveItems(PlayerRef player, ItemStack... items);
     void setArmor(PlayerRef player, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots);
-    
+
     /**
      * Teleports the player to the server lobby/spawn.
      */
@@ -24,6 +24,9 @@ public interface ServerAdapter {
     default void showTitle(PlayerRef player, String title, String subtitle, String color) {
         showTitle(player, title, subtitle, color, 0.3f, 3.5f, 0.5f);
     }
+
+    // Sound effects
+    void playSound(PlayerRef player, String soundId, float volume, float pitch);
 
     // Reading methods for Kit saving
     java.util.List<ItemStack> getInventory(PlayerRef player);

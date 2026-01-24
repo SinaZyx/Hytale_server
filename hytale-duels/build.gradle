@@ -9,18 +9,21 @@ repositories {
 }
 
 ext {
-    hytaleHome = "${System.getProperty("user.home")}/AppData/Roaming/Hytale"
+    if (project.hasProperty('hytale_home')) {
+        hytaleHome = project.findProperty('hytale_home')
+    } else {
+        hytaleHome = "${System.getProperty("user.home")}/AppData/Roaming/Hytale"
+    }
 }
 
-if (!project.hasProperty('hytaleHome')) {
-    throw new GradleException('Your Hytale install could not be detected automatically. If you are on an unsupported platform or using a custom install location, please define the install location using the hytale_home property.');
-}
-else if (!file(project.findProperty('hytaleHome')).exists()) {
-    throw new GradleException("Failed to find Hytale at the expected location. Please make sure you have installed the game. The expected location can be changed using the hytale_home property. Currently looking in ${project.findProperty('hytaleHome')}")
+// We just warn instead of failing, because we are using local jar dependencies for compilation
+if (!file(hytaleHome).exists()) {
+    println "WARNING: Hytale home not found at ${hytaleHome}. This is fine for compilation if dependencies are local."
 }
 
 java {
-    toolchain.languageVersion = JavaLanguageVersion.of(25)
+    // Force Java 21 as per instructions (overriding 25)
+    toolchain.languageVersion = JavaLanguageVersion.of(21)
     withSourcesJar()
     withJavadocJar()
 }
@@ -31,7 +34,12 @@ javadoc {
 
 dependencies {
     // Use local HytaleServer.jar like FancyCore
-    implementation files('../HytaleServer.jar')
+    // We look in parent directory first, then fallback
+    if (file('../HytaleServer.jar').exists()) {
+        implementation files('../HytaleServer.jar')
+    } else {
+         implementation files('HytaleServer.jar')
+    }
     implementation 'com.google.code.gson:gson:2.11.0'
 }
 

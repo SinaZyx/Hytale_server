@@ -13,6 +13,9 @@ import com.hypixel.hytale.server.core.util.EventTitleUtil;
 import com.hypixel.hytale.component.Ref;
 import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.entity.entities.Player;
+import com.hypixel.hytale.server.core.universe.world.SoundUtil;
+import com.hypixel.hytale.protocol.SoundCategory;
+import com.hypixel.hytale.server.core.asset.type.soundevent.config.SoundEvent;
 import com.kingc.hytale.duels.api.ItemStack;
 import com.kingc.hytale.duels.api.Location;
 import com.kingc.hytale.duels.api.ServerAdapter;
@@ -61,19 +64,19 @@ public final class HytaleServerAdapter implements ServerAdapter {
         if (!(player instanceof HytalePlayerRef hPlayer)) return;
         World world = Universe.get().getWorld(hPlayer.hytale().getWorldUuid());
         if (world == null) return;
-        
+
         world.execute(() -> {
             var entityStore = world.getEntityStore();
             if (entityStore == null) return;
             var store = entityStore.getStore();
             var ref = entityStore.getRefFromUUID(hPlayer.hytale().getUuid());
-            
+
             if (store != null && ref != null) {
                 Player playerComp = store.getComponent(ref, Player.getComponentType());
                 if (playerComp != null) {
                    var hotbar = playerComp.getInventory().getHotbar();
                    for (ItemStack item : items) {
-                       com.hypixel.hytale.server.core.inventory.ItemStack hItem = 
+                       com.hypixel.hytale.server.core.inventory.ItemStack hItem =
                            new com.hypixel.hytale.server.core.inventory.ItemStack(item.itemId(), item.count());
                        hotbar.addItemStack(hItem);
                    }
@@ -100,7 +103,7 @@ public final class HytaleServerAdapter implements ServerAdapter {
         if (!(player instanceof HytalePlayerRef hPlayer)) return;
         World world = Universe.get().getWorld(hPlayer.hytale().getWorldUuid());
         if (world == null) return;
-        
+
         world.execute(() -> {
             var entityStore = world.getEntityStore();
             if (entityStore != null) {
@@ -163,21 +166,32 @@ public final class HytaleServerAdapter implements ServerAdapter {
     }
 
     @Override
+    public void playSound(com.kingc.hytale.duels.api.PlayerRef player, String soundId, float volume, float pitch) {
+        if (!(player instanceof HytalePlayerRef hPlayer)) return;
+        if (soundId == null || soundId.isBlank()) return;
+
+        int eventId = SoundEvent.getAssetMap().getIndexOrDefault(soundId, SoundEvent.EMPTY_ID);
+        if (eventId == SoundEvent.EMPTY_ID) return;
+
+        SoundUtil.playSoundEvent2dToPlayer(hPlayer.hytale(), eventId, SoundCategory.SFX, volume, pitch);
+    }
+
+    @Override
     public java.util.List<ItemStack> getInventory(com.kingc.hytale.duels.api.PlayerRef player) {
         if (!(player instanceof HytalePlayerRef hPlayer)) return java.util.List.of();
-        
+
         World world = Universe.get().getWorld(hPlayer.hytale().getWorldUuid());
         if (world == null) return java.util.List.of();
-        
+
         var entityStore = world.getEntityStore();
         if (entityStore == null || entityStore.getStore() == null) return java.util.List.of();
-        
+
         var ref = entityStore.getRefFromUUID(hPlayer.hytale().getUuid());
         var store = entityStore.getStore();
-        
+
         Player playerComp = store.getComponent(ref, Player.getComponentType());
         if (playerComp == null) return java.util.List.of();
-        
+
         java.util.List<ItemStack> items = new java.util.ArrayList<>();
         var hotbar = playerComp.getInventory().getHotbar();
         for (short i = 0; i < hotbar.getCapacity(); i++) {
