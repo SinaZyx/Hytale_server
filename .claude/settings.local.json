@@ -10,7 +10,9 @@
       "Bash(where:*)",
       "Bash(\"C:/Program Files/Java/jdk-25/bin/javap\" -public -classpath \"C:/Users/kingc/hytale-workspace/HytaleServer.jar\" com.hypixel.hytale.server.core.ui.builder.UICommandBuilder)",
       "Bash(git add:*)",
-      "Bash(git commit:*)"
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(git cherry-pick:*)"
     ]
   }
 }
