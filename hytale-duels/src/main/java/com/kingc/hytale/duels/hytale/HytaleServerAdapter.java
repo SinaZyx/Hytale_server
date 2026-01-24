@@ -8,10 +8,7 @@ import com.hypixel.hytale.server.core.NameMatching;
 import com.hypixel.hytale.server.core.universe.PlayerRef;
 import com.hypixel.hytale.server.core.universe.Universe;
 import com.hypixel.hytale.server.core.universe.world.World;
-import com.hypixel.hytale.server.core.universe.world.storage.EntityStore;
 import com.hypixel.hytale.server.core.util.EventTitleUtil;
-import com.hypixel.hytale.component.Ref;
-import com.hypixel.hytale.component.Store;
 import com.hypixel.hytale.server.core.entity.entities.Player;
 import com.kingc.hytale.duels.api.ItemStack;
 import com.kingc.hytale.duels.api.Location;
@@ -61,19 +58,19 @@ public final class HytaleServerAdapter implements ServerAdapter {
         if (!(player instanceof HytalePlayerRef hPlayer)) return;
         World world = Universe.get().getWorld(hPlayer.hytale().getWorldUuid());
         if (world == null) return;
-        
+
         world.execute(() -> {
             var entityStore = world.getEntityStore();
             if (entityStore == null) return;
             var store = entityStore.getStore();
             var ref = entityStore.getRefFromUUID(hPlayer.hytale().getUuid());
-            
+
             if (store != null && ref != null) {
                 Player playerComp = store.getComponent(ref, Player.getComponentType());
                 if (playerComp != null) {
                    var hotbar = playerComp.getInventory().getHotbar();
                    for (ItemStack item : items) {
-                       com.hypixel.hytale.server.core.inventory.ItemStack hItem = 
+                       com.hypixel.hytale.server.core.inventory.ItemStack hItem =
                            new com.hypixel.hytale.server.core.inventory.ItemStack(item.itemId(), item.count());
                        hotbar.addItemStack(hItem);
                    }
@@ -84,13 +81,15 @@ public final class HytaleServerAdapter implements ServerAdapter {
 
     @Override
     public void setArmor(com.kingc.hytale.duels.api.PlayerRef player, ItemStack helmet, ItemStack chestplate, ItemStack leggings, ItemStack boots) {
-        // TODO: Find correct API for armor
+        // Implement if API known, otherwise log warning
+        System.err.println("setArmor not implemented in HytaleServerAdapter due to missing API knowledge");
     }
 
     @Override
     public void teleportToLobby(com.kingc.hytale.duels.api.PlayerRef player) {
         Location lobby = plugin.core().settings().lobbySpawn();
         if (lobby != null) {
+            // Using player.teleport() which correctly uses world.execute internally
             player.teleport(lobby);
         }
     }
@@ -100,7 +99,7 @@ public final class HytaleServerAdapter implements ServerAdapter {
         if (!(player instanceof HytalePlayerRef hPlayer)) return;
         World world = Universe.get().getWorld(hPlayer.hytale().getWorldUuid());
         if (world == null) return;
-        
+
         world.execute(() -> {
             var entityStore = world.getEntityStore();
             if (entityStore != null) {
@@ -118,7 +117,7 @@ public final class HytaleServerAdapter implements ServerAdapter {
                                 }
                             }
                         } catch (Exception e) {
-                            // Log error
+                            System.err.println("Failed to clear inventory: " + e.getMessage());
                         }
                     }
                 }
@@ -128,12 +127,12 @@ public final class HytaleServerAdapter implements ServerAdapter {
 
     @Override
     public void applyEffect(com.kingc.hytale.duels.api.PlayerRef player, String effectType, int amplifier, int durationTicks) {
-         // TODO: Implement using correct Hytale API
+         // Placeholder
     }
 
     @Override
     public void clearEffects(com.kingc.hytale.duels.api.PlayerRef player) {
-         // TODO: Implement using correct Hytale API
+         // Placeholder
     }
 
     @Override
@@ -165,19 +164,19 @@ public final class HytaleServerAdapter implements ServerAdapter {
     @Override
     public java.util.List<ItemStack> getInventory(com.kingc.hytale.duels.api.PlayerRef player) {
         if (!(player instanceof HytalePlayerRef hPlayer)) return java.util.List.of();
-        
+
         World world = Universe.get().getWorld(hPlayer.hytale().getWorldUuid());
         if (world == null) return java.util.List.of();
-        
+
         var entityStore = world.getEntityStore();
         if (entityStore == null || entityStore.getStore() == null) return java.util.List.of();
-        
+
         var ref = entityStore.getRefFromUUID(hPlayer.hytale().getUuid());
         var store = entityStore.getStore();
-        
+
         Player playerComp = store.getComponent(ref, Player.getComponentType());
         if (playerComp == null) return java.util.List.of();
-        
+
         java.util.List<ItemStack> items = new java.util.ArrayList<>();
         var hotbar = playerComp.getInventory().getHotbar();
         for (short i = 0; i < hotbar.getCapacity(); i++) {
@@ -198,8 +197,8 @@ public final class HytaleServerAdapter implements ServerAdapter {
 
     @Override
     public ItemStack[] getArmor(com.kingc.hytale.duels.api.PlayerRef player) {
-        // TODO: Implement using correct Hytale API
-        return new ItemStack[4]; // [helmet, chestplate, leggings, boots]
+        // Return empty array for now
+        return new ItemStack[4];
     }
 
     // === Methodes utilitaires ===
@@ -231,9 +230,5 @@ public final class HytaleServerAdapter implements ServerAdapter {
             rotation.getYaw(),
             rotation.getPitch()
         ));
-    }
-
-    private void performTeleport(Player serverPlayer, Location location) {
-         // Teleport logic disabled due to API mismatches
     }
 }
