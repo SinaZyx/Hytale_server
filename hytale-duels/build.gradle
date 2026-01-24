@@ -52,6 +52,13 @@ javadoc {
 dependencies {
     implementation(files("$hytaleHome/install/$patchline/package/game/latest/Server/HytaleServer.jar"))
     implementation 'com.google.code.gson:gson:2.11.0'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter:5.10.0'
+    testImplementation 'org.mockito:mockito-core:5.5.0'
+}
+
+test {
+    useJUnitPlatform()
 }
 
 def serverRunDir = file("$projectDir/run")
